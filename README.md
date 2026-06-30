@@ -4,6 +4,8 @@
 
 Dự án này được thiết kế để quản lý khách hàng, lịch trình chụp ảnh, quản lý tác vụ công việc của nhân viên, hệ thống trao đổi nội bộ (Chat) và theo dõi tiến độ mục tiêu (OKR).
 
+![Giao diện trang chủ Studio V2](assets/homepage.png)
+
 ---
 
 ## 📋 Tài liệu & Báo cáo Quan trọng
