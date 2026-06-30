@@ -1,0 +1,6 @@
+{
+  "name": "Studio Management App",
+  "description": "Hệ thống quản lý studio chụp ảnh cưới và cho thuê áo cưới, bao gồm quản lý đơn hàng, theo dõi lịch chụp, kho áo cưới, và giao việc nội bộ.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

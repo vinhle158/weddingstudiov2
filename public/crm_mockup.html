@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CRM Mockup – Aura Bridal Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0f172a;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  /* ── Phone Frame ── */
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: #fff;
+    border-radius: 44px;
+    border: 10px solid #1e293b;
+    box-shadow: 0 40px 80px rgba(0,0,0,.6), inset 0 0 0 2px #334155;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .notch {
+    position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+    width: 90px; height: 18px; background: #1e293b; border-radius: 20px;
+    z-index: 50;
+  }
+  .phone-body {
+    flex: 1; overflow: hidden; display: flex; flex-direction: column;
+    padding-top: 28px;
+  }
+
+  /* ── Status Bar ── */
+  .status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 2px 20px 6px; font-size: 10px; font-weight: 700; color: #334155;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-bottom: 1px solid #fde68a;
+    padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .header-left { display: flex; align-items: center; gap: 8px; }
+  .header-icon {
+    width: 30px; height: 30px; background: linear-gradient(135deg, #d97706, #b45309);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 14px;
+  }
+  .header-title { font-size: 13px; font-weight: 800; color: #78350f; }
+  .header-sub { font-size: 9px; font-weight: 600; color: #a16207; }
+  .header-btn {
+    background: linear-gradient(135deg, #d97706, #b45309);
+    color: #fff; border: none; border-radius: 20px;
+    padding: 5px 12px; font-size: 10px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  /* ── View Tabs ── */
+  .view-tabs {
+    display: flex; gap: 4px; padding: 8px 12px;
+    background: #fff; border-bottom: 1px solid #f1f5f9;
+  }
+  .tab-btn {
+    flex: 1; padding: 5px 4px; border: none; border-radius: 8px;
+    font-size: 9px; font-weight: 700; cursor: pointer;
+    background: #f1f5f9; color: #64748b; transition: all .2s;
+    display: flex; align-items: center; justify-content: center; gap: 3px;
+  }
+  .tab-btn.active { background: #78350f; color: #fff; }
+
+  /* ── Scroll area ── */
+  .scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; }
+  .scroll-area::-webkit-scrollbar { width: 3px; }
+  .scroll-area::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+
+  /* ── Kanban ── */
+  .kanban-container { padding: 10px 12px; display: flex; flex-direction: column; gap: 14px; }
+  .kanban-col { background: #f8fafc; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; }
+  .kanban-col-header {
+    padding: 7px 12px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .kanban-col-title { font-size: 10px; font-weight: 800; color: #334155; display: flex; align-items: center; gap: 5px; }
+  .step-badge { width: 16px; height: 16px; border-radius: 50%; background: #d97706; color: #fff; font-size: 8px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+  .count-badge { background: #e2e8f0; color: #64748b; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 20px; }
+
+  .kanban-cards { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .lead-card {
+    background: #fff; border-radius: 10px; border: 1px solid #e2e8f0;
+    padding: 9px 10px; cursor: pointer; transition: all .15s;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    position: relative;
+  }
+  .lead-card:hover { border-color: #d97706; box-shadow: 0 2px 8px rgba(217,119,6,.15); }
+  .lead-card.won { border-left: 3px solid #10b981; }
+  .lead-card.lost { border-left: 3px solid #f43f5e; }
+  .lead-card.consulting { border-left: 3px solid #f59e0b; }
+
+  .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+  .card-name { font-size: 11px; font-weight: 700; color: #1e293b; }
+  .source-pill {
+    font-size: 7.5px; font-weight: 700; padding: 2px 6px; border-radius: 20px;
+    background: #fef9ee; color: #92400e; border: 1px solid #fde68a;
+  }
+  .card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .pkg-pill {
+    font-size: 7px; font-weight: 700; padding: 2px 5px; border-radius: 10px;
+    background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8;
+  }
+  .pkg-pill.family { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+  .pkg-pill.beauty { background: #f3e8ff; color: #7c3aed; border-color: #ddd6fe; }
+  .follow-dots { display: flex; gap: 2px; margin-left: auto; }
+  .follow-dot { width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0; font-size: 6px; font-weight: 800; display: flex; align-items: center; justify-content: center; color: #94a3b8; }
+  .follow-dot.done { background: #d1fae5; color: #059669; }
+  .support-tag { display: flex; align-items: center; gap: 2px; font-size: 7px; font-weight: 700; color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 1px 5px; }
+  .fb-tag { display: flex; align-items: center; gap: 2px; font-size: 7px; font-weight: 700; color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 1px 5px; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .status-dot.won { background: #10b981; }
+  .status-dot.lost { background: #f43f5e; }
+  .status-dot.consulting { background: #f59e0b; animation: pulse 1.5s infinite; }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+
+  /* ── Screen visibility ── */
+  .screen { display: none; flex-direction: column; height: 100%; }
+  .screen.active { display: flex; }
+
+  /* ── Detail Modal ── */
+  .detail-overlay {
+    position: absolute; inset: 0; background: rgba(15,23,42,.6);
+    backdrop-filter: blur(4px); z-index: 40;
+    display: none; flex-direction: column;
+    animation: fadeIn .2s ease;
+  }
+  .detail-overlay.open { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .detail-sheet {
+    margin-top: auto;
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    max-height: 88%;
+    overflow-y: auto;
+    animation: slideUp .25s ease;
+  }
+  .detail-sheet::-webkit-scrollbar { width: 3px; }
+  .detail-sheet::-webkit-scrollbar-thumb { background: #e2e8f0; }
+  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .sheet-handle { width: 36px; height: 4px; background: #e2e8f0; border-radius: 4px; margin: 10px auto 6px; }
+  .sheet-header {
+    padding: 10px 16px 10px; border-bottom: 1px solid #f1f5f9;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sheet-title { font-size: 11px; font-weight: 800; color: #78350f; }
+  .close-btn { width: 24px; height: 24px; border-radius: 50%; background: #f1f5f9; border: none; font-size: 12px; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .sheet-body { padding: 14px 16px; }
+
+  /* Progress tracker */
+  .section-label { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 7px; }
+  .customer-card {
+    display: flex; align-items: center; gap: 10px;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px;
+    margin-bottom: 14px;
+  }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #d97706, #b45309); color: #fff; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .customer-info { flex: 1; }
+  .customer-name { font-size: 13px; font-weight: 700; color: #1e293b; }
+  .customer-phone { font-size: 10px; color: #94a3b8; font-family: monospace; margin-top: 1px; }
+  .badge-col { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+  .badge { font-size: 8px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
+  .badge.source { background: #fef9ee; color: #92400e; border: 1px solid #fde68a; }
+  .badge.consulting-s { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+  .badge.won-s { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+
+  /* Steps */
+  .steps-track { display: flex; align-items: flex-start; margin-bottom: 14px; }
+  .step-item { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; }
+  .step-row { display: flex; align-items: center; width: 100%; }
+  .step-line { flex: 1; height: 2px; background: #e2e8f0; }
+  .step-line.done { background: #d97706; }
+  .step-circle {
+    width: 24px; height: 24px; border-radius: 50%; border: 2px solid #e2e8f0;
+    background: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 800; color: #94a3b8; flex-shrink: 0; transition: all .2s;
+  }
+  .step-circle.done { background: #d97706; border-color: #d97706; color: #fff; }
+  .step-circle.current { background: #fff; border-color: #d97706; color: #b45309; box-shadow: 0 0 0 3px #fde68a; }
+  .step-label { font-size: 7.5px; font-weight: 600; text-align: center; margin-top: 4px; color: #94a3b8; max-width: 46px; line-height: 1.2; }
+  .step-label.done { color: #64748b; }
+  .step-label.current { color: #b45309; }
+
+  .step-current-text { font-size: 10px; font-weight: 700; color: #b45309; text-align: center; margin-bottom: 12px; }
+
+  /* Package pills row */
+  .pills-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+  .pill { font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 20px; }
+  .pill.wedding { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+  .pill.family { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+  .pill.beauty { background: #faf5ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+
+  /* Follow-up list */
+  .follow-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+  .follow-item { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 600; }
+  .follow-check { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 8px; flex-shrink: 0; color: #94a3b8; }
+  .follow-check.done { background: #10b981; border-color: #10b981; color: #fff; }
+  .follow-label { color: #64748b; }
+  .follow-label.done { color: #065f46; }
+
+  /* Notes */
+  .notes-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 10px; color: #334155; line-height: 1.5; margin-bottom: 12px; }
+
+  /* Support banner */
+  .support-banner { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 9px 11px; display: flex; gap: 8px; margin-bottom: 12px; }
+  .support-icon { font-size: 14px; flex-shrink: 0; }
+  .support-title { font-size: 8.5px; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+  .support-text { font-size: 10px; color: #78350f; line-height: 1.4; }
+
+  /* Feedback section */
+  .feedback-header { font-size: 10px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 5px; margin-bottom: 8px; }
+  .feedback-bubble { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 8px 10px; margin-bottom: 6px; }
+  .feedback-meta { display: flex; justify-content: space-between; margin-bottom: 3px; }
+  .feedback-name { font-size: 9px; font-weight: 800; color: #1d4ed8; }
+  .feedback-time { font-size: 8px; color: #94a3b8; font-family: monospace; }
+  .feedback-text { font-size: 10px; color: #1e3a5f; line-height: 1.4; }
+  .feedback-input-row { display: flex; gap: 6px; align-items: flex-end; margin-top: 8px; }
+  .feedback-input { flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 7px 10px; font-size: 10px; color: #334155; resize: none; outline: none; font-family: 'Inter', sans-serif; }
+  .feedback-input:focus { border-color: #60a5fa; }
+  .send-btn { background: #2563eb; border: none; border-radius: 8px; width: 32px; height: 32px; color: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* Table view */
+  .table-view { padding: 10px 12px; }
+  .search-bar { display: flex; align-items: center; gap: 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 7px 10px; margin-bottom: 10px; }
+  .search-input { border: none; background: transparent; font-size: 11px; color: #334155; flex: 1; outline: none; font-family: 'Inter', sans-serif; }
+  .search-icon { font-size: 12px; color: #94a3b8; }
+  .table-row { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; cursor: pointer; transition: all .15s; }
+  .table-row:hover { border-color: #d97706; }
+  .table-row-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+  .table-name { font-size: 12px; font-weight: 700; color: #1e293b; }
+  .table-status { display: flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 700; }
+  .table-meta { display: flex; align-items: center; gap: 6px; }
+  .table-meta span { font-size: 9px; color: #64748b; }
+  .meta-sep { color: #cbd5e1 !important; }
+
+  /* Analytics view */
+  .analytics-view { padding: 12px; }
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .kpi-card { background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1px solid #fde68a; border-radius: 12px; padding: 10px 12px; }
+  .kpi-card.blue { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-color: #bfdbfe; }
+  .kpi-card.green { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-color: #a7f3d0; }
+  .kpi-card.rose { background: linear-gradient(135deg, #fff1f2, #ffe4e6); border-color: #fecdd3; }
+  .kpi-label { font-size: 8.5px; font-weight: 700; color: #78350f; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+  .kpi-card.blue .kpi-label { color: #1e40af; }
+  .kpi-card.green .kpi-label { color: #065f46; }
+  .kpi-card.rose .kpi-label { color: #9f1239; }
+  .kpi-value { font-size: 20px; font-weight: 900; color: #78350f; line-height: 1; }
+  .kpi-card.blue .kpi-value { color: #1d4ed8; }
+  .kpi-card.green .kpi-value { color: #059669; }
+  .kpi-card.rose .kpi-value { color: #e11d48; }
+  .kpi-sub { font-size: 8px; color: #a16207; margin-top: 2px; }
+
+  .chart-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+  .chart-title { font-size: 9.5px; font-weight: 800; color: #334155; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+
+  /* Donut chart SVG */
+  .donut-wrap { display: flex; align-items: center; gap: 12px; }
+  .legend-list { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 9px; color: #334155; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .legend-val { margin-left: auto; font-weight: 700; color: #1e293b; }
+
+  /* Bar chart */
+  .bar-chart { display: flex; flex-direction: column; gap: 7px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; }
+  .bar-label { font-size: 9px; font-weight: 700; color: #64748b; width: 32px; text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; background: #f1f5f9; border-radius: 4px; height: 12px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #e11d48, #f43f5e); }
+  .bar-count { font-size: 9px; font-weight: 700; color: #334155; width: 16px; }
+
+  /* Screen label */
+  .screen-label {
+    position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);
+    color: #64748b; font-size: 11px; font-weight: 600; white-space: nowrap;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .phone-wrap { position: relative; }
+
+  /* Navigation demos */
+  .demo-nav {
+    display: flex; gap: 8px; margin-top: 48px; flex-wrap: wrap; justify-content: center;
+  }
+  .demo-btn {
+    background: #1e293b; color: #94a3b8; border: 1px solid #334155;
+    border-radius: 20px; padding: 6px 14px; font-size: 11px; font-weight: 600;
+    cursor: pointer; transition: all .2s; font-family: 'Inter', sans-serif;
+  }
+  .demo-btn:hover, .demo-btn.active { background: #d97706; color: #fff; border-color: #d97706; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    height: 60px; border-top: 1px solid #f1f5f9;
+    display: flex; align-items: center; background: #fff;
+    flex-shrink: 0;
+  }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 8px; font-weight: 700; color: #94a3b8; cursor: pointer; padding: 6px 4px; }
+  .nav-item.active { color: #d97706; }
+  .nav-icon { font-size: 18px; line-height: 1; }
+
+  hr.section-sep { border: none; border-top: 1px solid #f1f5f9; margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<!-- ======================================
+     PHONE 1 — Kanban View (Sale Login)
+     ====================================== -->
+<div class="phone-wrap">
+  <div class="phone" id="phone1">
+    <div class="notch"></div>
+    <div class="phone-body">
+
+      <!-- Status bar -->
+      <div class="status-bar">
+        <span>14:07</span>
+        <span>●●●●◌  WiFi  🔋</span>
+      </div>
+
+      <!-- Header -->
+      <div class="header">
+        <div class="header-left">
+          <div class="header-icon">📋</div>
+          <div>
+            <div class="header-title">Quản lý Tư vấn</div>
+            <div class="header-sub">Tháng 06 · 10 hồ sơ</div>
+          </div>
+        </div>
+        <button class="header-btn" onclick="openModal('modal1')">＋ Thêm</button>
+      </div>
+
+      <!-- View tabs -->
+      <div class="view-tabs">
+        <button class="tab-btn active" onclick="switchPhone1Tab('kanban',this)">🗂 Kanban</button>
+        <button class="tab-btn" onclick="switchPhone1Tab('table',this)">☰ Danh sách</button>
+        <button class="tab-btn" onclick="switchPhone1Tab('analytics',this)">📊 Báo cáo</button>
+      </div>
+
+      <!-- SCREEN: Kanban -->
+      <div class="scroll-area screen active" id="p1-kanban">
+        <div class="kanban-container">
+
+          <!-- Step B/1 -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <div class="kanban-col-title">
+                <span class="step-badge">1</span> Khai thác nhu cầu
+              </div>
+              <span class="count-badge">3</span>
+            </div>
+            <div class="kanban-cards">
+              <div class="lead-card consulting" onclick="openModal('modal1')">
+                <div class="card-top">
+                  <div style="display:flex;align-items:center;gap:5px">
+                    <div class="status-dot consulting"></div>
+                    <span class="card-name">Ng Ngọc Quyên</span>
+                  </div>
+                  <span class="source-pill">PAGE THE WILL</span>
+                </div>
+                <div class="card-meta">
+                  <span class="pkg-pill">💍 Wedding</span>
+                  <div class="follow-dots">
+                    <div class="follow-dot">1</div>
+                    <div class="follow-dot">2</div>
+                    <div class="follow-dot">3</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="lead-card consulting">
+                <div class="card-top">
+                  <div style="display:flex;align-items:center;gap:5px">
+                    <div class="status-dot consulting"></div>
+                    <span class="card-name">Kiều Mi</span>
+                  </div>
+                  <span class="source-pill">PAGE FAMILY</span>
+                </div>
+                <div class="card-meta">
+                  <span class="pkg-pill family">👨‍👩‍👧 Family</span>
+                  <div class="follow-dots">
+                    <div class="follow-dot done">✓</div>
+                    <div class="follow-dot">2</div>
+                    <div class="follow-dot">3</div>
+                  </div>
+                </div>
+                <div style="margin-top:5px">
+                  <span class="support-tag">⚠ Nhờ tư vấn thêm</span>
+                </div>
+              </div>
+
+              <div class="lead-card consulting">
+                <div class="card-top">
+                  <div style="display:flex;align-items:center;gap:5px">
+                    <div class="status-dot consulting"></div>
+                    <span class="card-name">Lê Thị Hồng Nhung</span>
+                  </div>
+                  <span class="source-pill">VÃNG LAI</span>
+                </div>
+                <div class="card-meta">
+                  <span class="pkg-pill beauty">👸 Beauty</span>
+                  <div class="follow-dots">
+                    <div class="follow-dot done">✓</div>
+                    <div class="follow-dot done">✓</div>
+                    <div class="follow-dot">3</div>
+                  </div>
+                </div>
+                <div style="margin-top:5px;display:flex;gap:4px">
+                  <span class="fb-tag">💬 Có phản hồi</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step B/3 -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <div class="kanban-col-title">
+                <span class="step-badge" style="background:#7c3aed">3</span> Đề xuất dịch vụ
+              </div>
+              <span class="count-badge">2</span>
+            </div>
+            <div class="kanban-cards">
+              <div class="lead-card consulting">
+                <div class="card-top">
+                  <div style="display:flex;align-items:center;gap:5px">
+                    <div class="status-dot consulting"></div>
+                    <span class="card-name">Lâm Gia Kỳ</span>
+                  </div>
+                  <span class="source-pill">KHÁCH CŨ</span>
+                </div>
+                <div class="card-meta">
+                  <span class="pkg-pill">💍 Wedding</span>
+                  <span class="pkg-pill family">👨‍👩‍👧 Family</span>
+                </div>
+              </div>
+              <div class="lead-card consulting">
+                <div class="card-top">
+                  <div style="display:flex;align-items:center;gap:5px">
+                    <div class="status-dot consulting"></div>
+                    <span class="card-name">Trần Quỳnh Như</span>
+                  </div>
+                  <span class="source-pill">PAGE GARDEN</span>
+                </div>
+                <div class="card-meta">
+                  <span class="pkg-pill beauty">👸 Beauty</span>
+                  <div class="follow-dots">
+                    <div class="follow-dot done">✓</div>
+                    <div class="follow-dot done">✓</div>
+                    <div class="follow-dot done">✓</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Won -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <div class="kanban-col-title">
+                <span class="step-badge" style="background:#10b981">✓</span> Chốt thành công
+              </div>
+              <span class="count-badge" style="background:#d1fae5;color:#065f46">3</span>
+            </div>
+            <div class="kanban-cards">
+              <div class="lead-card won">
+                <div class="card-top">
+                  <div style="display:flex;align-items:center;gap:5px">
+                    <div class="status-dot won"></div>
+                    <span class="card-name">Như Ý</span>
+                  </div>
+                  <span style="font-size:9px;font-weight:700;color:#059669">4.300 kđ</span>
+                </div>
+                <div class="card-meta">
+                  <span class="pkg-pill">💍 Wedding</span>
+                </div>
+              </div>
+              <div class="lead-card won">
+                <div class="card-top">
+                  <div style="display:flex;align-items:center;gap:5px">
+                    <div class="status-dot won"></div>
+                    <span class="card-name">Ngọc Phương</span>
+                  </div>
+                  <span style="font-size:9px;font-weight:700;color:#059669">6.500 kđ</span>
+                </div>
+                <div class="card-meta">
+                  <span class="pkg-pill">💍 Wedding</span>
+                  <span class="pkg-pill family">👨‍👩‍👧 Family</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SCREEN: Table -->
+      <div class="scroll-area screen" id="p1-table">
+        <div class="table-view">
+          <div class="search-bar">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" placeholder="Tìm tên, SĐT, nguồn..." readonly />
+          </div>
+          <div class="table-row" onclick="openModal('modal1')">
+            <div class="table-row-top">
+              <span class="table-name">Ng Ngọc Quyên</span>
+              <div class="table-status"><div class="status-dot consulting" style="animation:none"></div><span style="color:#b45309">Đang tư vấn</span></div>
+            </div>
+            <div class="table-meta">
+              <span>PAGE THE WILL</span><span class="meta-sep">·</span>
+              <span>💍 Wedding</span><span class="meta-sep">·</span>
+              <span>B/1</span>
+            </div>
+          </div>
+          <div class="table-row">
+            <div class="table-row-top">
+              <span class="table-name">Kiều Mi</span>
+              <div class="table-status"><div class="status-dot consulting" style="animation:none"></div><span style="color:#b45309">Đang tư vấn</span></div>
+            </div>
+            <div class="table-meta">
+              <span>PAGE FAMILY</span><span class="meta-sep">·</span>
+              <span>👨‍👩‍👧 Family</span><span class="meta-sep">·</span>
+              <span>B/1</span>
+            </div>
+          </div>
+          <div class="table-row">
+            <div class="table-row-top">
+              <span class="table-name">Như Ý</span>
+              <div class="table-status"><div class="status-dot won"></div><span style="color:#059669">Chốt thành công</span></div>
+            </div>
+            <div class="table-meta">
+              <span>KHÁCH CŨ</span><span class="meta-sep">·</span>
+              <span>💍 Wedding</span><span class="meta-sep">·</span>
+              <span style="color:#059669;font-weight:700">4.300 kđ</span>
+            </div>
+          </div>
+          <div class="table-row">
+            <div class="table-row-top">
+              <span class="table-name">Lâm Gia Kỳ</span>
+              <div class="table-status"><div class="status-dot consulting" style="animation:none"></div><span style="color:#b45309">Đang tư vấn</span></div>
+            </div>
+            <div class="table-meta">
+              <span>KHÁCH CŨ</span><span class="meta-sep">·</span>
+              <span>💍 Wedding</span><span class="meta-sep">·</span>
+              <span>B/3</span>
+            </div>
+          </div>
+          <div class="table-row">
+            <div class="table-row-top">
+              <span class="table-name">Ngọc Phương</span>
+              <div class="table-status"><div class="status-dot won"></div><span style="color:#059669">Chốt thành công</span></div>
+            </div>
+            <div class="table-meta">
+              <span>PAGE THE WILL</span><span class="meta-sep">·</span>
+              <span>💍 Wedding</span><span class="meta-sep">·</span>
+              <span style="color:#059669;font-weight:700">6.500 kđ</span>
+            </div>
+          </div>
+          <div class="table-row">
+            <div class="table-row-top">
+              <span class="table-name">Trần Thu Hà</span>
+              <div class="table-status"><div class="status-dot lost"></div><span style="color:#e11d48">Thất bại</span></div>
+            </div>
+            <div class="table-meta">
+              <span>PAGE FAMILY</span><span class="meta-sep">·</span>
+              <span>👨‍👩‍👧 Family</span><span class="meta-sep">·</span>
+              <span style="color:#f43f5e;font-weight:700">K02</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN: Analytics -->
+      <div class="scroll-area screen" id="p1-analytics">
+        <div class="analytics-view">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-label">Tổng hồ sơ</div>
+              <div class="kpi-value">10</div>
+              <div class="kpi-sub">Tháng 06/2025</div>
+            </div>
+            <div class="kpi-card green">
+              <div class="kpi-label">Đã chốt</div>
+              <div class="kpi-value">3</div>
+              <div class="kpi-sub">Tỷ lệ 30%</div>
+            </div>
+            <div class="kpi-card blue">
+              <div class="kpi-label">Doanh thu</div>
+              <div class="kpi-value" style="font-size:16px">15.8tr</div>
+              <div class="kpi-sub" style="color:#1e40af">Từ 3 đơn chốt</div>
+            </div>
+            <div class="kpi-card rose">
+              <div class="kpi-label">Thất bại</div>
+              <div class="kpi-value">2</div>
+              <div class="kpi-sub" style="color:#be123c">Cần xem lại</div>
+            </div>
+          </div>
+
+          <!-- Source Chart -->
+          <div class="chart-card">
+            <div class="chart-title">Nguồn khách tiếp cận</div>
+            <div class="donut-wrap">
+              <svg width="90" height="90" viewBox="0 0 90 90">
+                <circle cx="45" cy="45" r="34" fill="none" stroke="#e2e8f0" stroke-width="14"/>
+                <!-- PAGE THE WILL: 40% = 85.3 -->
+                <circle cx="45" cy="45" r="34" fill="none" stroke="#d97706" stroke-width="14"
+                  stroke-dasharray="85.3 128.2" stroke-dashoffset="0" transform="rotate(-90 45 45)"/>
+                <!-- PAGE FAMILY: 30% = 64 -->
+                <circle cx="45" cy="45" r="34" fill="none" stroke="#3b82f6" stroke-width="14"
+                  stroke-dasharray="64 149.5" stroke-dashoffset="-85.3" transform="rotate(-90 45 45)"/>
+                <!-- PAGE GARDEN: 20% = 42.7 -->
+                <circle cx="45" cy="45" r="34" fill="none" stroke="#10b981" stroke-width="14"
+                  stroke-dasharray="42.7 170.8" stroke-dashoffset="-149.3" transform="rotate(-90 45 45)"/>
+                <!-- Other: 10% -->
+                <circle cx="45" cy="45" r="34" fill="none" stroke="#a78bfa" stroke-width="14"
+                  stroke-dasharray="21.4 192.1" stroke-dashoffset="-192" transform="rotate(-90 45 45)"/>
+                <text x="45" y="50" text-anchor="middle" font-size="11" font-weight="800" fill="#334155">10</text>
+              </svg>
+              <div class="legend-list">
+                <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div>PAGE THE WILL<span class="legend-val">4</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>PAGE FAMILY<span class="legend-val">3</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>PAGE GARDEN<span class="legend-val">2</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div>Khác<span class="legend-val">1</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Failure reasons -->
+          <div class="chart-card">
+            <div class="chart-title">Nguyên nhân thất bại</div>
+            <div class="bar-chart">
+              <div class="bar-row">
+                <span class="bar-label">K02</span>
+                <div class="bar-track"><div class="bar-fill" style="width:80%"></div></div>
+                <span class="bar-count">2</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-label">P01</span>
+                <div class="bar-track"><div class="bar-fill" style="width:60%"></div></div>
+                <span class="bar-count">1</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-label">S02</span>
+                <div class="bar-track"><div class="bar-fill" style="width:40%"></div></div>
+                <span class="bar-count">1</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Bottom nav -->
+      <div class="bottom-nav">
+        <div class="nav-item"><div class="nav-icon">📊</div>Tổng quan</div>
+        <div class="nav-item active"><div class="nav-icon">📋</div>Tư vấn</div>
+        <div class="nav-item"><div class="nav-icon">📁</div>Hợp đồng</div>
+        <div class="nav-item"><div class="nav-icon">💬</div>Chat</div>
+        <div class="nav-item"><div class="nav-icon">🔔</div>Thông báo</div>
+      </div>
+    </div>
+
+    <!-- MODAL: Lead Detail (Admin view — Progress Tracker) -->
+    <div class="detail-overlay" id="modal1" onclick="closeModalOutside(event,'modal1')">
+      <div class="detail-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+          <div>
+            <div class="sheet-title">📋 Hồ sơ chi tiết: Ng Ngọc Quyên</div>
+            <div style="font-size:9px;color:#94a3b8;margin-top:2px">📅 Ghi nhận 03/06/2025 · PAGE THE WILL</div>
+          </div>
+          <button class="close-btn" onclick="closeModal('modal1')">✕</button>
+        </div>
+        <div class="sheet-body">
+
+          <!-- Toggle: admin / sale view -->
+          <div style="display:flex;gap:6px;margin-bottom:12px">
+            <button onclick="switchModalView('admin')" id="mbtn-admin"
+              style="flex:1;padding:6px;border-radius:8px;border:1px solid #d97706;background:#78350f;color:#fff;font-size:9px;font-weight:700;cursor:pointer">
+              👁 Xem (Admin)
+            </button>
+            <button onclick="switchModalView('sale')" id="mbtn-sale"
+              style="flex:1;padding:6px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;color:#64748b;font-size:9px;font-weight:700;cursor:pointer">
+              ✏️ Chỉnh sửa (Sale)
+            </button>
+          </div>
+
+          <!-- ADMIN VIEW -->
+          <div id="view-admin">
+            <!-- Customer summary -->
+            <div class="customer-card">
+              <div class="avatar">N</div>
+              <div class="customer-info">
+                <div class="customer-name">Ng Ngọc Quyên</div>
+                <div class="customer-phone">Chưa có SĐT</div>
+              </div>
+              <div class="badge-col">
+                <span class="badge source">PAGE THE WILL</span>
+                <span class="badge consulting-s">● Đang tư vấn</span>
+              </div>
+            </div>
+
+            <!-- Step tracker -->
+            <div class="section-label">Tiến trình tư vấn 6 bước</div>
+            <div class="steps-track" style="margin-bottom:6px">
+              <!-- Step 1: current -->
+              <div class="step-item">
+                <div class="step-row">
+                  <div class="step-circle current">1</div>
+                  <div class="step-line"></div>
+                </div>
+                <div class="step-label current">Khai thác</div>
+              </div>
+              <!-- Step 2 -->
+              <div class="step-item">
+                <div class="step-row">
+                  <div class="step-line"></div>
+                  <div class="step-circle">2</div>
+                  <div class="step-line"></div>
+                </div>
+                <div class="step-label">Tư vấn</div>
+              </div>
+              <!-- Step 3 -->
+              <div class="step-item">
+                <div class="step-row">
+                  <div class="step-line"></div>
+                  <div class="step-circle">3</div>
+                  <div class="step-line"></div>
+                </div>
+                <div class="step-label">Đề xuất</div>
+              </div>
+              <!-- Step 4 -->
+              <div class="step-item">
+                <div class="step-row">
+                  <div class="step-line"></div>
+                  <div class="step-circle">4</div>
+                  <div class="step-line"></div>
+                </div>
+                <div class="step-label">Báo giá</div>
+              </div>
+              <!-- Step 5 -->
+              <div class="step-item">
+                <div class="step-row">
+                  <div class="step-line"></div>
+                  <div class="step-circle">5</div>
+                  <div class="step-line"></div>
+                </div>
+                <div class="step-label">Thương lượng</div>
+              </div>
+              <!-- Step 6 -->
+              <div class="step-item">
+                <div class="step-row">
+                  <div class="step-line"></div>
+                  <div class="step-circle">6</div>
+                </div>
+                <div class="step-label">Chốt đơn</div>
+              </div>
+            </div>
+            <div class="step-current-text">Đang ở bước 1/6 — Khai thác nhu cầu</div>
+
+            <!-- Packages + Follow-up -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+              <div>
+                <div class="section-label">Gói quan tâm</div>
+                <div class="pills-row">
+                  <span class="pill wedding">💍 Wedding</span>
+                </div>
+              </div>
+              <div>
+                <div class="section-label">Bám sát</div>
+                <div class="follow-list">
+                  <div class="follow-item">
+                    <div class="follow-check">○</div>
+                    <span class="follow-label">Follow 1 (6-12h)</span>
+                  </div>
+                  <div class="follow-item">
+                    <div class="follow-check">○</div>
+                    <span class="follow-label">Follow 2 (1-2 ngày)</span>
+                  </div>
+                  <div class="follow-item">
+                    <div class="follow-check">○</div>
+                    <span class="follow-label">Follow 3 (2-4 ngày)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="section-label">Nhật ký đàm phán của Sale</div>
+            <div class="notes-box">Đang khai thác nhu cầu chụp cưới. Khách muốn phong cách nhẹ nhàng, dự kiến cưới tháng 12.</div>
+
+            <hr class="section-sep">
+
+            <!-- Feedback section -->
+            <div class="feedback-header">💬 Ghi chú & Phản hồi từ Quản lý</div>
+            <div class="feedback-bubble">
+              <div class="feedback-meta">
+                <span class="feedback-name">Nguyễn Văn Admin</span>
+                <span class="feedback-time">06-10 09:30</span>
+              </div>
+              <div class="feedback-text">Khách này tiềm năng, hãy ưu tiên follow sớm trong ngày. Nếu cần tư vấn thêm về combo cưới, báo mình để phối hợp.</div>
+            </div>
+
+            <div class="feedback-input-row">
+              <textarea class="feedback-input" rows="2" placeholder="Nhập phản hồi hoặc hướng dẫn cho Sale..."></textarea>
+              <button class="send-btn">➤</button>
+            </div>
+          </div>
+
+          <!-- SALE VIEW (hidden by default) -->
+          <div id="view-sale" style="display:none">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div>
+                <div class="section-label">Tên khách hàng</div>
+                <input style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:600;color:#1e293b;outline:none;font-family:'Inter',sans-serif" value="Ng Ngọc Quyên" />
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div>
+                  <div class="section-label">Nguồn tiếp cận</div>
+                  <select style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:7px 10px;font-size:11px;font-weight:600;color:#334155;outline:none;font-family:'Inter',sans-serif">
+                    <option selected>PAGE THE WILL</option>
+                    <option>PAGE FAMILY</option>
+                    <option>PAGE GARDEN</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="section-label">Bước tư vấn</div>
+                  <select style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:7px 10px;font-size:11px;font-weight:600;color:#334155;outline:none;font-family:'Inter',sans-serif">
+                    <option selected>B/1 – Khai thác</option>
+                    <option>B/2 – Tư vấn</option>
+                    <option>B/3 – Đề xuất</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <div class="section-label">Nhu cầu / Gói chụp</div>
+                <div style="display:flex;gap:6px">
+                  <label style="display:flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:700;color:#334155;cursor:pointer">
+                    <input type="checkbox" checked style="accent-color:#d97706"> 💍 Wedding
+                  </label>
+                  <label style="display:flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:700;color:#334155;cursor:pointer">
+                    <input type="checkbox" style="accent-color:#d97706"> 👨‍👩‍👧 Family
+                  </label>
+                  <label style="display:flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:700;color:#334155;cursor:pointer">
+                    <input type="checkbox" style="accent-color:#d97706"> 👸 Beauty
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <div class="section-label">Trạng thái</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;background:#f1f5f9;padding:3px;border-radius:10px">
+                  <button id="s-btn-consulting" onclick="selectStatus('consulting')" style="padding:6px;border:none;border-radius:7px;font-size:9px;font-weight:700;cursor:pointer;background:#fff;color:#b45309;box-shadow:0 1px 3px rgba(0,0,0,.08)">Đang tư vấn</button>
+                  <button id="s-btn-won" onclick="selectStatus('won')" style="padding:6px;border:none;border-radius:7px;font-size:9px;font-weight:700;cursor:pointer;background:transparent;color:#64748b">Chốt thành công</button>
+                  <button id="s-btn-lost" onclick="selectStatus('lost')" style="padding:6px;border:none;border-radius:7px;font-size:9px;font-weight:700;cursor:pointer;background:transparent;color:#64748b">Thất bại</button>
+                </div>
+              </div>
+
+              <div>
+                <div class="section-label">Nhật ký đàm phán</div>
+                <textarea style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-size:11px;color:#334155;resize:none;outline:none;font-family:'Inter',sans-serif" rows="2">Đang khai thác nhu cầu chụp cưới.</textarea>
+              </div>
+
+              <div>
+                <div class="section-label">Nhờ hỗ trợ từ Quản lý</div>
+                <textarea style="width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-size:11px;color:#334155;resize:none;outline:none;font-family:'Inter',sans-serif" rows="1" placeholder="Nhờ Quản lý tư vấn thêm về giá hoặc ưu đãi..."></textarea>
+              </div>
+
+              <button style="width:100%;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border:none;border-radius:12px;padding:11px;font-size:12px;font-weight:700;cursor:pointer">
+                Lưu thay đổi hồ sơ
+              </button>
+
+              <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:8px 11px">
+                <div style="font-size:9px;font-weight:800;color:#1d4ed8;margin-bottom:4px">💬 Ghi chú & Phản hồi từ Quản lý</div>
+                <div class="feedback-text" style="font-size:10px">Khách này tiềm năng, hãy ưu tiên follow sớm. Nếu cần tư vấn thêm về combo cưới, báo mình để phối hợp.</div>
+                <div style="font-size:8px;color:#94a3b8;margin-top:3px">— Nguyễn Văn Admin · 06-10 09:30</div>
+              </div>
+
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:7px;text-align:center">
+                <span style="font-size:9px;font-weight:700;color:#94a3b8">🔒 Chỉ Quản lý mới có thể gửi phản hồi</span>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /sheet-body -->
+      </div><!-- /detail-sheet -->
+    </div><!-- /detail-overlay -->
+
+  </div><!-- /phone -->
+  <div class="screen-label">📱 Giao diện Sale + Admin</div>
+</div>
+
+<script>
+function switchPhone1Tab(tab, btn) {
+  document.querySelectorAll('#phone1 .screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('p1-' + tab).classList.add('active');
+  document.querySelectorAll('#phone1 .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+function closeModalOutside(e, id) {
+  if(e.target === document.getElementById(id)) closeModal(id);
+}
+
+function switchModalView(view) {
+  document.getElementById('view-admin').style.display = view === 'admin' ? 'block' : 'none';
+  document.getElementById('view-sale').style.display = view === 'sale' ? 'block' : 'none';
+  const aBtn = document.getElementById('mbtn-admin');
+  const sBtn = document.getElementById('mbtn-sale');
+  if(view === 'admin') {
+    aBtn.style.background='#78350f'; aBtn.style.color='#fff'; aBtn.style.borderColor='#d97706';
+    sBtn.style.background='#f8fafc'; sBtn.style.color='#64748b'; sBtn.style.borderColor='#e2e8f0';
+  } else {
+    sBtn.style.background='#78350f'; sBtn.style.color='#fff'; sBtn.style.borderColor='#d97706';
+    aBtn.style.background='#f8fafc'; aBtn.style.color='#64748b'; aBtn.style.borderColor='#e2e8f0';
+  }
+}
+
+function selectStatus(status) {
+  const btns = { consulting: document.getElementById('s-btn-consulting'), won: document.getElementById('s-btn-won'), lost: document.getElementById('s-btn-lost') };
+  const colors = { consulting: {bg:'#fff',color:'#b45309',shadow:'0 1px 3px rgba(0,0,0,.08)'}, won: {bg:'#059669',color:'#fff',shadow:'none'}, lost: {bg:'#e11d48',color:'#fff',shadow:'none'} };
+  Object.keys(btns).forEach(k => {
+    const c = k === status ? colors[k] : {bg:'transparent',color:'#64748b',shadow:'none'};
+    btns[k].style.background = c.bg; btns[k].style.color = c.color; btns[k].style.boxShadow = c.shadow;
+  });
+}
+</script>
+
+</body>
+</html>

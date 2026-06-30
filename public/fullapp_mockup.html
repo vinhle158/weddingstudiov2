@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Aura Bridal Studio – Full App Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#0c111d;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:32px 24px 60px}
+
+h1.page-title{color:#94a3b8;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;text-align:center;margin-bottom:28px}
+
+/* ── Nav pills ── */
+.nav-pills{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:32px;max-width:900px}
+.np{background:#1e293b;color:#64748b;border:1px solid #334155;border-radius:20px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif}
+.np:hover{background:#334155;color:#cbd5e1}
+.np.active{background:#d97706;color:#fff;border-color:#d97706}
+
+/* ── Phone ── */
+.phone{width:375px;height:812px;background:#fff;border-radius:44px;border:10px solid #1e293b;box-shadow:0 40px 100px rgba(0,0,0,.7),inset 0 0 0 2px #334155;overflow:hidden;display:flex;flex-direction:column;position:relative;flex-shrink:0}
+.notch{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:90px;height:18px;background:#1e293b;border-radius:20px;z-index:100}
+.pb{flex:1;overflow:hidden;display:flex;flex-direction:column;padding-top:28px}
+
+/* status bar */
+.sb{display:flex;justify-content:space-between;align-items:center;padding:2px 20px 5px;font-size:10px;font-weight:700;color:#334155}
+
+/* screens */
+.scr{display:none;flex-direction:column;flex:1;overflow:hidden;animation:fi .2s ease}
+.scr.active{display:flex}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* scroll body */
+.sv{flex:1;overflow-y:auto;overflow-x:hidden}
+.sv::-webkit-scrollbar{width:3px}
+.sv::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:4px}
+
+/* ── Login ── */
+.login-banner{background:linear-gradient(135deg,#fffbeb,#fef3c7);padding:36px 24px 28px;text-align:center;border-bottom:1px solid #fde68a;position:relative}
+.login-banner .brand{font-family:'Playfair Display',serif;font-size:28px;font-style:italic;color:#78350f;letter-spacing:.12em}
+.login-banner .sub{font-size:9px;color:#a16207;text-transform:uppercase;letter-spacing:.12em;margin-top:4px;font-weight:600}
+.badge-pill{position:absolute;top:14px;right:14px;background:rgba(217,119,6,.15);border:1px solid #fde68a;color:#92400e;font-size:8px;font-weight:700;padding:3px 8px;border-radius:20px}
+.login-body{padding:20px 20px;display:flex;flex-direction:column;gap:12px}
+.quick-box{background:#fef9ee;border:1px solid #fde68a;border-radius:12px;padding:12px}
+.quick-label{font-size:9px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.qb{background:#fff;border:1px solid #fde68a;border-radius:8px;padding:7px 8px;font-size:9px;font-weight:700;color:#78350f;cursor:pointer;text-align:center;transition:all .15s}
+.qb:hover{background:#fef3c7}
+.lbl{font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.inp{width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:12px;color:#1e293b;outline:none;font-family:'Inter',sans-serif}
+.btn-login{width:100%;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;margin-top:4px}
+
+/* ── App Header ── */
+.app-header{background:linear-gradient(135deg,#fffbeb,#fef3c7);border-bottom:1px solid #fde68a;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.ah-left{display:flex;align-items:center;gap:8px}
+.ah-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:15px;color:#78350f;letter-spacing:.06em}
+.ah-sub{font-size:8px;color:#a16207;font-weight:600}
+.menu-btn{width:30px;height:30px;background:rgba(217,119,6,.12);border:1px solid #fde68a;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;color:#78350f}
+.notif-btn{width:30px;height:30px;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;color:#64748b;position:relative}
+.notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#e11d48;border:1.5px solid #fff}
+.header-actions{display:flex;gap:6px;align-items:center}
+
+/* ── Sidebar Overlay ── */
+.sidebar-overlay{position:absolute;inset:0;background:rgba(15,23,42,.5);z-index:50;display:none}
+.sidebar-overlay.open{display:block}
+.sidebar{position:absolute;left:0;top:0;bottom:0;width:240px;background:#fff;z-index:60;box-shadow:4px 0 20px rgba(0,0,0,.15);display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .25s ease}
+.sidebar.open{transform:translateX(0)}
+.sidebar-head{background:linear-gradient(135deg,#78350f,#92400e);padding:32px 16px 16px;color:#fff}
+.sidebar-brand{font-family:'Playfair Display',serif;font-style:italic;font-size:18px;letter-spacing:.08em;margin-bottom:2px}
+.sidebar-role{font-size:9px;opacity:.7;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.sidebar-user{font-size:11px;font-weight:700;margin-top:8px}
+.sidebar-nav{flex:1;overflow-y:auto;padding:10px 8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer;transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:#f8fafc}
+.nav-item.active{background:linear-gradient(135deg,#fef9ee,#fef3c7);border:1px solid #fde68a}
+.nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-label{font-size:11px;font-weight:700;color:#334155}
+.nav-item.active .nav-label{color:#78350f}
+.sidebar-footer{padding:12px 16px;border-top:1px solid #f1f5f9}
+.logout-btn{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:#e11d48;cursor:pointer}
+
+/* ── section header ── */
+.sec-head{padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.sec-title{font-size:13px;font-weight:800;color:#1e293b}
+.sec-sub{font-size:9px;color:#94a3b8;font-weight:600;margin-top:1px}
+.add-btn{background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border:none;border-radius:20px;padding:5px 12px;font-size:10px;font-weight:700;cursor:pointer}
+
+/* ── Cards & Lists ── */
+.pad{padding:12px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.card:hover{border-color:#d97706;box-shadow:0 2px 8px rgba(217,119,6,.12)}
+.card.accent{border-left:3px solid #d97706}
+.card.green{border-left:3px solid #10b981}
+.card.red{border-left:3px solid #f43f5e}
+.card.blue{border-left:3px solid #3b82f6}
+.ct{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.cn{font-size:12px;font-weight:700;color:#1e293b}
+.cm{font-size:9.5px;color:#64748b;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot.g{background:#10b981}.dot.r{background:#f43f5e}.dot.y{background:#f59e0b;animation:pulse 1.5s infinite}.dot.b{background:#3b82f6}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pill{font-size:8px;font-weight:700;padding:2px 7px;border-radius:20px}
+.pill.gold{background:#fef9ee;color:#92400e;border:1px solid #fde68a}
+.pill.green{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+.pill.red{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
+.pill.blue{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.pill.slate{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+.pill.purple{background:#faf5ff;color:#7c3aed;border:1px solid #ddd6fe}
+.amt{font-size:11px;font-weight:800;color:#059669}
+
+/* ── Dashboard ── */
+.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.kpi{border-radius:12px;padding:10px 12px}
+.kpi.gold-k{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a}
+.kpi.green-k{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #a7f3d0}
+.kpi.blue-k{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe}
+.kpi.rose-k{background:linear-gradient(135deg,#fff1f2,#ffe4e6);border:1px solid #fecdd3}
+.kpi-l{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.kpi.gold-k .kpi-l{color:#92400e}.kpi.green-k .kpi-l{color:#065f46}.kpi.blue-k .kpi-l{color:#1e40af}.kpi.rose-k .kpi-l{color:#9f1239}
+.kpi-v{font-size:22px;font-weight:900;line-height:1}
+.kpi.gold-k .kpi-v{color:#78350f}.kpi.green-k .kpi-v{color:#059669}.kpi.blue-k .kpi-v{color:#1d4ed8}.kpi.rose-k .kpi-v{color:#e11d48}
+.kpi-s{font-size:8px;margin-top:2px}
+.kpi.gold-k .kpi-s{color:#a16207}.kpi.green-k .kpi-s{color:#34d399}.kpi.blue-k .kpi-s{color:#60a5fa}.kpi.rose-k .kpi-s{color:#fb7185}
+.section-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:10px}
+.sc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:10px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.06em;padding-bottom:6px;border-bottom:1px solid #f1f5f9}
+.sc-link{color:#d97706;font-size:9px;font-weight:700;cursor:pointer}
+.chart-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.chart-bar-lbl{font-size:9px;color:#64748b;width:28px;text-align:right;font-weight:600}
+.chart-bar-track{flex:1;background:#f1f5f9;border-radius:4px;height:10px;overflow:hidden}
+.chart-bar-fill{height:100%;border-radius:4px}
+.chart-bar-val{font-size:9px;font-weight:700;color:#334155;width:14px}
+.activity-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #f8fafc}
+.activity-item:last-child{border-bottom:none}
+.act-dot{width:8px;height:8px;border-radius:50%;margin-top:3px;flex-shrink:0}
+.act-text{font-size:10px;color:#334155;line-height:1.4;flex:1}
+.act-time{font-size:8.5px;color:#94a3b8;font-family:monospace;white-space:nowrap}
+
+/* ── Kanban ── */
+.kb-col{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:10px;overflow:hidden}
+.kb-col-head{padding:7px 12px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}
+.kb-col-title{font-size:10px;font-weight:800;color:#334155;display:flex;align-items:center;gap:6px}
+.kb-step{width:18px;height:18px;border-radius:50%;color:#fff;font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.cnt{background:#e2e8f0;color:#64748b;font-size:9px;font-weight:700;padding:1px 7px;border-radius:20px}
+.kb-cards{padding:8px;display:flex;flex-direction:column;gap:6px}
+.kc{background:#fff;border:1px solid #e2e8f0;border-radius:9px;padding:9px 10px;border-left-width:3px;cursor:pointer;transition:all .15s}
+.kc:hover{border-color:#d97706!important;box-shadow:0 2px 8px rgba(217,119,6,.12)}
+.kc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.kc-name{font-size:11px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:5px}
+.kc-src{font-size:7.5px;font-weight:700;padding:2px 6px;border-radius:20px;background:#fef9ee;color:#92400e;border:1px solid #fde68a}
+.kc-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.fdots{display:flex;gap:2px;margin-left:auto}
+.fd{width:8px;height:8px;border-radius:50%;background:#e2e8f0;font-size:6px;font-weight:800;display:flex;align-items:center;justify-content:center;color:#94a3b8}
+.fd.d{background:#d1fae5;color:#059669}
+
+/* ── Tasks ── */
+.task-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9}
+.task-item:last-child{border-bottom:none}
+.task-cb{width:18px;height:18px;border-radius:5px;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#10b981;flex-shrink:0;margin-top:1px}
+.task-cb.done{background:#10b981;border-color:#10b981;color:#fff}
+.task-info{flex:1}
+.task-name{font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px}
+.task-name.done{text-decoration:line-through;color:#94a3b8}
+.task-meta{display:flex;gap:6px;align-items:center}
+.priority{font-size:8px;font-weight:700;padding:1px 6px;border-radius:20px}
+.priority.high{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
+.priority.med{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+.priority.low{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.due{font-size:8px;color:#64748b}
+
+/* ── Chat ── */
+.chat-list-item{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #f8fafc;cursor:pointer;transition:all .15s}
+.chat-list-item:hover{background:#f8fafc}
+.chat-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0}
+.chat-info{flex:1}
+.chat-name{font-size:11px;font-weight:700;color:#1e293b;margin-bottom:2px}
+.chat-preview{font-size:9.5px;color:#94a3b8}
+.chat-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.chat-time{font-size:8px;color:#94a3b8}
+.chat-unread{width:18px;height:18px;border-radius:50%;background:#e11d48;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center}
+
+/* ── Staff ── */
+.staff-card{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:8px;cursor:pointer}
+.staff-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0}
+.staff-info{flex:1}
+.staff-name{font-size:11px;font-weight:700;color:#1e293b;margin-bottom:2px}
+.staff-role{font-size:9px;color:#64748b}
+.staff-status{display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700}
+
+/* ── Settings ── */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f1f5f9;cursor:pointer}
+.setting-row:last-child{border-bottom:none}
+.sr-left{display:flex;align-items:center;gap:10px}
+.sr-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.sr-label{font-size:11px;font-weight:700;color:#1e293b}
+.sr-sub{font-size:9px;color:#94a3b8}
+.sr-arrow{color:#cbd5e1;font-size:14px}
+.toggle{width:38px;height:20px;border-radius:10px;background:#10b981;position:relative;cursor:pointer;flex-shrink:0}
+.toggle-ball{position:absolute;right:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+
+/* ── Notifications ── */
+.notif-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f8fafc}
+.notif-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.notif-icon.gold{background:#fef9ee}
+.notif-icon.blue{background:#eff6ff}
+.notif-icon.green{background:#ecfdf5}
+.notif-icon.red{background:#fff1f2}
+.notif-body{flex:1}
+.notif-title{font-size:10px;font-weight:700;color:#1e293b;margin-bottom:2px}
+.notif-msg{font-size:9.5px;color:#64748b;line-height:1.4}
+.notif-t{font-size:8px;color:#94a3b8;margin-top:3px}
+.unread-dot{width:7px;height:7px;border-radius:50%;background:#e11d48;flex-shrink:0;margin-top:6px}
+
+/* ── Objectives ── */
+.obj-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:10px}
+.obj-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.obj-title{font-size:11px;font-weight:700;color:#1e293b;margin-bottom:2px}
+.obj-period{font-size:8.5px;color:#94a3b8}
+.obj-pct{font-size:18px;font-weight:900;color:#d97706}
+.progress-track{height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;margin-bottom:6px}
+.progress-fill{height:100%;border-radius:4px}
+.obj-meta{display:flex;justify-content:space-between;font-size:9px;color:#64748b}
+
+/* ── Tabs ── */
+.tab-bar{display:flex;gap:4px;padding:8px 12px;background:#fff;border-bottom:1px solid #f1f5f9;flex-shrink:0}
+.tb{flex:1;padding:5px 3px;border:none;border-radius:8px;font-size:9px;font-weight:700;cursor:pointer;background:#f1f5f9;color:#64748b;display:flex;align-items:center;justify-content:center;gap:3px;font-family:'Inter',sans-serif}
+.tb.active{background:#78350f;color:#fff}
+
+/* ── Bottom Nav ── */
+.bnav{height:62px;border-top:1px solid #f1f5f9;display:flex;align-items:center;background:#fff;flex-shrink:0}
+.bi{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:8px;font-weight:700;color:#94a3b8;cursor:pointer;padding:6px 2px}
+.bi.active{color:#d97706}
+.bi-icon{font-size:19px;line-height:1}
+
+/* overlay modal */
+.overlay{position:absolute;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:40;display:none;flex-direction:column}
+.overlay.open{display:flex}
+.sheet{margin-top:auto;background:#fff;border-radius:20px 20px 0 0;max-height:82%;overflow-y:auto}
+.sheet::-webkit-scrollbar{width:3px}
+.handle{width:36px;height:4px;background:#e2e8f0;border-radius:4px;margin:10px auto 6px}
+.sh-head{padding:10px 16px 10px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+.sh-title{font-size:12px;font-weight:800;color:#1e293b}
+.close-x{width:26px;height:26px;border-radius:50%;background:#f1f5f9;border:none;font-size:12px;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.sh-body{padding:14px 16px}
+
+/* form elements */
+.fi{width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-size:11px;color:#334155;outline:none;font-family:'Inter',sans-serif}
+.fi:focus{border-color:#d97706}
+.btn-prim{width:100%;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border:none;border-radius:12px;padding:11px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-sec{width:100%;background:#f8fafc;color:#64748b;border:1px solid #e2e8f0;border-radius:12px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+.fl{font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;margin-top:10px}
+
+/* separator */
+hr{border:none;border-top:1px solid #f1f5f9;margin:10px 0}
+.tag{font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px}
+</style>
+</head>
+<body>
+
+<h1 class="page-title">⬛ AURA BRIDAL STUDIO — Full App Mockup · Mobile View</h1>
+
+<!-- NAV PILLS -->
+<div class="nav-pills">
+  <button class="np active" onclick="show('login',this)">🔐 Đăng nhập</button>
+  <button class="np" onclick="show('dash',this)">📊 Dashboard</button>
+  <button class="np" onclick="show('leads',this)">📋 Tư vấn CRM</button>
+  <button class="np" onclick="show('orders',this)">📁 Hợp đồng</button>
+  <button class="np" onclick="show('customers',this)">👥 Khách hàng</button>
+  <button class="np" onclick="show('tasks',this)">✅ Công việc</button>
+  <button class="np" onclick="show('objectives',this)">🎯 Mục tiêu</button>
+  <button class="np" onclick="show('chat',this)">💬 Chat</button>
+  <button class="np" onclick="show('notif',this)">🔔 Thông báo</button>
+  <button class="np" onclick="show('staff',this)">👤 Nhân sự</button>
+  <button class="np" onclick="show('settings',this)">⚙️ Cài đặt</button>
+</div>
+
+<!-- PHONE -->
+<div class="phone">
+  <div class="notch"></div>
+  <div class="pb">
+    <div class="sb"><span>14:18</span><span>●●●●◌  WiFi  🔋</span></div>
+
+    <!-- ══════ LOGIN ══════ -->
+    <div class="scr active" id="scr-login" style="overflow-y:auto">
+      <div class="login-banner">
+        <div class="badge-pill">✦ CLOUD LOCAL</div>
+        <div class="brand">AURA BRIDAL</div>
+        <div class="sub">Hệ thống quản lý Studio cao cấp</div>
+      </div>
+      <div class="login-body">
+        <div class="quick-box">
+          <div class="quick-label">⚡ Đăng nhập nhanh (Demo)</div>
+          <div class="quick-grid">
+            <div class="qb">👑 Admin<br><span style="font-weight:500;opacity:.7">admin@studio.com</span></div>
+            <div class="qb">🏢 Manager<br><span style="font-weight:500;opacity:.7">manager@studio.com</span></div>
+            <div class="qb">💼 Sales<br><span style="font-weight:500;opacity:.7">sale@studio.com</span></div>
+            <div class="qb">📸 Thợ chụp<br><span style="font-weight:500;opacity:.7">photo@studio.com</span></div>
+          </div>
+        </div>
+        <div><div class="lbl">Email</div><input class="inp" value="admin@studio.com" readonly></div>
+        <div><div class="lbl">Mật khẩu</div><input class="inp" type="password" value="123abc456" readonly></div>
+        <button class="btn-login" onclick="show('dash',document.querySelector('.np:nth-child(2)'))">Đăng nhập →</button>
+        <p style="text-align:center;font-size:9px;color:#94a3b8;font-weight:600">Aura Bridal Studio © 2025 · v2.0</p>
+      </div>
+    </div>
+
+    <!-- ══════ DASHBOARD ══════ -->
+    <div class="scr" id="scr-dash">
+      <div class="app-header">
+        <div class="ah-left">
+          <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+          <div><div class="ah-logo">AURA BRIDAL</div><div class="ah-sub">Xin chào, Admin 👋</div></div>
+        </div>
+        <div class="header-actions">
+          <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+        </div>
+      </div>
+      <div class="sv" style="padding:12px">
+        <div class="kpi-row">
+          <div class="kpi gold-k"><div class="kpi-l">Đơn hàng</div><div class="kpi-v">24</div><div class="kpi-s">Tháng 06</div></div>
+          <div class="kpi green-k"><div class="kpi-l">Doanh thu</div><div class="kpi-v" style="font-size:18px">48tr</div><div class="kpi-s">↑ 12% so tháng trước</div></div>
+          <div class="kpi blue-k"><div class="kpi-l">Khách hàng</div><div class="kpi-v">87</div><div class="kpi-s">Tổng cộng</div></div>
+          <div class="kpi rose-k"><div class="kpi-l">Công việc</div><div class="kpi-v">6</div><div class="kpi-s">Đang xử lý</div></div>
+        </div>
+
+        <div class="section-card">
+          <div class="sc-head">Doanh thu theo tháng<span class="sc-link">Xem thêm</span></div>
+          <div class="chart-bar-row"><span class="chart-bar-lbl">T4</span><div class="chart-bar-track"><div class="chart-bar-fill" style="width:55%;background:linear-gradient(90deg,#d97706,#f59e0b)"></div></div><span class="chart-bar-val">38tr</span></div>
+          <div class="chart-bar-row"><span class="chart-bar-lbl">T5</span><div class="chart-bar-track"><div class="chart-bar-fill" style="width:62%;background:linear-gradient(90deg,#d97706,#f59e0b)"></div></div><span class="chart-bar-val">43tr</span></div>
+          <div class="chart-bar-row"><span class="chart-bar-lbl">T6</span><div class="chart-bar-track"><div class="chart-bar-fill" style="width:70%;background:linear-gradient(90deg,#d97706,#f59e0b)"></div></div><span class="chart-bar-val">48tr</span></div>
+        </div>
+
+        <div class="section-card">
+          <div class="sc-head">Hoạt động gần đây<span class="sc-link">Tất cả</span></div>
+          <div class="activity-item"><div class="act-dot" style="background:#10b981"></div><div class="act-text"><b>Như Ý</b> đã chốt hợp đồng Wedding · 4.300 kđ</div><div class="act-time">09:31</div></div>
+          <div class="activity-item"><div class="act-dot" style="background:#3b82f6"></div><div class="act-text"><b>Kiều Mi</b> — lead mới từ PAGE FAMILY</div><div class="act-time">08:50</div></div>
+          <div class="activity-item"><div class="act-dot" style="background:#d97706"></div><div class="act-text">Nhiệm vụ <b>Chụp ngoại cảnh T06</b> đã được phân công cho Hải Nam</div><div class="act-time">08:10</div></div>
+          <div class="activity-item"><div class="act-dot" style="background:#a78bfa"></div><div class="act-text"><b>Ngọc Phương</b> — hoàn thành chụp, đang xử lý hậu kỳ</div><div class="act-time">Hôm qua</div></div>
+        </div>
+
+        <div class="section-card">
+          <div class="sc-head">Đơn hàng sắp chụp<span class="sc-link">Xem lịch</span></div>
+          <div class="card accent" style="margin-bottom:6px;padding:9px 11px">
+            <div class="ct"><span class="cn">Như Ý & Văn Hùng</span><span class="pill gold">💍 Wedding</span></div>
+            <div class="cm"><div class="dot g"></div>📅 15/07 · 🗓 Phòng 2</div>
+          </div>
+          <div class="card" style="border-left:3px solid #3b82f6;padding:9px 11px">
+            <div class="ct"><span class="cn">Gia đình chị Lâm</span><span class="pill blue">👨‍👩‍👧 Family</span></div>
+            <div class="cm"><div class="dot b"></div>📅 18/07 · 🗓 Phòng 1</div>
+          </div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bi active"><div class="bi-icon">📊</div>Tổng quan</div>
+        <div class="bi" onclick="show('leads',document.querySelector('.np:nth-child(3)'))"><div class="bi-icon">📋</div>Tư vấn</div>
+        <div class="bi" onclick="show('orders',document.querySelector('.np:nth-child(4)'))"><div class="bi-icon">📁</div>Hợp đồng</div>
+        <div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><div class="bi-icon">💬</div>Chat</div>
+        <div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><div class="bi-icon">🔔<span style="font-size:8px;color:#e11d48;font-weight:800;vertical-align:top"> 3</span></div>Thông báo</div>
+      </div>
+    </div>
+
+    <!-- ══════ LEADS / CRM ══════ -->
+    <div class="scr" id="scr-leads">
+      <div class="app-header">
+        <div class="ah-left">
+          <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+          <div><div class="ah-logo" style="font-size:13px">Quản lý Tư vấn</div><div class="ah-sub">CRM · 10 hồ sơ tháng 06</div></div>
+        </div>
+        <button class="add-btn" onclick="openSheet('sh-lead')">＋ Thêm</button>
+      </div>
+      <div class="tab-bar">
+        <button class="tb active">🗂 Kanban</button>
+        <button class="tb">☰ Danh sách</button>
+        <button class="tb">📊 Báo cáo</button>
+      </div>
+      <div class="sv" style="padding:10px 12px">
+        <div class="kb-col">
+          <div class="kb-col-head"><div class="kb-col-title"><div class="kb-step" style="background:#d97706">1</div>Khai thác nhu cầu</div><span class="cnt">3</span></div>
+          <div class="kb-cards">
+            <div class="kc" style="border-left-color:#f59e0b" onclick="openSheet('sh-lead-detail')">
+              <div class="kc-top"><div class="kc-name"><div class="dot y"></div>Ng Ngọc Quyên</div><span class="kc-src">PAGE THE WILL</span></div>
+              <div class="kc-meta"><span class="pill red" style="font-size:7px">💍 Wedding</span><div class="fdots"><div class="fd">1</div><div class="fd">2</div><div class="fd">3</div></div></div>
+            </div>
+            <div class="kc" style="border-left-color:#f59e0b">
+              <div class="kc-top"><div class="kc-name"><div class="dot y"></div>Kiều Mi</div><span class="kc-src">PAGE FAMILY</span></div>
+              <div class="kc-meta"><span class="pill blue" style="font-size:7px">👨‍👩‍👧 Family</span><div class="fdots"><div class="fd d">✓</div><div class="fd">2</div><div class="fd">3</div></div></div>
+              <div style="margin-top:5px"><span class="tag" style="background:#fffbeb;color:#92400e;border:1px solid #fde68a">⚠ Nhờ tư vấn thêm</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="kb-col">
+          <div class="kb-col-head"><div class="kb-col-title"><div class="kb-step" style="background:#7c3aed">3</div>Đề xuất dịch vụ</div><span class="cnt">2</span></div>
+          <div class="kb-cards">
+            <div class="kc" style="border-left-color:#7c3aed">
+              <div class="kc-top"><div class="kc-name"><div class="dot y"></div>Lâm Gia Kỳ</div><span class="kc-src">KHÁCH CŨ</span></div>
+              <div class="kc-meta"><span class="pill red" style="font-size:7px">💍 Wedding</span><span class="pill blue" style="font-size:7px">👨‍👩‍👧 Family</span></div>
+              <div style="margin-top:5px"><span class="tag" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;font-size:7px">💬 Có phản hồi</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="kb-col">
+          <div class="kb-col-head"><div class="kb-col-title"><div class="kb-step" style="background:#10b981">✓</div>Chốt thành công</div><span class="cnt" style="background:#d1fae5;color:#065f46">3</span></div>
+          <div class="kb-cards">
+            <div class="kc" style="border-left-color:#10b981">
+              <div class="kc-top"><div class="kc-name"><div class="dot g"></div>Như Ý</div><span style="font-size:10px;font-weight:800;color:#059669">4.300 kđ</span></div>
+              <div class="kc-meta"><span class="pill red" style="font-size:7px">💍 Wedding</span></div>
+            </div>
+            <div class="kc" style="border-left-color:#10b981">
+              <div class="kc-top"><div class="kc-name"><div class="dot g"></div>Ngọc Phương</div><span style="font-size:10px;font-weight:800;color:#059669">6.500 kđ</span></div>
+              <div class="kc-meta"><span class="pill red" style="font-size:7px">💍 Wedding</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><div class="bi-icon">📊</div>Tổng quan</div>
+        <div class="bi active"><div class="bi-icon">📋</div>Tư vấn</div>
+        <div class="bi" onclick="show('orders',document.querySelector('.np:nth-child(4)'))"><div class="bi-icon">📁</div>Hợp đồng</div>
+        <div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><div class="bi-icon">💬</div>Chat</div>
+        <div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><div class="bi-icon">🔔</div>Thông báo</div>
+      </div>
+    </div>
+
+    <!-- ══════ ORDERS ══════ -->
+    <div class="scr" id="scr-orders">
+      <div class="app-header">
+        <div class="ah-left"><div class="menu-btn" onclick="toggleSidebar()">☰</div><div><div class="ah-logo" style="font-size:13px">Hợp đồng & Đơn hàng</div><div class="ah-sub">24 đơn · Tháng 06</div></div></div>
+        <button class="add-btn">＋ Tạo đơn</button>
+      </div>
+      <div class="tab-bar">
+        <button class="tb active">📋 Tất cả</button>
+        <button class="tb">📅 Sắp chụp</button>
+        <button class="tb">✏️ Hậu kỳ</button>
+        <button class="tb">✅ Hoàn thành</button>
+      </div>
+      <div class="sv" style="padding:12px">
+        <div class="card accent" onclick="openSheet('sh-order')">
+          <div class="ct"><span class="cn">HD-2025-001</span><span class="pill gold">💍 Wedding</span></div>
+          <div class="cm"><div class="dot g"></div>Như Ý & Văn Hùng · <b>4.300 kđ</b></div>
+          <div class="cm" style="margin-top:4px">📅 Chụp: 15/07/2025 · Phòng 2</div>
+        </div>
+        <div class="card" style="border-left:3px solid #3b82f6">
+          <div class="ct"><span class="cn">HD-2025-002</span><span class="pill blue">👨‍👩‍👧 Family</span></div>
+          <div class="cm"><div class="dot b"></div>Gia đình chị Lâm Gia Kỳ · <b>2.800 kđ</b></div>
+          <div class="cm" style="margin-top:4px">📅 Chụp: 18/07/2025 · Phòng 1</div>
+        </div>
+        <div class="card" style="border-left:3px solid #a78bfa">
+          <div class="ct"><span class="cn">HD-2025-003</span><span class="pill purple">👸 Beauty</span></div>
+          <div class="cm"><div class="dot" style="background:#a78bfa"></div>Trần Quỳnh Như · <b>1.500 kđ</b></div>
+          <div class="cm" style="margin-top:4px">✏️ Đang hậu kỳ · 60% hoàn thành</div>
+        </div>
+        <div class="card green">
+          <div class="ct"><span class="cn">HD-2025-004</span><span class="pill green">💍 Wedding</span></div>
+          <div class="cm"><div class="dot g"></div>Ngọc Phương & Minh Khoa · <b>6.500 kđ</b></div>
+          <div class="cm" style="margin-top:4px">✅ Đã bàn giao · 28/06/2025</div>
+        </div>
+        <div class="card red">
+          <div class="ct"><span class="cn">HD-2025-005</span><span class="pill red">💍 Wedding</span></div>
+          <div class="cm"><div class="dot r"></div>Bùi Thị Lan · <b>3.200 kđ</b></div>
+          <div class="cm" style="margin-top:4px">⚠️ Chậm tiến độ · Hậu kỳ</div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><div class="bi-icon">📊</div>Tổng quan</div>
+        <div class="bi" onclick="show('leads',document.querySelector('.np:nth-child(3)'))"><div class="bi-icon">📋</div>Tư vấn</div>
+        <div class="bi active"><div class="bi-icon">📁</div>Hợp đồng</div>
+        <div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><div class="bi-icon">💬</div>Chat</div>
+        <div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><div class="bi-icon">🔔</div>Thông báo</div>
+      </div>
+    </div>
+
+    <!-- ══════ CUSTOMERS ══════ -->
+    <div class="scr" id="scr-customers">
+      <div class="app-header">
+        <div class="ah-left"><div class="menu-btn" onclick="toggleSidebar()">☰</div><div><div class="ah-logo" style="font-size:13px">Khách hàng</div><div class="ah-sub">87 khách · Toàn thời gian</div></div></div>
+        <button class="add-btn">＋ Thêm</button>
+      </div>
+      <div style="padding:10px 12px 0;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:6px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:7px 10px;margin-bottom:8px">
+          <span style="font-size:12px;color:#94a3b8">🔍</span>
+          <span style="font-size:11px;color:#94a3b8">Tìm tên, SĐT, email...</span>
+        </div>
+      </div>
+      <div class="sv" style="padding:4px 12px 12px">
+        <div class="card accent" onclick="openSheet('sh-customer')">
+          <div class="ct"><span class="cn">Như Ý</span><span class="pill gold">2 đơn hàng</span></div>
+          <div class="cm">📞 0901 234 567 · 💍 Wedding, 👨‍👩‍👧 Family</div>
+          <div class="cm" style="margin-top:3px">💰 Tổng chi: 7.100 kđ · Lần cuối: 06/2025</div>
+        </div>
+        <div class="card">
+          <div class="ct"><span class="cn">Ngọc Phương</span><span class="pill green">Hoàn thành</span></div>
+          <div class="cm">📞 0912 345 678 · 💍 Wedding</div>
+          <div class="cm" style="margin-top:3px">💰 Tổng chi: 6.500 kđ · Lần cuối: 06/2025</div>
+        </div>
+        <div class="card">
+          <div class="ct"><span class="cn">Gia đình chị Lâm</span><span class="pill blue">Đang xử lý</span></div>
+          <div class="cm">📞 0923 456 789 · 👨‍👩‍👧 Family</div>
+          <div class="cm" style="margin-top:3px">💰 Tổng chi: 2.800 kđ · Lần cuối: 07/2025</div>
+        </div>
+        <div class="card">
+          <div class="ct"><span class="cn">Trần Quỳnh Như</span><span class="pill purple">Hậu kỳ</span></div>
+          <div class="cm">📞 0934 567 890 · 👸 Beauty</div>
+          <div class="cm" style="margin-top:3px">💰 Tổng chi: 1.500 kđ</div>
+        </div>
+        <div class="card">
+          <div class="ct"><span class="cn">Bùi Thị Lan</span><span class="pill slate">Đang chụp</span></div>
+          <div class="cm">📞 0945 678 901 · 💍 Wedding</div>
+          <div class="cm" style="margin-top:3px">💰 Tổng chi: 3.200 kđ</div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><div class="bi-icon">📊</div>Tổng quan</div>
+        <div class="bi active"><div class="bi-icon">👥</div>Khách hàng</div>
+        <div class="bi" onclick="show('orders',document.querySelector('.np:nth-child(4)'))"><div class="bi-icon">📁</div>Hợp đồng</div>
+        <div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><div class="bi-icon">💬</div>Chat</div>
+        <div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><div class="bi-icon">🔔</div>Thông báo</div>
+      </div>
+    </div>
+
+    <!-- ══════ TASKS ══════ -->
+    <div class="scr" id="scr-tasks">
+      <div class="app-header">
+        <div class="ah-left"><div class="menu-btn" onclick="toggleSidebar()">☰</div><div><div class="ah-logo" style="font-size:13px">Phân công công việc</div><div class="ah-sub">6 đang xử lý · 3 chờ duyệt</div></div></div>
+        <button class="add-btn">＋ Tạo</button>
+      </div>
+      <div class="tab-bar">
+        <button class="tb active">📋 Tất cả</button>
+        <button class="tb">⏳ Đang làm</button>
+        <button class="tb">✅ Hoàn thành</button>
+      </div>
+      <div class="sv" style="padding:10px 14px">
+        <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">📅 Hôm nay</p>
+        <div class="task-item">
+          <div class="task-cb done">✓</div>
+          <div class="task-info">
+            <div class="task-name done">Chụp ảnh Như Ý & Văn Hùng</div>
+            <div class="task-meta"><span class="priority high">Gấp</span><span class="due">📅 30/06</span><span style="font-size:8px;color:#64748b">👤 Hải Nam</span></div>
+          </div>
+        </div>
+        <div class="task-item">
+          <div class="task-cb" style="border-color:#f59e0b"></div>
+          <div class="task-info">
+            <div class="task-name">Hậu kỳ album Trần Quỳnh Như</div>
+            <div class="task-meta"><span class="priority high">Gấp</span><span class="due">📅 02/07</span><span style="font-size:8px;color:#64748b">👤 Minh Hoàng</span></div>
+          </div>
+        </div>
+        <div class="task-item">
+          <div class="task-cb"></div>
+          <div class="task-info">
+            <div class="task-name">Tư vấn follow-up Kiều Mi</div>
+            <div class="task-meta"><span class="priority med">Thường</span><span class="due">📅 01/07</span><span style="font-size:8px;color:#64748b">👤 Ngọc Sales</span></div>
+          </div>
+        </div>
+        <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin:12px 0 8px">📆 Tuần này</p>
+        <div class="task-item">
+          <div class="task-cb"></div>
+          <div class="task-info">
+            <div class="task-name">Chuẩn bị phục trang chụp Family Lâm</div>
+            <div class="task-meta"><span class="priority low">Bình thường</span><span class="due">📅 05/07</span><span style="font-size:8px;color:#64748b">👤 Hải Nam</span></div>
+          </div>
+        </div>
+        <div class="task-item">
+          <div class="task-cb"></div>
+          <div class="task-info">
+            <div class="task-name">Báo cáo doanh thu tháng 06</div>
+            <div class="task-meta"><span class="priority med">Thường</span><span class="due">📅 05/07</span><span style="font-size:8px;color:#64748b">👤 Admin</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><div class="bi-icon">📊</div>Tổng quan</div>
+        <div class="bi active"><div class="bi-icon">✅</div>Công việc</div>
+        <div class="bi" onclick="show('orders',document.querySelector('.np:nth-child(4)'))"><div class="bi-icon">📁</div>Hợp đồng</div>
+        <div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><div class="bi-icon">💬</div>Chat</div>
+        <div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><div class="bi-icon">🔔</div>Thông báo</div>
+      </div>
+    </div>
+
+    <!-- ══════ OBJECTIVES ══════ -->
+    <div class="scr" id="scr-objectives">
+      <div class="app-header">
+        <div class="ah-left"><div class="menu-btn" onclick="toggleSidebar()">☰</div><div><div class="ah-logo" style="font-size:13px">Mục tiêu & Tiến độ</div><div class="ah-sub">Q3 2025 · Tháng 07–09</div></div></div>
+      </div>
+      <div class="sv" style="padding:12px">
+        <div class="obj-card">
+          <div class="obj-head"><div><div class="obj-title">🎯 Doanh thu tháng 07</div><div class="obj-period">01/07 – 31/07/2025</div></div><div class="obj-pct">68%</div></div>
+          <div class="progress-track"><div class="progress-fill" style="width:68%;background:linear-gradient(90deg,#d97706,#f59e0b)"></div></div>
+          <div class="obj-meta"><span>Đã đạt: 34tr / 50tr</span><span style="color:#d97706">Còn 16tr</span></div>
+        </div>
+        <div class="obj-card">
+          <div class="obj-head"><div><div class="obj-title">📸 Số đơn chụp hoàn thành</div><div class="obj-period">Tháng 06/2025</div></div><div class="obj-pct">83%</div></div>
+          <div class="progress-track"><div class="progress-fill" style="width:83%;background:linear-gradient(90deg,#10b981,#34d399)"></div></div>
+          <div class="obj-meta"><span>Đã xong: 10 / 12 đơn</span><span style="color:#059669">Còn 2 đơn</span></div>
+        </div>
+        <div class="obj-card">
+          <div class="obj-head"><div><div class="obj-title">💼 Tỷ lệ chốt tư vấn CRM</div><div class="obj-period">Q3/2025</div></div><div class="obj-pct">30%</div></div>
+          <div class="progress-track"><div class="progress-fill" style="width:30%;background:linear-gradient(90deg,#3b82f6,#60a5fa)"></div></div>
+          <div class="obj-meta"><span>3/10 lead chốt được</span><span style="color:#1d4ed8">Mục tiêu: 40%</span></div>
+        </div>
+        <div class="obj-card">
+          <div class="obj-head"><div><div class="obj-title">👥 Khách hàng mới</div><div class="obj-period">Tháng 06/2025</div></div><div class="obj-pct">100%</div></div>
+          <div class="progress-track"><div class="progress-fill" style="width:100%;background:linear-gradient(90deg,#10b981,#34d399)"></div></div>
+          <div class="obj-meta"><span>Đạt: 10 khách mới</span><span style="color:#059669">✅ Vượt mục tiêu</span></div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><div class="bi-icon">📊</div>Tổng quan</div>
+        <div class="bi active"><div class="bi-icon">🎯</div>Mục tiêu</div>
+        <div class="bi" onclick="show('tasks',document.querySelector('.np:nth-child(6)'))"><div class="bi-icon">✅</div>Công việc</div>
+        <div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><div class="bi-icon">💬</div>Chat</div>
+        <div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><div class="bi-icon">🔔</div>Thông báo</div>
+      </div>
+    </div>
+
+    <!-- ══════ CHAT ══════ -->
+    <div class="scr" id="scr-chat">
+      <div class="app-header">
+        <div class="ah-left"><div class="menu-btn" onclick="toggleSidebar()">☰</div><div><div class="ah-logo" style="font-size:13px">Trò chuyện nội bộ</div><div class="ah-sub">5 cuộc trò chuyện</div></div></div>
+        <div class="notif-btn" style="font-size:12px">✏️</div>
+      </div>
+      <div class="sv">
+        <div class="chat-list-item">
+          <div class="chat-avatar" style="background:linear-gradient(135deg,#d97706,#b45309)">A</div>
+          <div class="chat-info">
+            <div class="chat-name">Nhóm Toàn Studio</div>
+            <div class="chat-preview">Admin: Nhớ follow khách Kiều Mi nhé các em 👍</div>
+          </div>
+          <div class="chat-meta"><div class="chat-time">09:32</div><div class="chat-unread">3</div></div>
+        </div>
+        <div class="chat-list-item">
+          <div class="chat-avatar" style="background:linear-gradient(135deg,#10b981,#059669)">H</div>
+          <div class="chat-info">
+            <div class="chat-name">Hải Nam (Thợ chụp)</div>
+            <div class="chat-preview">Em đã chuẩn bị xong thiết bị, sáng mai ổn ạ</div>
+          </div>
+          <div class="chat-meta"><div class="chat-time">08:45</div><div class="chat-unread">1</div></div>
+        </div>
+        <div class="chat-list-item">
+          <div class="chat-avatar" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8)">N</div>
+          <div class="chat-info">
+            <div class="chat-name">Ngọc Sales</div>
+            <div class="chat-preview">Chị ơi, khách Kiều Mi hỏi thêm về gói combo ạ</div>
+          </div>
+          <div class="chat-meta"><div class="chat-time">08:20</div></div>
+        </div>
+        <div class="chat-list-item">
+          <div class="chat-avatar" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">M</div>
+          <div class="chat-info">
+            <div class="chat-name">Minh Hoàng (Thợ ảnh)</div>
+            <div class="chat-preview">Album Như Ý xong chiều nay, anh/chị kiểm tra nhé</div>
+          </div>
+          <div class="chat-meta"><div class="chat-time">Hôm qua</div></div>
+        </div>
+        <div class="chat-list-item">
+          <div class="chat-avatar" style="background:linear-gradient(135deg,#f43f5e,#e11d48)">T</div>
+          <div class="chat-info">
+            <div class="chat-name">Trần Manager</div>
+            <div class="chat-preview">Bạn ơi cho mình xem lịch chụp tuần sau với</div>
+          </div>
+          <div class="chat-meta"><div class="chat-time">Hôm qua</div></div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><div class="bi-icon">📊</div>Tổng quan</div>
+        <div class="bi" onclick="show('leads',document.querySelector('.np:nth-child(3)'))"><div class="bi-icon">📋</div>Tư vấn</div>
+        <div class="bi" onclick="show('orders',document.querySelector('.np:nth-child(4)'))"><div class="bi-icon">📁</div>Hợp đồng</div>
+        <div class="bi active"><div class="bi-icon">💬</div>Chat</div>
+        <div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><div class="bi-icon">🔔</div>Thông báo</div>
+      </div>
+    </div>
+
+    <!-- ══════ NOTIFICATIONS ══════ -->
+    <div class="scr" id="scr-notif">
+      <div class="app-header">
+        <div class="ah-left"><div class="menu-btn" onclick="toggleSidebar()">☰</div><div><div class="ah-logo" style="font-size:13px">Thông báo</div><div class="ah-sub">3 chưa đọc</div></div></div>
+        <span style="font-size:9px;font-weight:700;color:#d97706;cursor:pointer">Đọc tất cả</span>
+      </div>
+      <div class="sv" style="padding:10px 14px">
+        <div class="notif-item">
+          <div class="notif-icon green">✅</div>
+          <div class="notif-body">
+            <div class="notif-title">Chốt đơn thành công!</div>
+            <div class="notif-msg">Lead Như Ý đã chốt · Đơn hàng HD-2025-001 được tạo tự động · 4.300 kđ</div>
+            <div class="notif-t">Hôm nay · 09:31</div>
+          </div>
+          <div class="unread-dot"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon gold">💬</div>
+          <div class="notif-body">
+            <div class="notif-title">Phản hồi từ Quản lý</div>
+            <div class="notif-msg">Admin đã gửi ghi chú về hồ sơ Kiều Mi. Hãy xem và thực hiện nhé.</div>
+            <div class="notif-t">Hôm nay · 09:15</div>
+          </div>
+          <div class="unread-dot"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon blue">📅</div>
+          <div class="notif-body">
+            <div class="notif-title">Nhắc lịch chụp ngày mai</div>
+            <div class="notif-msg">Đơn HD-2025-002 · Gia đình Lâm Gia Kỳ · 08:00 tại Phòng 1</div>
+            <div class="notif-t">Hôm nay · 08:00</div>
+          </div>
+          <div class="unread-dot"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon gold">⚠️</div>
+          <div class="notif-body">
+            <div class="notif-title">Nhiệm vụ sắp đến hạn</div>
+            <div class="notif-msg">Hậu kỳ album Trần Quỳnh Như hết hạn 02/07 · Còn 2 ngày</div>
+            <div class="notif-t">Hôm qua · 20:00</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon blue">📊</div>
+          <div class="notif-body">
+            <div class="notif-title">Báo cáo doanh thu tháng 06</div>
+            <div class="notif-msg">Tổng doanh thu: 48tr · Tăng 12% so tháng trước · 24 đơn hoàn thành</div>
+            <div class="notif-t">30/06 · 08:00</div>
+          </div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><div class="bi-icon">📊</div>Tổng quan</div>
+        <div class="bi" onclick="show('leads',document.querySelector('.np:nth-child(3)'))"><div class="bi-icon">📋</div>Tư vấn</div>
+        <div class="bi" onclick="show('orders',document.querySelector('.np:nth-child(4)'))"><div class="bi-icon">📁</div>Hợp đồng</div>
+        <div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><div class="bi-icon">💬</div>Chat</div>
+        <div class="bi active"><div class="bi-icon">🔔</div>Thông báo</div>
+      </div>
+    </div>
+
+    <!-- ══════ STAFF ══════ -->
+    <div class="scr" id="scr-staff">
+      <div class="app-header">
+        <div class="ah-left"><div class="menu-btn" onclick="toggleSidebar()">☰</div><div><div class="ah-logo" style="font-size:13px">Quản lý Nhân sự</div><div class="ah-sub">6 thành viên</div></div></div>
+        <button class="add-btn">＋ Thêm</button>
+      </div>
+      <div class="sv" style="padding:12px">
+        <div class="staff-card">
+          <div class="staff-av" style="background:linear-gradient(135deg,#d97706,#b45309)">A</div>
+          <div class="staff-info"><div class="staff-name">Nguyễn Văn Admin</div><div class="staff-role">Điều hành · admin@studio.com</div></div>
+          <div class="staff-status"><div class="dot g"></div><span style="color:#059669">Active</span></div>
+        </div>
+        <div class="staff-card">
+          <div class="staff-av" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">T</div>
+          <div class="staff-info"><div class="staff-name">Trần Thị Manager</div><div class="staff-role">Quản lý · manager@studio.com</div></div>
+          <div class="staff-status"><div class="dot g"></div><span style="color:#059669">Active</span></div>
+        </div>
+        <div class="staff-card">
+          <div class="staff-av" style="background:linear-gradient(135deg,#e11d48,#be123c)">N</div>
+          <div class="staff-info"><div class="staff-name">Nguyễn Thị Sales</div><div class="staff-role">Tư vấn & Sales · sale@studio.com</div></div>
+          <div class="staff-status"><div class="dot g"></div><span style="color:#059669">Active</span></div>
+        </div>
+        <div class="staff-card">
+          <div class="staff-av" style="background:linear-gradient(135deg,#10b981,#059669)">H</div>
+          <div class="staff-info"><div class="staff-name">Lê Hải Nam</div><div class="staff-role">Thợ chụp ảnh · photo@studio.com</div></div>
+          <div class="staff-status"><div class="dot g"></div><span style="color:#059669">Active</span></div>
+        </div>
+        <div class="staff-card">
+          <div class="staff-av" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8)">M</div>
+          <div class="staff-info"><div class="staff-name">Phạm Minh Hoàng</div><div class="staff-role">Xử lý ảnh · editor@studio.com</div></div>
+          <div class="staff-status"><div class="dot g"></div><span style="color:#059669">Active</span></div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><div class="bi-icon">📊</div>Tổng quan</div>
+        <div class="bi active"><div class="bi-icon">👤</div>Nhân sự</div>
+        <div class="bi" onclick="show('settings',document.querySelector('.np:nth-child(11)'))"><div class="bi-icon">⚙️</div>Cài đặt</div>
+        <div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><div class="bi-icon">💬</div>Chat</div>
+        <div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><div class="bi-icon">🔔</div>Thông báo</div>
+      </div>
+    </div>
+
+    <!-- ══════ SETTINGS ══════ -->
+    <div class="scr" id="scr-settings">
+      <div class="app-header">
+        <div class="ah-left"><div class="menu-btn" onclick="toggleSidebar()">☰</div><div><div class="ah-logo" style="font-size:13px">Cài đặt & Hệ thống</div><div class="ah-sub">Aura Bridal Studio</div></div></div>
+      </div>
+      <div class="sv" style="padding:12px 14px">
+        <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">🏢 Thông tin Studio</p>
+        <div class="section-card">
+          <div class="setting-row">
+            <div class="sr-left"><div class="sr-icon" style="background:#fef9ee">🏷️</div><div><div class="sr-label">Tên Studio</div><div class="sr-sub">Aura Bridal Studio</div></div></div>
+            <span class="sr-arrow">›</span>
+          </div>
+          <div class="setting-row">
+            <div class="sr-left"><div class="sr-icon" style="background:#eff6ff">📞</div><div><div class="sr-label">Hotline</div><div class="sr-sub">0901 234 567</div></div></div>
+            <span class="sr-arrow">›</span>
+          </div>
+          <div class="setting-row" style="border-bottom:none">
+            <div class="sr-left"><div class="sr-icon" style="background:#ecfdf5">📍</div><div><div class="sr-label">Địa chỉ</div><div class="sr-sub">123 Nguyễn Trãi, TP.HCM</div></div></div>
+            <span class="sr-arrow">›</span>
+          </div>
+        </div>
+        <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin:14px 0 8px">⚙️ Tuỳ chỉnh hệ thống</p>
+        <div class="section-card">
+          <div class="setting-row">
+            <div class="sr-left"><div class="sr-icon" style="background:#fef9ee">🔔</div><div><div class="sr-label">Thông báo đẩy</div><div class="sr-sub">Bật thông báo khi có đơn mới</div></div></div>
+            <div class="toggle"><div class="toggle-ball"></div></div>
+          </div>
+          <div class="setting-row">
+            <div class="sr-left"><div class="sr-icon" style="background:#faf5ff">🌙</div><div><div class="sr-label">Chế độ tối</div><div class="sr-sub">Giao diện nền đen</div></div></div>
+            <div class="toggle" style="background:#e2e8f0"><div class="toggle-ball" style="right:auto;left:2px"></div></div>
+          </div>
+          <div class="setting-row" style="border-bottom:none">
+            <div class="sr-left"><div class="sr-icon" style="background:#ecfdf5">🌐</div><div><div class="sr-label">Ngôn ngữ</div><div class="sr-sub">Tiếng Việt</div></div></div>
+            <span class="sr-arrow">›</span>
+          </div>
+        </div>
+        <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin:14px 0 8px">🔐 Tài khoản</p>
+        <div class="section-card">
+          <div class="setting-row">
+            <div class="sr-left"><div class="sr-icon" style="background:#eff6ff">👤</div><div><div class="sr-label">Hồ sơ cá nhân</div><div class="sr-sub">Nguyễn Văn Admin</div></div></div>
+            <span class="sr-arrow">›</span>
+          </div>
+          <div class="setting-row">
+            <div class="sr-left"><div class="sr-icon" style="background:#fef9ee">🔑</div><div><div class="sr-label">Đổi mật khẩu</div><div class="sr-sub">Lần đổi cuối: 30/06/2025</div></div></div>
+            <span class="sr-arrow">›</span>
+          </div>
+          <div class="setting-row" style="border-bottom:none">
+            <div class="sr-left"><div class="sr-icon" style="background:#fff1f2">🚪</div><div><div class="sr-label" style="color:#e11d48">Đăng xuất</div><div class="sr-sub">admin@studio.com</div></div></div>
+            <span class="sr-arrow" style="color:#fca5a5">›</span>
+          </div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><div class="bi-icon">📊</div>Tổng quan</div>
+        <div class="bi" onclick="show('staff',document.querySelector('.np:nth-child(10)'))"><div class="bi-icon">👤</div>Nhân sự</div>
+        <div class="bi active"><div class="bi-icon">⚙️</div>Cài đặt</div>
+        <div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><div class="bi-icon">💬</div>Chat</div>
+        <div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><div class="bi-icon">🔔</div>Thông báo</div>
+      </div>
+    </div>
+
+    <!-- ══ SIDEBAR ══ -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <div class="sidebar-brand">AURA BRIDAL</div>
+        <div class="sidebar-role">Hệ thống quản lý</div>
+        <div class="sidebar-user">👑 Nguyễn Văn Admin · Điều hành</div>
+      </div>
+      <div class="sidebar-nav">
+        <div class="nav-item" onclick="navTo('dash')"><div class="nav-icon">📊</div><div class="nav-label">Tổng Quan</div></div>
+        <div class="nav-item" onclick="navTo('leads')"><div class="nav-icon">📋</div><div class="nav-label">Quản lý Tư vấn (CRM)</div></div>
+        <div class="nav-item" onclick="navTo('orders')"><div class="nav-icon">📁</div><div class="nav-label">Hợp đồng & Đơn hàng</div></div>
+        <div class="nav-item" onclick="navTo('customers')"><div class="nav-icon">👥</div><div class="nav-label">Quản lý Khách hàng</div></div>
+        <div class="nav-item" onclick="navTo('tasks')"><div class="nav-icon">✅</div><div class="nav-label">Phân công công việc</div></div>
+        <div class="nav-item" onclick="navTo('objectives')"><div class="nav-icon">🎯</div><div class="nav-label">Mục tiêu & Tiến độ</div></div>
+        <div class="nav-item" onclick="navTo('chat')"><div class="nav-icon">💬</div><div class="nav-label">Trò chuyện nội bộ</div></div>
+        <div class="nav-item" onclick="navTo('notif')"><div class="nav-icon">🔔</div><div class="nav-label">Thông báo</div></div>
+        <div class="nav-item" onclick="navTo('staff')"><div class="nav-icon">👤</div><div class="nav-label">Quản lý Nhân sự</div></div>
+        <div class="nav-item" onclick="navTo('settings')"><div class="nav-icon">⚙️</div><div class="nav-label">Cài đặt & Hệ thống</div></div>
+      </div>
+      <div class="sidebar-footer"><div class="logout-btn">🚪 Đăng xuất</div></div>
+    </div>
+
+    <!-- ══ BOTTOM SHEETS ══ -->
+    <!-- Lead Detail -->
+    <div class="overlay" id="sh-lead-detail" onclick="closeSheetOutside(event,'sh-lead-detail')">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sh-head"><div class="sh-title">📋 Hồ sơ: Ng Ngọc Quyên</div><button class="close-x" onclick="closeSheet('sh-lead-detail')">✕</button></div>
+        <div class="sh-body">
+          <div style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;margin-bottom:12px">
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center">N</div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:700;color:#1e293b">Ng Ngọc Quyên</div><div style="font-size:10px;color:#94a3b8">Chưa có SĐT</div></div>
+            <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+              <span class="pill gold">PAGE THE WILL</span>
+              <span class="pill" style="background:#fffbeb;color:#b45309;border:1px solid #fde68a">● Đang tư vấn</span>
+            </div>
+          </div>
+          <div style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Tiến trình 6 bước</div>
+          <div style="display:flex;align-items:flex-start;margin-bottom:14px">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+              <div style="width:100%;display:flex;align-items:center"><div style="width:22px;height:22px;border-radius:50%;border:2px solid #d97706;background:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#b45309;box-shadow:0 0 0 3px #fde68a;flex-shrink:0">1</div><div style="flex:1;height:2px;background:#e2e8f0"></div></div>
+              <div style="font-size:8px;font-weight:700;color:#b45309;margin-top:4px;text-align:center;max-width:42px">Khai thác</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+              <div style="width:100%;display:flex;align-items:center"><div style="flex:1;height:2px;background:#e2e8f0"></div><div style="width:22px;height:22px;border-radius:50%;border:2px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#94a3b8;flex-shrink:0">2</div><div style="flex:1;height:2px;background:#e2e8f0"></div></div>
+              <div style="font-size:8px;font-weight:600;color:#94a3b8;margin-top:4px;text-align:center;max-width:42px">Tư vấn</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+              <div style="width:100%;display:flex;align-items:center"><div style="flex:1;height:2px;background:#e2e8f0"></div><div style="width:22px;height:22px;border-radius:50%;border:2px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#94a3b8;flex-shrink:0">3</div><div style="flex:1;height:2px;background:#e2e8f0"></div></div>
+              <div style="font-size:8px;font-weight:600;color:#94a3b8;margin-top:4px;text-align:center;max-width:42px">Đề xuất</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+              <div style="width:100%;display:flex;align-items:center"><div style="flex:1;height:2px;background:#e2e8f0"></div><div style="width:22px;height:22px;border-radius:50%;border:2px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#94a3b8;flex-shrink:0">4</div><div style="flex:1;height:2px;background:#e2e8f0"></div></div>
+              <div style="font-size:8px;font-weight:600;color:#94a3b8;margin-top:4px;text-align:center;max-width:42px">Báo giá</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+              <div style="width:100%;display:flex;align-items:center"><div style="flex:1;height:2px;background:#e2e8f0"></div><div style="width:22px;height:22px;border-radius:50%;border:2px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#94a3b8;flex-shrink:0">5</div><div style="flex:1;height:2px;background:#e2e8f0"></div></div>
+              <div style="font-size:8px;font-weight:600;color:#94a3b8;margin-top:4px;text-align:center;max-width:42px">Thương lượng</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+              <div style="width:100%;display:flex;align-items:center"><div style="flex:1;height:2px;background:#e2e8f0"></div><div style="width:22px;height:22px;border-radius:50%;border:2px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#94a3b8;flex-shrink:0">6</div></div>
+              <div style="font-size:8px;font-weight:600;color:#94a3b8;margin-top:4px;text-align:center;max-width:42px">Chốt đơn</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:10px">
+            <span class="pill red">💍 Wedding</span>
+            <span class="pill" style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;font-size:9px">✓ F1</span>
+          </div>
+          <div style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">Nhật ký Sale</div>
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:10px;color:#334155;line-height:1.5;margin-bottom:10px">Đang khai thác nhu cầu chụp cưới. Khách muốn phong cách nhẹ nhàng.</div>
+          <div style="font-size:9px;font-weight:800;color:#1d4ed8;margin-bottom:6px">💬 Ghi chú & Phản hồi từ Quản lý</div>
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:9px 11px;margin-bottom:8px">
+            <div style="font-size:9px;font-weight:800;color:#1d4ed8;margin-bottom:2px">Nguyễn Văn Admin <span style="color:#94a3b8;font-weight:500;font-family:monospace"> · 09:30</span></div>
+            <div style="font-size:10px;color:#1e3a5f;line-height:1.4">Khách này tiềm năng! Follow sớm trong ngày nhé.</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input class="fi" placeholder="Nhập phản hồi hoặc hướng dẫn..." style="flex:1;font-size:10px;padding:7px 10px">
+            <button style="background:#2563eb;border:none;border-radius:8px;width:34px;height:34px;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Detail -->
+    <div class="overlay" id="sh-order" onclick="closeSheetOutside(event,'sh-order')">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sh-head"><div class="sh-title">📁 HD-2025-001 · Wedding</div><button class="close-x" onclick="closeSheet('sh-order')">✕</button></div>
+        <div class="sh-body">
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <span class="pill gold">💍 Wedding</span><span class="pill green">Đang xử lý</span>
+          </div>
+          <div class="fl">Khách hàng</div>
+          <div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">Như Ý & Văn Hùng</div>
+          <div class="fl">SĐT</div>
+          <div style="font-size:12px;color:#334155;font-family:monospace;margin-bottom:6px">0901 234 567</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div><div class="fl">Ngày chụp</div><div style="font-size:11px;font-weight:600;color:#334155">15/07/2025</div></div>
+            <div><div class="fl">Phòng</div><div style="font-size:11px;font-weight:600;color:#334155">Phòng 2</div></div>
+            <div><div class="fl">Thành tiền</div><div style="font-size:13px;font-weight:800;color:#059669">4.300 kđ</div></div>
+            <div><div class="fl">Đã thanh toán</div><div style="font-size:11px;font-weight:700;color:#1d4ed8">2.000 kđ</div></div>
+          </div>
+          <div class="fl">Tiến độ xử lý</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:10px">
+              <span style="width:20px;height:20px;border-radius:50%;background:#10b981;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">✓</span>
+              <span style="font-weight:600;color:#059669">Đã chụp ảnh</span>
+              <span style="color:#94a3b8;font-size:9px;margin-left:auto">30/06</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:10px">
+              <span style="width:20px;height:20px;border-radius:50%;background:#f59e0b;color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0">●</span>
+              <span style="font-weight:600;color:#b45309">Đang hậu kỳ (40%)</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:10px">
+              <span style="width:20px;height:20px;border-radius:50%;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#94a3b8;flex-shrink:0">3</span>
+              <span style="color:#94a3b8">Bàn giao sản phẩm</span>
+            </div>
+          </div>
+          <button class="btn-prim">Cập nhật tiến độ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer Detail -->
+    <div class="overlay" id="sh-customer" onclick="closeSheetOutside(event,'sh-customer')">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sh-head"><div class="sh-title">👤 Như Ý</div><button class="close-x" onclick="closeSheet('sh-customer')">✕</button></div>
+        <div class="sh-body">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center">N</div>
+            <div>
+              <div style="font-size:15px;font-weight:800;color:#1e293b">Như Ý</div>
+              <div style="font-size:10px;color:#94a3b8;margin-top:2px">📞 0901 234 567</div>
+              <div style="font-size:10px;color:#94a3b8">📧 nhuuy@gmail.com</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+            <div class="kpi gold-k" style="padding:9px"><div class="kpi-l">Tổng chi</div><div class="kpi-v" style="font-size:16px">7.1tr</div></div>
+            <div class="kpi green-k" style="padding:9px"><div class="kpi-l">Số đơn</div><div class="kpi-v" style="font-size:16px">2</div></div>
+          </div>
+          <div class="fl">Lịch sử đơn hàng</div>
+          <div class="card accent" style="padding:9px;margin-bottom:6px">
+            <div class="ct"><span class="cn" style="font-size:11px">HD-2025-001</span><span class="pill gold">💍 Wedding</span></div>
+            <div class="cm">✅ Hoàn thành · 4.300 kđ · 06/2025</div>
+          </div>
+          <div class="card" style="border-left:3px solid #3b82f6;padding:9px">
+            <div class="ct"><span class="cn" style="font-size:11px">HD-2024-089</span><span class="pill blue">👨‍👩‍👧 Family</span></div>
+            <div class="cm">✅ Hoàn thành · 2.800 kđ · 12/2024</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+            <button class="btn-prim" style="font-size:10px;padding:9px">📁 Tạo đơn mới</button>
+            <button class="btn-sec" style="font-size:10px;padding:8px">✏️ Chỉnh sửa</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Lead Sheet -->
+    <div class="overlay" id="sh-lead" onclick="closeSheetOutside(event,'sh-lead')">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sh-head"><div class="sh-title">➕ Thêm hồ sơ tư vấn mới</div><button class="close-x" onclick="closeSheet('sh-lead')">✕</button></div>
+        <div class="sh-body">
+          <div class="fl">Tên khách hàng *</div><input class="fi" placeholder="Nhập họ tên..." style="margin-bottom:8px">
+          <div class="fl">Số điện thoại</div><input class="fi" placeholder="0901 234 567" style="margin-bottom:8px">
+          <div class="fl">Nguồn tiếp cận *</div>
+          <select class="fi" style="margin-bottom:8px"><option>PAGE THE WILL</option><option>PAGE FAMILY</option><option>PAGE GARDEN</option><option>KHÁCH CŨ</option><option>VÃNG LAI</option><option>ĐƯỢC GIỚI THIỆU</option></select>
+          <div class="fl">Gói quan tâm</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+            <label style="display:flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:700;color:#334155;cursor:pointer"><input type="checkbox" style="accent-color:#d97706"> 💍 Wedding</label>
+            <label style="display:flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:700;color:#334155;cursor:pointer"><input type="checkbox" style="accent-color:#d97706"> 👨‍👩‍👧 Family</label>
+            <label style="display:flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:700;color:#334155;cursor:pointer"><input type="checkbox" style="accent-color:#d97706"> 👸 Beauty</label>
+          </div>
+          <div class="fl">Ghi chú ban đầu</div>
+          <textarea class="fi" rows="2" placeholder="Khách muốn chụp phong cách..." style="margin-bottom:12px;resize:none"></textarea>
+          <button class="btn-prim">Tạo hồ sơ tư vấn</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /pb -->
+</div><!-- /phone -->
+
+<script>
+const screens = ['login','dash','leads','orders','customers','tasks','objectives','chat','notif','staff','settings'];
+
+function show(id, btn) {
+  screens.forEach(s => {
+    const el = document.getElementById('scr-' + s);
+    if(el) el.classList.remove('active');
+  });
+  const target = document.getElementById('scr-' + id);
+  if(target) target.classList.add('active');
+  document.querySelectorAll('.np').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  closeSidebar();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+const navMap = {dash:1,leads:2,orders:3,customers:4,tasks:5,objectives:6,chat:7,notif:8,staff:9,settings:10};
+function navTo(id) {
+  const idx = navMap[id];
+  const btn = document.querySelector('.np:nth-child(' + idx + ')');
+  show(id, btn);
+}
+
+function openSheet(id) { document.getElementById(id).classList.add('open'); }
+function closeSheet(id) { document.getElementById(id).classList.remove('open'); }
+function closeSheetOutside(e, id) { if(e.target === document.getElementById(id)) closeSheet(id); }
+</script>
+</body>
+</html>

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Aura Bridal Studio · Full App Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;1,700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#09111f;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 24px 80px}
+.page-h{color:#475569;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;text-align:center;margin-bottom:6px}
+.page-brand{font-family:'Playfair Display',serif;font-style:italic;font-size:22px;color:#c9a96e;letter-spacing:.08em;text-align:center;margin-bottom:22px}
+.pills{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:30px;max-width:960px}
+.np{background:#111827;color:#4b5563;border:1px solid #1f2937;border-radius:20px;padding:6px 14px;font-size:10px;font-weight:700;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;letter-spacing:.04em;display:flex;align-items:center;gap:5px}
+.np svg{width:11px;height:11px}
+.np:hover{background:#1f2937;color:#9ca3af;border-color:#374151}
+.np.active{background:linear-gradient(135deg,#c9a96e,#a07840);color:#fff;border-color:transparent;box-shadow:0 2px 12px rgba(201,169,110,.35)}
+:root{--gold:#c9a96e;--gold-d:#a07840;--gold-l:#f0e6d0;--gold-xl:#faf6ee;--r:12px;--r-sm:8px;--r-lg:16px}
+.phone{width:375px;height:812px;background:#f8f7f4;border-radius:44px;border:9px solid #111827;box-shadow:0 0 0 1px #1f2937,0 50px 120px rgba(0,0,0,.75);overflow:hidden;display:flex;flex-direction:column;position:relative}
+.notch{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:88px;height:18px;background:#111827;border-radius:20px;z-index:100}
+.pb{flex:1;overflow:hidden;display:flex;flex-direction:column;padding-top:26px}
+.sb{display:flex;justify-content:space-between;align-items:center;padding:2px 18px 5px;font-size:10px;font-weight:700;color:#374151}
+.sb-icons{display:flex;align-items:center;gap:4px}
+.scr{display:none;flex-direction:column;flex:1;overflow:hidden}
+.scr.active{display:flex;animation:si .2s ease}
+@keyframes si{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.sv{flex:1;overflow-y:auto;overflow-x:hidden}
+.sv::-webkit-scrollbar{width:2px}
+.sv::-webkit-scrollbar-thumb{background:#e2d9c8;border-radius:4px}
+/* Header */
+.app-hd{background:linear-gradient(135deg,#faf6ee,#f5edd8);border-bottom:1px solid #e8d9bb;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.ah-left{display:flex;align-items:center;gap:8px}
+.ah-brand{font-family:'Playfair Display',serif;font-style:italic;font-size:15px;color:#78350f;letter-spacing:.06em}
+.ah-sub{font-size:8.5px;color:#a16207;font-weight:600;margin-top:1px}
+.icon-btn{width:32px;height:32px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s}
+.icon-btn svg{width:15px;height:15px}
+.icon-btn.menu{background:rgba(201,169,110,.15);border:1px solid #e8d9bb;color:#78350f}
+.icon-btn.bell{background:#fff;border:1px solid #e2e8f0;color:#64748b;position:relative}
+.bell-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#e11d48;border:1.5px solid #fff}
+.hd-r{display:flex;gap:6px;align-items:center}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:none;border-radius:var(--r-sm);font-family:'Inter',sans-serif;font-weight:700;cursor:pointer;transition:all .18s;letter-spacing:.02em}
+.btn svg{width:12px;height:12px}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-d));color:#fff;padding:6px 13px;font-size:10px;box-shadow:0 2px 8px rgba(201,169,110,.3)}
+.btn-gold:hover{filter:brightness(1.08)}
+.btn-ghost{background:transparent;color:var(--gold);padding:4px 9px;font-size:9px;border:1px solid #e8d9bb;border-radius:var(--r-sm)}
+.btn-ghost:hover{background:var(--gold-xl)}
+.btn-p{background:linear-gradient(135deg,var(--gold),var(--gold-d));color:#fff;padding:11px;font-size:12px;width:100%;border-radius:var(--r);box-shadow:0 3px 12px rgba(201,169,110,.35)}
+.btn-s{background:#fff;color:#64748b;padding:10px;font-size:11px;width:100%;border-radius:var(--r);border:1px solid #e2e8f0}
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:8px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.03em;flex-shrink:0}
+.badge svg{width:8px;height:8px}
+.bg{background:#faf6ee;color:#92400e;border:1px solid #e8d9bb}
+.bb{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.br{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
+.bv{background:#faf5ff;color:#6d28d9;border:1px solid #ddd6fe}
+.bgr{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+.bs{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+.ba{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+/* Status dot */
+.sd{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sdg{background:#10b981}.sdr{background:#f43f5e}.sdy{background:#f59e0b;animation:bl 1.8s infinite}.sdb{background:#3b82f6}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.35}}
+/* Card */
+.card{background:#fff;border:1px solid #ebe4d8;border-radius:var(--r);padding:11px 12px;margin-bottom:7px;cursor:pointer;transition:all .15s}
+.card:hover{border-color:var(--gold);box-shadow:0 3px 12px rgba(201,169,110,.15)}
+.ca{border-left:3px solid var(--gold)}.cg{border-left:3px solid #10b981}.cr{border-left:3px solid #f43f5e}.cb{border-left:3px solid #3b82f6}.cv{border-left:3px solid #7c3aed}
+.ct{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.cn{font-size:12px;font-weight:700;color:#0f172a}
+.cm{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cmt{font-size:9.5px;color:#64748b}
+.amt{font-size:11px;font-weight:800;color:#059669}
+/* KPI */
+.krow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.kpi{border-radius:var(--r);padding:11px 13px}
+.kg{background:linear-gradient(135deg,#faf6ee,#f5edd8);border:1px solid #e8d9bb}
+.kgr{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #a7f3d0}
+.kb{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe}
+.kr{background:linear-gradient(135deg,#fff1f2,#ffe4e6);border:1px solid #fecdd3}
+.kl{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.kg .kl{color:#92400e}.kgr .kl{color:#065f46}.kb .kl{color:#1e40af}.kr .kl{color:#9f1239}
+.kv{font-size:22px;font-weight:900;line-height:1;letter-spacing:-.02em}
+.kg .kv{color:#78350f}.kgr .kv{color:#059669}.kb .kv{color:#1d4ed8}.kr .kv{color:#e11d48}
+.ks{font-size:8px;margin-top:3px;font-weight:600}
+.kg .ks{color:#a16207}.kgr .ks{color:#34d399}.kb .ks{color:#60a5fa}.kr .ks{color:#fb7185}
+/* Section card */
+.sc{background:#fff;border:1px solid #ebe4d8;border-radius:var(--r);padding:12px;margin-bottom:10px}
+.sch{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid #f1f5f9}
+.sct{font-size:10px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:5px}
+.sct svg{width:11px;height:11px;color:var(--gold)}
+/* Charts */
+.br-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.br-l{font-size:9px;color:#64748b;width:24px;text-align:right;font-weight:600}
+.br-t{flex:1;background:#f1f5f9;border-radius:4px;height:9px;overflow:hidden}
+.br-f{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gold),#e6b97a)}
+.br-v{font-size:9px;font-weight:700;color:#334155;width:26px}
+/* Activity */
+.ai{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #f5f3ef}
+.ai:last-child{border:none}
+.an{width:8px;height:8px;border-radius:50%;margin-top:3px;flex-shrink:0}
+.at{font-size:10px;color:#334155;line-height:1.45;flex:1}
+.atm{font-size:8px;color:#94a3b8;font-weight:600;white-space:nowrap}
+/* Tabs */
+.tab-bar{display:flex;gap:3px;padding:8px 10px;background:#fff;border-bottom:1px solid #ebe4d8;flex-shrink:0}
+.tb{flex:1;padding:5px 3px;border:none;border-radius:var(--r-sm);font-size:9px;font-weight:700;cursor:pointer;background:#f1f5f9;color:#64748b;display:flex;align-items:center;justify-content:center;gap:3px;font-family:'Inter',sans-serif;transition:all .15s}
+.tb svg{width:10px;height:10px}
+.tb.active{background:#78350f;color:#fff}
+/* Kanban */
+.kbc{background:#faf8f4;border:1px solid #ebe4d8;border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+.kbch{padding:8px 12px;border-bottom:1px solid #ebe4d8;display:flex;align-items:center;justify-content:space-between}
+.kbct{font-size:10px;font-weight:800;color:#334155;display:flex;align-items:center;gap:7px}
+.kbst{width:20px;height:20px;border-radius:50%;color:#fff;font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.kbst svg{width:10px;height:10px}
+.kbcnt{background:#f1f5f9;color:#64748b;font-size:9px;font-weight:700;padding:1px 8px;border-radius:20px;display:flex;align-items:center;gap:3px}
+.kbcnt svg{width:9px;height:9px}
+.kbcs{padding:8px;display:flex;flex-direction:column;gap:5px}
+.kc{background:#fff;border:1px solid #ebe4d8;border-radius:var(--r-sm);padding:9px 10px;border-left-width:3px;cursor:pointer;transition:all .15s}
+.kc:hover{border-color:var(--gold)!important;box-shadow:0 2px 10px rgba(201,169,110,.18)}
+.kct{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.kcn{font-size:11px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:5px}
+.kcm{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.fds{display:flex;gap:2px;margin-left:auto}
+.fd{width:9px;height:9px;border-radius:50%;background:#e2e8f0;font-size:6px;font-weight:800;display:flex;align-items:center;justify-content:center;color:#94a3b8}
+.fd svg{width:6px;height:6px}
+.fdd{background:#d1fae5;color:#059669}
+/* Tasks */
+.titem{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #f5f3ef}
+.titem:last-child{border:none}
+.tcb{width:18px;height:18px;border-radius:5px;border:2px solid #ebe4d8;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.tcb svg{width:10px;height:10px}
+.tcbd{background:#10b981;border-color:#10b981;color:#fff}
+.tn{font-size:11px;font-weight:700;color:#1e293b;margin-bottom:3px}
+.tnd{text-decoration:line-through;color:#94a3b8}
+.tmeta{display:flex;gap:5px;align-items:center}
+.pr{font-size:8px;font-weight:700;padding:1px 6px;border-radius:20px;display:flex;align-items:center;gap:2px}
+.pr svg{width:8px;height:8px}
+.prh{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
+.prm{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+.prl{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.due{font-size:8.5px;color:#94a3b8;display:flex;align-items:center;gap:2px}
+.due svg{width:9px;height:9px}
+/* Chat */
+.ci{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f5f3ef;cursor:pointer;transition:all .15s}
+.ci:hover{background:#faf8f4}
+.av{display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;flex-shrink:0;border-radius:50%}
+.av svg{width:16px;height:16px}
+.cib{flex:1;min-width:0}
+.cin{font-size:11px;font-weight:700;color:#1e293b;margin-bottom:2px}
+.cip{font-size:9.5px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cir{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
+.cit{font-size:8px;color:#94a3b8;font-weight:600}
+.ub{width:18px;height:18px;border-radius:50%;background:#e11d48;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center}
+/* Staff */
+.sfc{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1px solid #ebe4d8;border-radius:var(--r);margin-bottom:7px;cursor:pointer;transition:all .15s}
+.sfc:hover{border-color:var(--gold)}
+.sfi{flex:1}
+.sfn{font-size:11px;font-weight:700;color:#1e293b;margin-bottom:2px}
+.sfr{font-size:9px;color:#64748b;display:flex;align-items:center;gap:4px}
+.sfr svg{width:9px;height:9px}
+/* Settings */
+.srow{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f5f3ef;cursor:pointer}
+.srow:last-child{border:none}
+.srowl{display:flex;align-items:center;gap:10px}
+.sico{width:32px;height:32px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sico svg{width:14px;height:14px}
+.slbl{font-size:11px;font-weight:700;color:#1e293b;transition:color .15s}
+.ssub{font-size:8.5px;color:#94a3b8}
+.chev svg{width:14px;height:14px;color:#cbd5e1}
+.tog{width:38px;height:20px;border-radius:10px;background:#10b981;position:relative;cursor:pointer;flex-shrink:0}
+.togoff{background:#e2e8f0}
+.togk{position:absolute;right:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.togoff .togk{right:auto;left:2px}
+/* Notifications */
+.ni{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f5f3ef}
+.ni:last-child{border:none}
+.nico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nico svg{width:16px;height:16px}
+.nicog{background:#faf6ee;color:var(--gold)}
+.nicob{background:#eff6ff;color:#2563eb}
+.nicogr{background:#ecfdf5;color:#059669}
+.nicor{background:#fff1f2;color:#e11d48}
+.nib{flex:1}
+.nit{font-size:10px;font-weight:700;color:#1e293b;margin-bottom:2px}
+.nim{font-size:9.5px;color:#64748b;line-height:1.4}
+.nitime{font-size:8px;color:#94a3b8;margin-top:3px;display:flex;align-items:center;gap:3px}
+.nitime svg{width:9px;height:9px}
+.udot{width:7px;height:7px;border-radius:50%;background:#e11d48;flex-shrink:0;margin-top:6px}
+/* Objectives */
+.oc{background:#fff;border:1px solid #ebe4d8;border-radius:var(--r);padding:12px;margin-bottom:9px}
+.och{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px}
+.oct{font-size:11px;font-weight:700;color:#1e293b;margin-bottom:2px;display:flex;align-items:center;gap:5px}
+.oct svg{width:12px;height:12px}
+.ocp{font-size:8.5px;color:#94a3b8}
+.ocpct{font-size:20px;font-weight:900;letter-spacing:-.02em}
+.prog{height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden;margin-bottom:5px}
+.progf{height:100%;border-radius:4px}
+.ocm{display:flex;justify-content:space-between;font-size:8.5px;color:#64748b;font-weight:600}
+/* Sidebar */
+.sbov{position:absolute;inset:0;background:rgba(9,17,31,.55);z-index:50;display:none;backdrop-filter:blur(2px)}
+.sbov.open{display:block}
+.sidebar{position:absolute;left:0;top:0;bottom:0;width:248px;background:#fff;z-index:60;box-shadow:6px 0 30px rgba(0,0,0,.18);display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .26s cubic-bezier(.4,0,.2,1)}
+.sidebar.open{transform:translateX(0)}
+.sbhd{background:linear-gradient(160deg,#78350f,#92400e 60%,#a16207);padding:34px 16px 16px}
+.sbst{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.sblogo{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center}
+.sblogo svg{width:17px;height:17px;color:#f0e6d0}
+.sbbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:16px;color:#fff;letter-spacing:.07em}
+.sbtagline{font-size:8px;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-top:2px}
+.sbusr{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:8px}
+.sbav{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+.sbname{font-size:11px;font-weight:700;color:#fff}
+.sbrole{font-size:8px;color:rgba(255,255,255,.65);display:flex;align-items:center;gap:3px}
+.sbrole svg{width:8px;height:8px}
+.sbnav{flex:1;overflow-y:auto;padding:10px 8px}
+.sbnav::-webkit-scrollbar{width:0}
+.ni-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r-sm);cursor:pointer;transition:all .15s;margin-bottom:1px}
+.ni-item:hover{background:#faf8f4}
+.ni-item.active{background:linear-gradient(135deg,#faf6ee,#f5edd8);border:1px solid #e8d9bb}
+.niico{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.niico svg{width:14px;height:14px}
+.ni-item.active .niico{background:rgba(201,169,110,.2)}
+.ni-item.active .niico svg{color:var(--gold)}
+.ni-item:not(.active) .niico svg{color:#94a3b8}
+.nilbl{font-size:11px;font-weight:700;color:#64748b}
+.ni-item.active .nilbl{color:#78350f}
+.nibadge{background:#e11d48;color:#fff;font-size:8px;font-weight:800;padding:1px 5px;border-radius:20px;margin-left:auto}
+.sbsep{height:1px;background:#f1f5f9;margin:6px 10px}
+.sbfot{padding:10px 16px 14px;border-top:1px solid #f1f5f9}
+.logrow{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r-sm);cursor:pointer;transition:all .15s}
+.logrow:hover{background:#fff1f2}
+.logrow svg{width:15px;height:15px;color:#e11d48}
+.loglbl{font-size:11px;font-weight:700;color:#e11d48}
+/* Bottom nav */
+.bnav{height:62px;border-top:1px solid #ebe4d8;display:flex;align-items:stretch;background:#fff;flex-shrink:0}
+.bi{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.5px;font-size:8px;font-weight:700;color:#94a3b8;cursor:pointer;padding:4px 2px;transition:color .15s;position:relative}
+.bi svg{width:19px;height:19px}
+.bi.active{color:var(--gold)}
+.bi.active svg{color:var(--gold)}
+.bibadge{position:absolute;top:7px;right:calc(50% - 14px);background:#e11d48;color:#fff;font-size:7px;font-weight:800;padding:1px 4px;border-radius:20px}
+/* Overlay sheet */
+.overlay{position:absolute;inset:0;background:rgba(9,17,31,.55);z-index:40;display:none;flex-direction:column;backdrop-filter:blur(3px)}
+.overlay.open{display:flex;animation:ovin .2s ease}
+@keyframes ovin{from{opacity:0}to{opacity:1}}
+.sheet{margin-top:auto;background:#fff;border-radius:20px 20px 0 0;max-height:85%;overflow-y:auto}
+.sheet::-webkit-scrollbar{width:2px}
+.sheet::-webkit-scrollbar-thumb{background:#e8d9bb}
+.handle{width:36px;height:4px;background:#e8d9bb;border-radius:4px;margin:10px auto 6px}
+.shhd{padding:10px 16px 10px;border-bottom:1px solid #f5f3ef;display:flex;align-items:center;justify-content:space-between}
+.shtitle{font-size:12px;font-weight:800;color:#1e293b}
+.shsub{font-size:9px;color:#94a3b8;margin-top:1px}
+.closex{width:28px;height:28px;border-radius:50%;background:#f1f5f9;border:none;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.closex svg{width:13px;height:13px}
+.shbody{padding:14px 16px 24px}
+/* form */
+.fl{font-size:8.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;margin-top:10px}
+.fi{width:100%;background:#f8fafc;border:1px solid #ebe4d8;border-radius:var(--r);padding:9px 12px;font-size:11px;color:#1e293b;outline:none;font-family:'Inter',sans-serif;transition:border-color .15s}
+.fi:focus{border-color:var(--gold)}
+/* Login */
+.lbanner{background:linear-gradient(160deg,#faf6ee,#f0e4c8);padding:38px 24px 26px;text-align:center;border-bottom:1px solid #e8d9bb;position:relative}
+.lgem{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--gold),var(--gold-d));margin:0 auto 12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(201,169,110,.4)}
+.lgem svg{width:26px;height:26px;color:#fff}
+.lbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:26px;color:#78350f;letter-spacing:.1em}
+.ltagline{font-size:9px;color:#a16207;text-transform:uppercase;letter-spacing:.14em;margin-top:4px;font-weight:600}
+.lbadge{position:absolute;top:14px;right:14px;background:rgba(201,169,110,.15);border:1px solid #e8d9bb;color:#92400e;font-size:8px;font-weight:700;padding:3px 9px;border-radius:20px;display:flex;align-items:center;gap:4px}
+.lbadge svg{width:9px;height:9px}
+.lbody{padding:18px 20px;display:flex;flex-direction:column;gap:11px}
+.qbox{background:#faf6ee;border:1px solid #e8d9bb;border-radius:var(--r);padding:12px}
+.qlbl{font-size:9px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.qlbl svg{width:10px;height:10px}
+.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.qb{background:#fff;border:1px solid #e8d9bb;border-radius:var(--r-sm);padding:8px 9px;cursor:pointer;transition:all .15s;text-align:left}
+.qb:hover{border-color:var(--gold);background:var(--gold-xl)}
+.qbico{display:flex;align-items:center;gap:5px;margin-bottom:3px}
+.qbico svg{width:11px;height:11px;color:var(--gold)}
+.qbrole{font-size:8px;font-weight:700;color:var(--gold)}
+.qbname{font-size:10px;font-weight:700;color:#78350f;margin-bottom:1px}
+.qbemail{font-size:8px;color:#94a3b8}
+/* Section label */
+.slbl{font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+/* Step tracker */
+.sttrack{display:flex;align-items:flex-start}
+.stitem{flex:1;display:flex;flex-direction:column;align-items:center}
+.strow{display:flex;align-items:center;width:100%}
+.stline{flex:1;height:2px;background:#ebe4d8}
+.stline-d{background:var(--gold)}
+.stcirc{width:22px;height:22px;border-radius:50%;border:2px solid #ebe4d8;background:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#94a3b8;flex-shrink:0}
+.stcirc svg{width:10px;height:10px}
+.stcirc-d{background:var(--gold);border-color:var(--gold);color:#fff}
+.stcirc-c{border-color:var(--gold);color:var(--gold-d);box-shadow:0 0 0 3px rgba(201,169,110,.25)}
+.stlbl{font-size:7.5px;font-weight:600;text-align:center;margin-top:4px;color:#94a3b8;max-width:46px;line-height:1.2}
+.stlbl-c{color:var(--gold-d);font-weight:800}
+.stlbl-d{color:#64748b}
+hr.div{border:none;border-top:1px solid #f5f3ef;margin:11px 0}
+.fbox{background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--r);padding:10px 11px}
+.fmeta{display:flex;justify-content:space-between;margin-bottom:3px}
+.fname{font-size:9px;font-weight:800;color:#1d4ed8}
+.ftime{font-size:8px;color:#94a3b8;font-family:monospace}
+.ftext{font-size:10px;color:#1e3a5f;line-height:1.45}
+.finrow{display:flex;gap:6px;align-items:flex-end;margin-top:8px}
+.fin{flex:1;background:#fff;border:1px solid #ebe4d8;border-radius:var(--r-sm);padding:7px 10px;font-size:10px;color:#1e293b;resize:none;outline:none;font-family:'Inter',sans-serif}
+.fin:focus{border-color:#3b82f6}
+.sendbtn{background:#2563eb;border:none;border-radius:var(--r-sm);width:34px;height:34px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sendbtn svg{width:14px;height:14px}
+</style>
+</head>
+<body>
+<div class="page-h">Aura Bridal Studio</div>
+<div class="page-brand">Full App Mockup · Mobile UI</div>
+<div class="pills">
+  <button class="np active" onclick="show('login',this)"><i data-lucide="log-in"></i>Đăng nhập</button>
+  <button class="np" onclick="show('dash',this)"><i data-lucide="layout-dashboard"></i>Dashboard</button>
+  <button class="np" onclick="show('leads',this)"><i data-lucide="clipboard-list"></i>Tư vấn CRM</button>
+  <button class="np" onclick="show('orders',this)"><i data-lucide="folder-open"></i>Hợp đồng</button>
+  <button class="np" onclick="show('customers',this)"><i data-lucide="users"></i>Khách hàng</button>
+  <button class="np" onclick="show('tasks',this)"><i data-lucide="check-square"></i>Công việc</button>
+  <button class="np" onclick="show('objectives',this)"><i data-lucide="target"></i>Mục tiêu</button>
+  <button class="np" onclick="show('chat',this)"><i data-lucide="message-circle"></i>Chat</button>
+  <button class="np" onclick="show('notif',this)"><i data-lucide="bell"></i>Thông báo</button>
+  <button class="np" onclick="show('staff',this)"><i data-lucide="shield-check"></i>Nhân sự</button>
+  <button class="np" onclick="show('settings',this)"><i data-lucide="settings"></i>Cài đặt</button>
+</div>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="pb">
+    <div class="sb"><span>14:33</span><div class="sb-icons"><i data-lucide="signal" style="width:12px;height:12px;color:#374151"></i><i data-lucide="wifi" style="width:12px;height:12px;color:#374151"></i><i data-lucide="battery" style="width:14px;height:14px;color:#374151"></i></div></div>
+
+    <!-- LOGIN -->
+    <div class="scr active" id="scr-login" style="overflow-y:auto">
+      <div class="lbanner">
+        <div class="lbadge"><i data-lucide="cloud"></i>Cloud Local</div>
+        <div class="lgem"><i data-lucide="camera"></i></div>
+        <div class="lbrand">AURA BRIDAL</div>
+        <div class="ltagline">Hệ thống quản lý studio cao cấp</div>
+      </div>
+      <div class="lbody">
+        <div class="qbox">
+          <div class="qlbl"><i data-lucide="zap"></i>Đăng nhập nhanh (Demo)</div>
+          <div class="qgrid">
+            <div class="qb" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><div class="qbico"><i data-lucide="shield"></i><span class="qbrole">Điều hành</span></div><div class="qbname">Văn Admin</div><div class="qbemail">admin@studio.com</div></div>
+            <div class="qb" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><div class="qbico"><i data-lucide="briefcase"></i><span class="qbrole">Quản lý</span></div><div class="qbname">Thị Manager</div><div class="qbemail">manager@studio.com</div></div>
+            <div class="qb" onclick="show('leads',document.querySelector('.np:nth-child(3)'))"><div class="qbico"><i data-lucide="user-check"></i><span class="qbrole">Tư vấn</span></div><div class="qbname">Thị Sales</div><div class="qbemail">sale@studio.com</div></div>
+            <div class="qb" onclick="show('tasks',document.querySelector('.np:nth-child(6)'))"><div class="qbico"><i data-lucide="camera"></i><span class="qbrole">Thợ chụp</span></div><div class="qbname">Hải Nam</div><div class="qbemail">photo@studio.com</div></div>
+          </div>
+        </div>
+        <div><div class="fl">Email</div><input class="fi" value="admin@studio.com" readonly></div>
+        <div><div class="fl">Mật khẩu</div><input class="fi" type="password" value="123abc456" readonly></div>
+        <button class="btn btn-p" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><i data-lucide="log-in"></i>Đăng nhập</button>
+        <p style="text-align:center;font-size:9px;color:#94a3b8;font-weight:600">Aura Bridal Studio © 2025 · v2.0</p>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="scr" id="scr-dash">
+      <div class="app-hd"><div class="ah-left"><div class="icon-btn menu" onclick="toggleSidebar()"><i data-lucide="menu"></i></div><div><div class="ah-brand">AURA BRIDAL</div><div class="ah-sub">Xin chào, Admin · Tháng 06/2025</div></div></div><div class="hd-r"><div class="icon-btn bell"><i data-lucide="bell"></i><div class="bell-dot"></div></div></div></div>
+      <div class="sv" style="padding:12px">
+        <div class="krow"><div class="kpi kg"><div class="kl">Đơn tháng 06</div><div class="kv">24</div><div class="ks">↑ 4 so tháng trước</div></div><div class="kpi kgr"><div class="kl">Doanh thu</div><div class="kv" style="font-size:18px">48tr</div><div class="ks">↑ 12%</div></div><div class="kpi kb"><div class="kl">Khách hàng</div><div class="kv">87</div><div class="ks">Tổng cộng</div></div><div class="kpi kr"><div class="kl">Việc đang làm</div><div class="kv">6</div><div class="ks">2 sắp đến hạn</div></div></div>
+        <div class="sc"><div class="sch"><div class="sct"><i data-lucide="bar-chart-2"></i>Doanh thu 3 tháng</div><button class="btn btn-ghost">Xem thêm</button></div><div class="br-row"><span class="br-l">T4</span><div class="br-t"><div class="br-f" style="width:55%"></div></div><span class="br-v">38tr</span></div><div class="br-row"><span class="br-l">T5</span><div class="br-t"><div class="br-f" style="width:63%"></div></div><span class="br-v">43tr</span></div><div class="br-row"><span class="br-l">T6</span><div class="br-t"><div class="br-f" style="width:72%"></div></div><span class="br-v">48tr</span></div></div>
+        <div class="sc"><div class="sch"><div class="sct"><i data-lucide="activity"></i>Hoạt động gần đây</div><button class="btn btn-ghost">Tất cả</button></div><div class="ai"><div class="an" style="background:#10b981"></div><div class="at"><b>Như Ý</b> đã chốt hợp đồng Wedding · 4.300 kđ</div><div class="atm">09:31</div></div><div class="ai"><div class="an" style="background:#3b82f6"></div><div class="at">Lead mới <b>Kiều Mi</b> từ PAGE FAMILY</div><div class="atm">08:50</div></div><div class="ai"><div class="an" style="background:var(--gold)"></div><div class="at">Phân công <b>Chụp ngoại cảnh T06</b> cho Hải Nam</div><div class="atm">08:10</div></div><div class="ai"><div class="an" style="background:#7c3aed"></div><div class="at"><b>Ngọc Phương</b> — hoàn thành chụp, đang hậu kỳ</div><div class="atm">Hôm qua</div></div></div>
+        <div class="sc"><div class="sch"><div class="sct"><i data-lucide="calendar-clock"></i>Lịch chụp sắp tới</div><button class="btn btn-ghost">Lịch</button></div><div class="card ca" style="padding:9px 11px;margin-bottom:6px" onclick="openSheet('sh-order')"><div class="ct"><span class="cn" style="font-size:11px">Như Ý & Văn Hùng</span><span class="badge bg"><i data-lucide="heart"></i>Wedding</span></div><div class="cm"><div class="sd sdg"></div><span class="cmt">15/07 · Phòng 2 · Hải Nam</span></div></div><div class="card cb" style="padding:9px 11px"><div class="ct"><span class="cn" style="font-size:11px">Gia đình chị Lâm</span><span class="badge bb"><i data-lucide="users"></i>Family</span></div><div class="cm"><div class="sd sdb"></div><span class="cmt">18/07 · Phòng 1 · Hải Nam</span></div></div></div>
+      </div>
+      <div class="bnav"><div class="bi active"><i data-lucide="layout-dashboard"></i>Tổng quan</div><div class="bi" onclick="show('leads',document.querySelector('.np:nth-child(3)'))"><i data-lucide="clipboard-list"></i>Tư vấn</div><div class="bi" onclick="show('orders',document.querySelector('.np:nth-child(4)'))"><i data-lucide="folder-open"></i>Hợp đồng</div><div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><i data-lucide="message-circle"></i>Chat</div><div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><i data-lucide="bell"></i>Thông báo<div class="bibadge">3</div></div></div>
+    </div>
+
+    <!-- CRM -->
+    <div class="scr" id="scr-leads">
+      <div class="app-hd"><div class="ah-left"><div class="icon-btn menu" onclick="toggleSidebar()"><i data-lucide="menu"></i></div><div><div class="ah-brand" style="font-size:13px">Quản lý Tư vấn</div><div class="ah-sub">CRM · 10 hồ sơ tháng 06</div></div></div><button class="btn btn-gold" onclick="openSheet('sh-new-lead')"><i data-lucide="plus"></i>Thêm hồ sơ</button></div>
+      <div class="tab-bar"><button class="tb active"><i data-lucide="kanban"></i>Kanban</button><button class="tb"><i data-lucide="list"></i>Danh sách</button><button class="tb"><i data-lucide="bar-chart-2"></i>Báo cáo</button></div>
+      <div class="sv" style="padding:10px 12px">
+        <div class="kbc"><div class="kbch"><div class="kbct"><div class="kbst" style="background:var(--gold)">1</div>Khai thác nhu cầu</div><span class="kbcnt"><i data-lucide="users"></i>3</span></div><div class="kbcs"><div class="kc" style="border-left-color:var(--gold)" onclick="openSheet('sh-lead-detail')"><div class="kct"><div class="kcn"><div class="sd sdy"></div>Ng Ngọc Quyên</div><span class="badge bg" style="font-size:7.5px">PAGE THE WILL</span></div><div class="kcm"><span class="badge br" style="font-size:7px"><i data-lucide="heart"></i>Wedding</span><div class="fds"><div class="fd">1</div><div class="fd">2</div><div class="fd">3</div></div></div></div><div class="kc" style="border-left-color:var(--gold)"><div class="kct"><div class="kcn"><div class="sd sdy"></div>Kiều Mi</div><span class="badge bg" style="font-size:7.5px">PAGE FAMILY</span></div><div class="kcm"><span class="badge bb" style="font-size:7px"><i data-lucide="users"></i>Family</span><div class="fds"><div class="fd fdd"><i data-lucide="check" style="width:6px;height:6px"></i></div><div class="fd">2</div><div class="fd">3</div></div></div><div style="margin-top:5px"><span class="badge ba"><i data-lucide="alert-circle"></i>Nhờ tư vấn thêm</span></div></div></div></div>
+        <div class="kbc"><div class="kbch"><div class="kbct"><div class="kbst" style="background:#7c3aed">3</div>Đề xuất dịch vụ</div><span class="kbcnt"><i data-lucide="users"></i>2</span></div><div class="kbcs"><div class="kc" style="border-left-color:#7c3aed"><div class="kct"><div class="kcn"><div class="sd sdy"></div>Lâm Gia Kỳ</div><span class="badge bg" style="font-size:7.5px">KHÁCH CŨ</span></div><div class="kcm"><span class="badge br" style="font-size:7px"><i data-lucide="heart"></i>Wedding</span><span class="badge bb" style="font-size:7px"><i data-lucide="users"></i>Family</span></div><div style="margin-top:5px"><span class="badge bb"><i data-lucide="message-circle"></i>Có phản hồi</span></div></div></div></div>
+        <div class="kbc"><div class="kbch"><div class="kbct"><div class="kbst" style="background:#10b981"><i data-lucide="check" style="width:10px;height:10px"></i></div>Chốt thành công</div><span class="kbcnt" style="background:#d1fae5;color:#065f46"><i data-lucide="check-circle"></i>3</span></div><div class="kbcs"><div class="kc" style="border-left-color:#10b981"><div class="kct"><div class="kcn"><div class="sd sdg"></div>Như Ý</div><span class="amt">4.300 kđ</span></div><div class="kcm"><span class="badge br" style="font-size:7px"><i data-lucide="heart"></i>Wedding</span></div></div><div class="kc" style="border-left-color:#10b981"><div class="kct"><div class="kcn"><div class="sd sdg"></div>Ngọc Phương</div><span class="amt">6.500 kđ</span></div><div class="kcm"><span class="badge br" style="font-size:7px"><i data-lucide="heart"></i>Wedding</span></div></div></div></div>
+      </div>
+      <div class="bnav"><div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><i data-lucide="layout-dashboard"></i>Tổng quan</div><div class="bi active"><i data-lucide="clipboard-list"></i>Tư vấn</div><div class="bi" onclick="show('orders',document.querySelector('.np:nth-child(4)'))"><i data-lucide="folder-open"></i>Hợp đồng</div><div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><i data-lucide="message-circle"></i>Chat</div><div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><i data-lucide="bell"></i>Thông báo</div></div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="scr" id="scr-orders">
+      <div class="app-hd"><div class="ah-left"><div class="icon-btn menu" onclick="toggleSidebar()"><i data-lucide="menu"></i></div><div><div class="ah-brand" style="font-size:13px">Hợp đồng & Đơn hàng</div><div class="ah-sub">24 đơn · Tháng 06/2025</div></div></div><button class="btn btn-gold"><i data-lucide="plus"></i>Tạo đơn</button></div>
+      <div class="tab-bar"><button class="tb active"><i data-lucide="list"></i>Tất cả</button><button class="tb"><i data-lucide="calendar"></i>Sắp chụp</button><button class="tb"><i data-lucide="image"></i>Hậu kỳ</button><button class="tb"><i data-lucide="check-circle"></i>Xong</button></div>
+      <div class="sv" style="padding:12px">
+        <div class="card ca" onclick="openSheet('sh-order')"><div class="ct"><span class="cn">HD-2025-001</span><span class="badge br"><i data-lucide="heart"></i>Wedding</span></div><div class="cm"><div class="sd sdg"></div><span class="cmt">Như Ý & Văn Hùng</span><span class="amt" style="margin-left:auto">4.300 kđ</span></div><div class="cm" style="margin-top:4px"><i data-lucide="calendar" style="width:10px;height:10px;color:#94a3b8"></i><span class="cmt">Chụp: 15/07/2025 · Phòng 2</span></div></div>
+        <div class="card cb"><div class="ct"><span class="cn">HD-2025-002</span><span class="badge bb"><i data-lucide="users"></i>Family</span></div><div class="cm"><div class="sd sdb"></div><span class="cmt">Gia đình Lâm Gia Kỳ</span><span class="amt" style="margin-left:auto">2.800 kđ</span></div><div class="cm" style="margin-top:4px"><i data-lucide="calendar" style="width:10px;height:10px;color:#94a3b8"></i><span class="cmt">Chụp: 18/07/2025 · Phòng 1</span></div></div>
+        <div class="card cv"><div class="ct"><span class="cn">HD-2025-003</span><span class="badge bv"><i data-lucide="sparkles"></i>Beauty</span></div><div class="cm"><div class="sd sdy"></div><span class="cmt">Trần Quỳnh Như</span><span class="amt" style="margin-left:auto">1.500 kđ</span></div><div class="cm" style="margin-top:4px"><i data-lucide="image" style="width:10px;height:10px;color:#94a3b8"></i><span class="cmt">Đang hậu kỳ · 60%</span></div></div>
+        <div class="card cg"><div class="ct"><span class="cn">HD-2025-004</span><span class="badge bgr"><i data-lucide="check-circle"></i>Hoàn thành</span></div><div class="cm"><div class="sd sdg"></div><span class="cmt">Ngọc Phương & Minh Khoa</span><span class="amt" style="margin-left:auto">6.500 kđ</span></div><div class="cm" style="margin-top:4px"><i data-lucide="check" style="width:10px;height:10px;color:#059669"></i><span class="cmt">Bàn giao 28/06/2025</span></div></div>
+        <div class="card cr"><div class="ct"><span class="cn">HD-2025-005</span><span class="badge br"><i data-lucide="alert-triangle"></i>Trễ tiến độ</span></div><div class="cm"><div class="sd sdr"></div><span class="cmt">Bùi Thị Lan</span><span class="amt" style="margin-left:auto">3.200 kđ</span></div><div class="cm" style="margin-top:4px"><i data-lucide="clock" style="width:10px;height:10px;color:#e11d48"></i><span class="cmt">Chậm hậu kỳ · Cần xử lý</span></div></div>
+      </div>
+      <div class="bnav"><div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><i data-lucide="layout-dashboard"></i>Tổng quan</div><div class="bi" onclick="show('leads',document.querySelector('.np:nth-child(3)'))"><i data-lucide="clipboard-list"></i>Tư vấn</div><div class="bi active"><i data-lucide="folder-open"></i>Hợp đồng</div><div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><i data-lucide="message-circle"></i>Chat</div><div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><i data-lucide="bell"></i>Thông báo</div></div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div class="scr" id="scr-customers">
+      <div class="app-hd"><div class="ah-left"><div class="icon-btn menu" onclick="toggleSidebar()"><i data-lucide="menu"></i></div><div><div class="ah-brand" style="font-size:13px">Khách hàng</div><div class="ah-sub">87 khách · Toàn thời gian</div></div></div><button class="btn btn-gold"><i data-lucide="user-plus"></i>Thêm</button></div>
+      <div style="padding:10px 12px 4px;flex-shrink:0"><div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #ebe4d8;border-radius:var(--r);padding:8px 11px"><i data-lucide="search" style="width:14px;height:14px;color:#94a3b8;flex-shrink:0"></i><span style="font-size:11px;color:#94a3b8">Tìm tên, SĐT, email...</span></div></div>
+      <div class="sv" style="padding:4px 12px 12px">
+        <div class="card ca" onclick="openSheet('sh-customer')"><div class="ct"><span class="cn">Như Ý</span><span class="badge bg"><i data-lucide="shopping-bag"></i>2 đơn hàng</span></div><div class="cm"><i data-lucide="phone" style="width:10px;height:10px;color:#94a3b8"></i><span class="cmt">0901 234 567</span></div><div class="cm" style="margin-top:3px"><i data-lucide="credit-card" style="width:10px;height:10px;color:#059669"></i><span class="cmt">Tổng chi: <b style="color:#059669">7.100 kđ</b> · 06/2025</span></div></div>
+        <div class="card"><div class="ct"><span class="cn">Ngọc Phương</span><span class="badge bgr"><i data-lucide="check-circle"></i>Hoàn thành</span></div><div class="cm"><i data-lucide="phone" style="width:10px;height:10px;color:#94a3b8"></i><span class="cmt">0912 345 678</span></div><div class="cm" style="margin-top:3px"><i data-lucide="credit-card" style="width:10px;height:10px;color:#059669"></i><span class="cmt">Tổng chi: <b style="color:#059669">6.500 kđ</b> · 06/2025</span></div></div>
+        <div class="card"><div class="ct"><span class="cn">Gia đình chị Lâm</span><span class="badge bb"><i data-lucide="clock"></i>Đang xử lý</span></div><div class="cm"><i data-lucide="phone" style="width:10px;height:10px;color:#94a3b8"></i><span class="cmt">0923 456 789</span></div><div class="cm" style="margin-top:3px"><i data-lucide="credit-card" style="width:10px;height:10px;color:#059669"></i><span class="cmt">2.800 kđ · 07/2025</span></div></div>
+        <div class="card"><div class="ct"><span class="cn">Trần Quỳnh Như</span><span class="badge bv"><i data-lucide="image"></i>Hậu kỳ</span></div><div class="cm"><i data-lucide="phone" style="width:10px;height:10px;color:#94a3b8"></i><span class="cmt">0934 567 890</span></div><div class="cm" style="margin-top:3px"><i data-lucide="credit-card" style="width:10px;height:10px;color:#059669"></i><span class="cmt">1.500 kđ</span></div></div>
+      </div>
+      <div class="bnav"><div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><i data-lucide="layout-dashboard"></i>Tổng quan</div><div class="bi active"><i data-lucide="users"></i>Khách hàng</div><div class="bi" onclick="show('orders',document.querySelector('.np:nth-child(4)'))"><i data-lucide="folder-open"></i>Hợp đồng</div><div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><i data-lucide="message-circle"></i>Chat</div><div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><i data-lucide="bell"></i>Thông báo</div></div>
+    </div>
+
+    <!-- TASKS -->
+    <div class="scr" id="scr-tasks">
+      <div class="app-hd"><div class="ah-left"><div class="icon-btn menu" onclick="toggleSidebar()"><i data-lucide="menu"></i></div><div><div class="ah-brand" style="font-size:13px">Phân công công việc</div><div class="ah-sub">6 đang làm · 3 chờ duyệt</div></div></div><button class="btn btn-gold"><i data-lucide="plus"></i>Tạo</button></div>
+      <div class="tab-bar"><button class="tb active"><i data-lucide="list"></i>Tất cả</button><button class="tb"><i data-lucide="loader"></i>Đang làm</button><button class="tb"><i data-lucide="check-circle"></i>Xong</button></div>
+      <div class="sv" style="padding:10px 14px">
+        <div class="slbl" style="margin-top:4px">Hôm nay · 30/06/2025</div>
+        <div class="titem"><div class="tcb tcbd"><i data-lucide="check"></i></div><div><div class="tn tnd">Chụp ảnh Như Ý & Văn Hùng</div><div class="tmeta"><span class="pr prh"><i data-lucide="flame"></i>Gấp</span><span class="due"><i data-lucide="calendar"></i>30/06</span><span class="due"><i data-lucide="user"></i>Hải Nam</span></div></div></div>
+        <div class="titem"><div class="tcb" style="border-color:#f59e0b"></div><div><div class="tn">Hậu kỳ album Trần Quỳnh Như</div><div class="tmeta"><span class="pr prh"><i data-lucide="flame"></i>Gấp</span><span class="due"><i data-lucide="calendar"></i>02/07</span><span class="due"><i data-lucide="user"></i>Minh Hoàng</span></div></div></div>
+        <div class="titem"><div class="tcb"></div><div><div class="tn">Follow-up tư vấn Kiều Mi</div><div class="tmeta"><span class="pr prm"><i data-lucide="minus-circle"></i>Thường</span><span class="due"><i data-lucide="calendar"></i>01/07</span><span class="due"><i data-lucide="user"></i>Ngọc Sales</span></div></div></div>
+        <div class="slbl" style="margin-top:12px">Tuần này</div>
+        <div class="titem"><div class="tcb"></div><div><div class="tn">Chuẩn bị phục trang Family Lâm</div><div class="tmeta"><span class="pr prl"><i data-lucide="circle"></i>Bình thường</span><span class="due"><i data-lucide="calendar"></i>05/07</span><span class="due"><i data-lucide="user"></i>Hải Nam</span></div></div></div>
+        <div class="titem"><div class="tcb"></div><div><div class="tn">Báo cáo doanh thu tháng 06</div><div class="tmeta"><span class="pr prm"><i data-lucide="minus-circle"></i>Thường</span><span class="due"><i data-lucide="calendar"></i>05/07</span><span class="due"><i data-lucide="user"></i>Admin</span></div></div></div>
+      </div>
+      <div class="bnav"><div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><i data-lucide="layout-dashboard"></i>Tổng quan</div><div class="bi active"><i data-lucide="check-square"></i>Công việc</div><div class="bi" onclick="show('objectives',document.querySelector('.np:nth-child(7)'))"><i data-lucide="target"></i>Mục tiêu</div><div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><i data-lucide="message-circle"></i>Chat</div><div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><i data-lucide="bell"></i>Thông báo</div></div>
+    </div>
+
+    <!-- OBJECTIVES -->
+    <div class="scr" id="scr-objectives">
+      <div class="app-hd"><div class="ah-left"><div class="icon-btn menu" onclick="toggleSidebar()"><i data-lucide="menu"></i></div><div><div class="ah-brand" style="font-size:13px">Mục tiêu & Tiến độ</div><div class="ah-sub">Q3 · Tháng 07–09/2025</div></div></div></div>
+      <div class="sv" style="padding:12px">
+        <div class="oc"><div class="och"><div><div class="oct"><i data-lucide="trending-up"></i>Doanh thu tháng 07</div><div class="ocp">01/07 – 31/07/2025</div></div><div class="ocpct" style="color:var(--gold)">68%</div></div><div class="prog"><div class="progf" style="width:68%;background:linear-gradient(90deg,var(--gold),#e6b97a)"></div></div><div class="ocm"><span>Đạt: 34tr / 50tr</span><span style="color:var(--gold)">Còn 16tr</span></div></div>
+        <div class="oc"><div class="och"><div><div class="oct"><i data-lucide="camera"></i>Số đơn chụp hoàn thành</div><div class="ocp">Tháng 06/2025</div></div><div class="ocpct" style="color:#059669">83%</div></div><div class="prog"><div class="progf" style="width:83%;background:linear-gradient(90deg,#10b981,#34d399)"></div></div><div class="ocm"><span>10 / 12 đơn</span><span style="color:#059669">Còn 2 đơn</span></div></div>
+        <div class="oc"><div class="och"><div><div class="oct"><i data-lucide="clipboard-list"></i>Tỷ lệ chốt tư vấn CRM</div><div class="ocp">Q3/2025</div></div><div class="ocpct" style="color:#2563eb">30%</div></div><div class="prog"><div class="progf" style="width:30%;background:linear-gradient(90deg,#3b82f6,#60a5fa)"></div></div><div class="ocm"><span>3 / 10 lead chốt</span><span style="color:#2563eb">Mục tiêu: 40%</span></div></div>
+        <div class="oc"><div class="och"><div><div class="oct"><i data-lucide="user-plus"></i>Khách hàng mới</div><div class="ocp">Tháng 06/2025</div></div><div class="ocpct" style="color:#059669">100%</div></div><div class="prog"><div class="progf" style="width:100%;background:linear-gradient(90deg,#10b981,#34d399)"></div></div><div class="ocm"><span>10 khách mới</span><span style="color:#059669;display:flex;align-items:center;gap:3px"><i data-lucide="award" style="width:10px;height:10px"></i>Vượt mục tiêu</span></div></div>
+      </div>
+      <div class="bnav"><div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><i data-lucide="layout-dashboard"></i>Tổng quan</div><div class="bi active"><i data-lucide="target"></i>Mục tiêu</div><div class="bi" onclick="show('tasks',document.querySelector('.np:nth-child(6)'))"><i data-lucide="check-square"></i>Công việc</div><div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><i data-lucide="message-circle"></i>Chat</div><div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><i data-lucide="bell"></i>Thông báo</div></div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="scr" id="scr-chat">
+      <div class="app-hd"><div class="ah-left"><div class="icon-btn menu" onclick="toggleSidebar()"><i data-lucide="menu"></i></div><div><div class="ah-brand" style="font-size:13px">Trò chuyện nội bộ</div><div class="ah-sub">5 cuộc trò chuyện</div></div></div><div class="icon-btn" style="background:#fff;border:1px solid #ebe4d8;color:#64748b"><i data-lucide="edit-3" style="width:14px;height:14px"></i></div></div>
+      <div class="sv">
+        <div class="ci"><div class="av" style="background:linear-gradient(135deg,var(--gold),var(--gold-d));width:38px;height:38px"><i data-lucide="users"></i></div><div class="cib"><div class="cin">Nhóm Toàn Studio</div><div class="cip">Admin: Nhớ follow khách Kiều Mi nhé 👍</div></div><div class="cir"><div class="cit">09:32</div><div class="ub">3</div></div></div>
+        <div class="ci"><div class="av" style="background:linear-gradient(135deg,#10b981,#059669);width:38px;height:38px;font-size:13px;font-weight:800">H</div><div class="cib"><div class="cin">Hải Nam (Thợ chụp)</div><div class="cip">Em đã chuẩn bị xong thiết bị ạ</div></div><div class="cir"><div class="cit">08:45</div><div class="ub">1</div></div></div>
+        <div class="ci"><div class="av" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);width:38px;height:38px;font-size:13px;font-weight:800">N</div><div class="cib"><div class="cin">Ngọc Sales</div><div class="cip">Khách Kiều Mi hỏi thêm về gói combo ạ</div></div><div class="cir"><div class="cit">08:20</div></div></div>
+        <div class="ci"><div class="av" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);width:38px;height:38px;font-size:13px;font-weight:800">M</div><div class="cib"><div class="cin">Minh Hoàng (Editor)</div><div class="cip">Album Như Ý xong chiều nay ạ</div></div><div class="cir"><div class="cit">Hôm qua</div></div></div>
+        <div class="ci"><div class="av" style="background:linear-gradient(135deg,#f43f5e,#e11d48);width:38px;height:38px;font-size:13px;font-weight:800">T</div><div class="cib"><div class="cin">Trần Manager</div><div class="cip">Cho mình xem lịch chụp tuần sau với</div></div><div class="cir"><div class="cit">Hôm qua</div></div></div>
+      </div>
+      <div class="bnav"><div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><i data-lucide="layout-dashboard"></i>Tổng quan</div><div class="bi" onclick="show('leads',document.querySelector('.np:nth-child(3)'))"><i data-lucide="clipboard-list"></i>Tư vấn</div><div class="bi" onclick="show('orders',document.querySelector('.np:nth-child(4)'))"><i data-lucide="folder-open"></i>Hợp đồng</div><div class="bi active"><i data-lucide="message-circle"></i>Chat</div><div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><i data-lucide="bell"></i>Thông báo</div></div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="scr" id="scr-notif">
+      <div class="app-hd"><div class="ah-left"><div class="icon-btn menu" onclick="toggleSidebar()"><i data-lucide="menu"></i></div><div><div class="ah-brand" style="font-size:13px">Thông báo</div><div class="ah-sub">3 chưa đọc</div></div></div><button class="btn btn-ghost">Đọc tất cả</button></div>
+      <div class="sv" style="padding:10px 14px">
+        <div class="ni"><div class="nico nicogr"><i data-lucide="check-circle-2"></i></div><div class="nib"><div class="nit">Chốt đơn thành công!</div><div class="nim">Lead Như Ý đã chốt · HD-2025-001 · 4.300 kđ</div><div class="nitime"><i data-lucide="clock"></i>Hôm nay · 09:31</div></div><div class="udot"></div></div>
+        <div class="ni"><div class="nico nicog"><i data-lucide="message-square"></i></div><div class="nib"><div class="nit">Phản hồi từ Quản lý</div><div class="nim">Admin đã gửi ghi chú về hồ sơ Kiều Mi.</div><div class="nitime"><i data-lucide="clock"></i>Hôm nay · 09:15</div></div><div class="udot"></div></div>
+        <div class="ni"><div class="nico nicob"><i data-lucide="calendar-clock"></i></div><div class="nib"><div class="nit">Nhắc lịch chụp ngày mai</div><div class="nim">HD-2025-002 · Gia đình Lâm · 08:00 · Phòng 1</div><div class="nitime"><i data-lucide="clock"></i>Hôm nay · 08:00</div></div><div class="udot"></div></div>
+        <div class="ni"><div class="nico nicor"><i data-lucide="alert-triangle"></i></div><div class="nib"><div class="nit">Nhiệm vụ sắp đến hạn</div><div class="nim">Hậu kỳ Trần Quỳnh Như hết hạn 02/07 · Còn 2 ngày</div><div class="nitime"><i data-lucide="clock"></i>Hôm qua · 20:00</div></div></div>
+        <div class="ni"><div class="nico nicog"><i data-lucide="bar-chart-2"></i></div><div class="nib"><div class="nit">Báo cáo doanh thu tháng 06</div><div class="nim">Tổng: 48tr · Tăng 12% · 24 đơn hoàn thành</div><div class="nitime"><i data-lucide="clock"></i>30/06 · 08:00</div></div></div>
+      </div>
+      <div class="bnav"><div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><i data-lucide="layout-dashboard"></i>Tổng quan</div><div class="bi" onclick="show('leads',document.querySelector('.np:nth-child(3)'))"><i data-lucide="clipboard-list"></i>Tư vấn</div><div class="bi" onclick="show('orders',document.querySelector('.np:nth-child(4)'))"><i data-lucide="folder-open"></i>Hợp đồng</div><div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><i data-lucide="message-circle"></i>Chat</div><div class="bi active"><i data-lucide="bell"></i>Thông báo</div></div>
+    </div>
+
+    <!-- STAFF -->
+    <div class="scr" id="scr-staff">
+      <div class="app-hd"><div class="ah-left"><div class="icon-btn menu" onclick="toggleSidebar()"><i data-lucide="menu"></i></div><div><div class="ah-brand" style="font-size:13px">Quản lý Nhân sự</div><div class="ah-sub">6 thành viên đang hoạt động</div></div></div><button class="btn btn-gold"><i data-lucide="user-plus"></i>Thêm</button></div>
+      <div class="sv" style="padding:12px">
+        <div class="sfc"><div class="av" style="background:linear-gradient(135deg,var(--gold),var(--gold-d));width:38px;height:38px"><i data-lucide="shield"></i></div><div class="sfi"><div class="sfn">Nguyễn Văn Admin</div><div class="sfr"><i data-lucide="shield-check"></i>Điều hành · admin@studio.com</div></div><div style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:#059669"><div class="sd sdg"></div>Active</div></div>
+        <div class="sfc"><div class="av" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);width:38px;height:38px"><i data-lucide="briefcase"></i></div><div class="sfi"><div class="sfn">Trần Thị Manager</div><div class="sfr"><i data-lucide="briefcase"></i>Quản lý · manager@studio.com</div></div><div style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:#059669"><div class="sd sdg"></div>Active</div></div>
+        <div class="sfc"><div class="av" style="background:linear-gradient(135deg,#e11d48,#be123c);width:38px;height:38px"><i data-lucide="user-check"></i></div><div class="sfi"><div class="sfn">Nguyễn Thị Sales</div><div class="sfr"><i data-lucide="user-check"></i>Tư vấn & Sales · sale@studio.com</div></div><div style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:#059669"><div class="sd sdg"></div>Active</div></div>
+        <div class="sfc"><div class="av" style="background:linear-gradient(135deg,#10b981,#059669);width:38px;height:38px"><i data-lucide="camera"></i></div><div class="sfi"><div class="sfn">Lê Hải Nam</div><div class="sfr"><i data-lucide="camera"></i>Thợ chụp ảnh · photo@studio.com</div></div><div style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:#059669"><div class="sd sdg"></div>Active</div></div>
+        <div class="sfc"><div class="av" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);width:38px;height:38px"><i data-lucide="image"></i></div><div class="sfi"><div class="sfn">Phạm Minh Hoàng</div><div class="sfr"><i data-lucide="image"></i>Xử lý & chỉnh sửa ảnh</div></div><div style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:#059669"><div class="sd sdg"></div>Active</div></div>
+      </div>
+      <div class="bnav"><div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><i data-lucide="layout-dashboard"></i>Tổng quan</div><div class="bi active"><i data-lucide="shield-check"></i>Nhân sự</div><div class="bi" onclick="show('settings',document.querySelector('.np:nth-child(11)'))"><i data-lucide="settings"></i>Cài đặt</div><div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><i data-lucide="message-circle"></i>Chat</div><div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><i data-lucide="bell"></i>Thông báo</div></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="scr" id="scr-settings">
+      <div class="app-hd"><div class="ah-left"><div class="icon-btn menu" onclick="toggleSidebar()"><i data-lucide="menu"></i></div><div><div class="ah-brand" style="font-size:13px">Cài đặt & Hệ thống</div><div class="ah-sub">Aura Bridal Studio</div></div></div></div>
+      <div class="sv" style="padding:12px 14px">
+        <div class="slbl" style="margin-top:4px">Thông tin studio</div>
+        <div class="sc"><div class="srow"><div class="srowl"><div class="sico" style="background:#faf6ee"><i data-lucide="building-2" style="color:var(--gold)"></i></div><div><div class="slbl" style="font-size:11px;font-weight:700;color:#1e293b;text-transform:none;letter-spacing:0;margin:0">Tên Studio</div><div class="ssub">Aura Bridal Studio</div></div></div><div class="chev"><i data-lucide="chevron-right"></i></div></div><div class="srow"><div class="srowl"><div class="sico" style="background:#eff6ff"><i data-lucide="phone" style="color:#2563eb"></i></div><div><div class="slbl" style="font-size:11px;font-weight:700;color:#1e293b;text-transform:none;letter-spacing:0;margin:0">Hotline</div><div class="ssub">0901 234 567</div></div></div><div class="chev"><i data-lucide="chevron-right"></i></div></div><div class="srow"><div class="srowl"><div class="sico" style="background:#ecfdf5"><i data-lucide="map-pin" style="color:#059669"></i></div><div><div class="slbl" style="font-size:11px;font-weight:700;color:#1e293b;text-transform:none;letter-spacing:0;margin:0">Địa chỉ</div><div class="ssub">123 Nguyễn Trãi, TP.HCM</div></div></div><div class="chev"><i data-lucide="chevron-right"></i></div></div></div>
+        <div class="slbl" style="margin-top:14px">Tuỳ chỉnh hệ thống</div>
+        <div class="sc"><div class="srow"><div class="srowl"><div class="sico" style="background:#faf6ee"><i data-lucide="bell" style="color:var(--gold)"></i></div><div><div class="slbl" style="font-size:11px;font-weight:700;color:#1e293b;text-transform:none;letter-spacing:0;margin:0">Thông báo đẩy</div><div class="ssub">Bật khi có đơn hàng mới</div></div></div><div class="tog"><div class="togk"></div></div></div><div class="srow"><div class="srowl"><div class="sico" style="background:#faf5ff"><i data-lucide="moon" style="color:#7c3aed"></i></div><div><div class="slbl" style="font-size:11px;font-weight:700;color:#1e293b;text-transform:none;letter-spacing:0;margin:0">Chế độ tối</div><div class="ssub">Giao diện nền tối</div></div></div><div class="tog togoff"><div class="togk"></div></div></div><div class="srow"><div class="srowl"><div class="sico" style="background:#eff6ff"><i data-lucide="globe" style="color:#2563eb"></i></div><div><div class="slbl" style="font-size:11px;font-weight:700;color:#1e293b;text-transform:none;letter-spacing:0;margin:0">Ngôn ngữ</div><div class="ssub">Tiếng Việt</div></div></div><div class="chev"><i data-lucide="chevron-right"></i></div></div></div>
+        <div class="slbl" style="margin-top:14px">Tài khoản</div>
+        <div class="sc"><div class="srow"><div class="srowl"><div class="sico" style="background:#faf6ee"><i data-lucide="user-circle" style="color:var(--gold)"></i></div><div><div class="slbl" style="font-size:11px;font-weight:700;color:#1e293b;text-transform:none;letter-spacing:0;margin:0">Hồ sơ cá nhân</div><div class="ssub">Nguyễn Văn Admin</div></div></div><div class="chev"><i data-lucide="chevron-right"></i></div></div><div class="srow"><div class="srowl"><div class="sico" style="background:#fffbeb"><i data-lucide="key" style="color:#d97706"></i></div><div><div class="slbl" style="font-size:11px;font-weight:700;color:#1e293b;text-transform:none;letter-spacing:0;margin:0">Đổi mật khẩu</div><div class="ssub">Lần đổi cuối: 30/06/2025</div></div></div><div class="chev"><i data-lucide="chevron-right"></i></div></div><div class="srow" onclick="show('login',document.querySelector('.np:nth-child(1)'))"><div class="srowl"><div class="sico" style="background:#fff1f2"><i data-lucide="log-out" style="color:#e11d48"></i></div><div><div class="slbl" style="font-size:11px;font-weight:700;color:#e11d48;text-transform:none;letter-spacing:0;margin:0">Đăng xuất</div><div class="ssub">admin@studio.com</div></div></div><div class="chev" style="color:#fca5a5"><i data-lucide="chevron-right"></i></div></div></div>
+      </div>
+      <div class="bnav"><div class="bi" onclick="show('dash',document.querySelector('.np:nth-child(2)'))"><i data-lucide="layout-dashboard"></i>Tổng quan</div><div class="bi" onclick="show('staff',document.querySelector('.np:nth-child(10)'))"><i data-lucide="shield-check"></i>Nhân sự</div><div class="bi active"><i data-lucide="settings"></i>Cài đặt</div><div class="bi" onclick="show('chat',document.querySelector('.np:nth-child(8)'))"><i data-lucide="message-circle"></i>Chat</div><div class="bi" onclick="show('notif',document.querySelector('.np:nth-child(9)'))"><i data-lucide="bell"></i>Thông báo</div></div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sbov" id="sbov" onclick="closeSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+      <div class="sbhd"><div class="sbst"><div class="sblogo"><i data-lucide="camera"></i></div><div><div class="sbbrand">AURA BRIDAL</div><div class="sbtagline">Studio Management</div></div></div><div class="sbusr"><div class="sbav">A</div><div><div class="sbname">Nguyễn Văn Admin</div><div class="sbrole"><i data-lucide="shield-check"></i>Điều hành hệ thống</div></div></div></div>
+      <div class="sbnav">
+        <div class="ni-item" onclick="navTo('dash',2)"><div class="niico"><i data-lucide="layout-dashboard"></i></div><div class="nilbl">Tổng Quan</div></div>
+        <div class="ni-item" onclick="navTo('leads',3)"><div class="niico"><i data-lucide="clipboard-list"></i></div><div class="nilbl">Quản lý Tư vấn (CRM)</div></div>
+        <div class="ni-item" onclick="navTo('orders',4)"><div class="niico"><i data-lucide="folder-open"></i></div><div class="nilbl">Hợp đồng & Đơn hàng</div></div>
+        <div class="ni-item" onclick="navTo('customers',5)"><div class="niico"><i data-lucide="users"></i></div><div class="nilbl">Quản lý Khách hàng</div></div>
+        <div class="sbsep"></div>
+        <div class="ni-item" onclick="navTo('tasks',6)"><div class="niico"><i data-lucide="check-square"></i></div><div class="nilbl">Phân công công việc</div></div>
+        <div class="ni-item" onclick="navTo('objectives',7)"><div class="niico"><i data-lucide="target"></i></div><div class="nilbl">Mục tiêu & Tiến độ</div></div>
+        <div class="sbsep"></div>
+        <div class="ni-item" onclick="navTo('chat',8)"><div class="niico"><i data-lucide="message-circle"></i></div><div class="nilbl">Trò chuyện nội bộ</div><div class="nibadge">4</div></div>
+        <div class="ni-item" onclick="navTo('notif',9)"><div class="niico"><i data-lucide="bell"></i></div><div class="nilbl">Thông báo</div><div class="nibadge">3</div></div>
+        <div class="sbsep"></div>
+        <div class="ni-item" onclick="navTo('staff',10)"><div class="niico"><i data-lucide="shield-check"></i></div><div class="nilbl">Quản lý Nhân sự</div></div>
+        <div class="ni-item" onclick="navTo('settings',11)"><div class="niico"><i data-lucide="settings"></i></div><div class="nilbl">Cài đặt & Hệ thống</div></div>
+      </div>
+      <div class="sbfot"><div class="logrow" onclick="show('login',document.querySelector('.np:nth-child(1)'));closeSidebar()"><i data-lucide="log-out"></i><span class="loglbl">Đăng xuất</span></div></div>
+    </div>
+
+    <!-- SHEET: Lead Detail -->
+    <div class="overlay" id="sh-lead-detail" onclick="closeSheetOut(event,'sh-lead-detail')">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="shhd"><div><div class="shtitle">Hồ sơ tư vấn: Ng Ngọc Quyên</div><div class="shsub">PAGE THE WILL · 03/06/2025</div></div><button class="closex" onclick="closeSheet('sh-lead-detail')"><i data-lucide="x"></i></button></div>
+        <div class="shbody">
+          <div style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid #ebe4d8;border-radius:var(--r);padding:10px 12px;margin-bottom:13px">
+            <div class="av" style="background:linear-gradient(135deg,var(--gold),var(--gold-d));width:38px;height:38px;font-size:14px;font-weight:800;flex-shrink:0">N</div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:700;color:#0f172a">Ng Ngọc Quyên</div><div style="font-size:9.5px;color:#94a3b8;margin-top:1px;display:flex;align-items:center;gap:4px"><i data-lucide="phone" style="width:9px;height:9px"></i>Chưa có SĐT</div></div>
+            <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end"><span class="badge bg">PAGE THE WILL</span><span class="badge ba"><i data-lucide="circle" style="width:7px;height:7px"></i>Đang tư vấn</span></div>
+          </div>
+          <div class="slbl">Tiến trình 6 bước</div>
+          <div class="sttrack" style="margin-bottom:5px">
+            <div class="stitem"><div class="strow"><div class="stcirc stcirc-c">1</div><div class="stline"></div></div><div class="stlbl stlbl-c">Khai thác</div></div>
+            <div class="stitem"><div class="strow"><div class="stline"></div><div class="stcirc">2</div><div class="stline"></div></div><div class="stlbl">Tư vấn</div></div>
+            <div class="stitem"><div class="strow"><div class="stline"></div><div class="stcirc">3</div><div class="stline"></div></div><div class="stlbl">Đề xuất</div></div>
+            <div class="stitem"><div class="strow"><div class="stline"></div><div class="stcirc">4</div><div class="stline"></div></div><div class="stlbl">Báo giá</div></div>
+            <div class="stitem"><div class="strow"><div class="stline"></div><div class="stcirc">5</div><div class="stline"></div></div><div class="stlbl">Thương lượng</div></div>
+            <div class="stitem"><div class="strow"><div class="stline"></div><div class="stcirc">6</div></div><div class="stlbl">Chốt đơn</div></div>
+          </div>
+          <p style="font-size:9.5px;font-weight:700;color:var(--gold-d);text-align:center;margin-bottom:12px">Đang ở bước 1/6 — Khai thác nhu cầu</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div><div class="slbl">Gói quan tâm</div><div style="display:flex;flex-wrap:wrap;gap:4px"><span class="badge br"><i data-lucide="heart"></i>Wedding</span></div></div>
+            <div><div class="slbl">Bám sát</div><div style="display:flex;flex-direction:column;gap:4px"><div style="display:flex;align-items:center;gap:6px;font-size:9.5px;color:#94a3b8"><i data-lucide="circle" style="width:12px;height:12px"></i>Follow 1 (6-12h)</div><div style="display:flex;align-items:center;gap:6px;font-size:9.5px;color:#94a3b8"><i data-lucide="circle" style="width:12px;height:12px"></i>Follow 2 (1-2 ngày)</div><div style="display:flex;align-items:center;gap:6px;font-size:9.5px;color:#94a3b8"><i data-lucide="circle" style="width:12px;height:12px"></i>Follow 3 (2-4 ngày)</div></div></div>
+          </div>
+          <div class="slbl">Nhật ký đàm phán của Sale</div>
+          <div style="background:#f8fafc;border:1px solid #ebe4d8;border-radius:var(--r);padding:10px 12px;font-size:10px;color:#334155;line-height:1.5;margin-bottom:12px">Đang khai thác nhu cầu chụp cưới. Khách muốn phong cách nhẹ nhàng, dự kiến cưới tháng 12.</div>
+          <hr class="div">
+          <div style="display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;color:#1d4ed8;margin-bottom:8px"><i data-lucide="message-square" style="width:13px;height:13px"></i>Ghi chú & Phản hồi từ Quản lý</div>
+          <div class="fbox" style="margin-bottom:8px"><div class="fmeta"><span class="fname">Nguyễn Văn Admin</span><span class="ftime">06-10 09:30</span></div><div class="ftext">Khách này tiềm năng! Ưu tiên follow trong ngày. Cần tư vấn combo cứ báo mình.</div></div>
+          <div class="finrow"><textarea class="fin" rows="2" placeholder="Nhập phản hồi hoặc hướng dẫn cho Sale..."></textarea><button class="sendbtn"><i data-lucide="send"></i></button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHEET: Order -->
+    <div class="overlay" id="sh-order" onclick="closeSheetOut(event,'sh-order')">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="shhd"><div><div class="shtitle">HD-2025-001 · Wedding</div><div class="shsub">Tạo ngày 01/06/2025</div></div><button class="closex" onclick="closeSheet('sh-order')"><i data-lucide="x"></i></button></div>
+        <div class="shbody">
+          <div style="display:flex;gap:6px;margin-bottom:12px"><span class="badge br"><i data-lucide="heart"></i>Wedding</span><span class="badge bgr"><i data-lucide="loader"></i>Đang xử lý</span></div>
+          <div class="fl">Khách hàng</div><div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:6px">Như Ý & Văn Hùng</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+            <div><div class="fl">Ngày chụp</div><div style="font-size:11px;font-weight:600;color:#334155">15/07/2025</div></div>
+            <div><div class="fl">Phòng chụp</div><div style="font-size:11px;font-weight:600;color:#334155">Phòng 2</div></div>
+            <div><div class="fl">Thành tiền</div><div style="font-size:14px;font-weight:900;color:#059669">4.300 kđ</div></div>
+            <div><div class="fl">Đã thanh toán</div><div style="font-size:12px;font-weight:700;color:#1d4ed8">2.000 kđ</div></div>
+          </div>
+          <div class="fl">Tiến độ xử lý</div>
+          <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:9px"><div style="width:22px;height:22px;border-radius:50%;background:#10b981;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="check" style="width:11px;height:11px"></i></div><span style="font-size:10px;font-weight:600;color:#059669">Đã chụp ảnh</span><span style="font-size:8.5px;color:#94a3b8;margin-left:auto">30/06</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><div style="width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="loader" style="width:11px;height:11px"></i></div><span style="font-size:10px;font-weight:600;color:var(--gold-d)">Đang hậu kỳ (40%)</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><div style="width:22px;height:22px;border-radius:50%;border:2px solid #ebe4d8;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-lucide="package" style="width:11px;height:11px;color:#94a3b8"></i></div><span style="font-size:10px;color:#94a3b8">Bàn giao sản phẩm</span></div>
+          </div>
+          <button class="btn btn-p"><i data-lucide="edit-3"></i>Cập nhật tiến độ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHEET: Customer -->
+    <div class="overlay" id="sh-customer" onclick="closeSheetOut(event,'sh-customer')">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="shhd"><div><div class="shtitle">Như Ý</div><div class="shsub">Khách hàng thân thiết · Từ 12/2024</div></div><button class="closex" onclick="closeSheet('sh-customer')"><i data-lucide="x"></i></button></div>
+        <div class="shbody">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <div class="av" style="background:linear-gradient(135deg,var(--gold),var(--gold-d));width:48px;height:48px;border-radius:50%;font-size:18px;font-weight:800;flex-shrink:0">N</div>
+            <div><div style="font-size:15px;font-weight:800;color:#0f172a">Như Ý</div><div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#94a3b8;margin-top:3px"><i data-lucide="phone" style="width:10px;height:10px"></i>0901 234 567</div><div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#94a3b8;margin-top:2px"><i data-lucide="mail" style="width:10px;height:10px"></i>nhuuy@gmail.com</div></div>
+          </div>
+          <div class="krow" style="margin-bottom:10px"><div class="kpi kg" style="padding:9px"><div class="kl">Tổng chi</div><div class="kv" style="font-size:18px">7.1tr</div></div><div class="kpi kgr" style="padding:9px"><div class="kl">Số đơn</div><div class="kv" style="font-size:18px">2</div></div></div>
+          <div class="slbl">Lịch sử đơn hàng</div>
+          <div class="card ca" style="padding:9px 11px;margin-bottom:6px"><div class="ct"><span class="cn" style="font-size:11px">HD-2025-001</span><span class="badge br"><i data-lucide="heart"></i>Wedding</span></div><div class="cm"><i data-lucide="check-circle" style="width:10px;height:10px;color:#059669"></i><span class="cmt">Hoàn thành · 4.300 kđ · 06/2025</span></div></div>
+          <div class="card cb" style="padding:9px 11px"><div class="ct"><span class="cn" style="font-size:11px">HD-2024-089</span><span class="badge bb"><i data-lucide="users"></i>Family</span></div><div class="cm"><i data-lucide="check-circle" style="width:10px;height:10px;color:#059669"></i><span class="cmt">Hoàn thành · 2.800 kđ · 12/2024</span></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn btn-p" style="font-size:10px;padding:9px"><i data-lucide="plus"></i>Tạo đơn mới</button><button class="btn btn-s" style="font-size:10px;padding:8px"><i data-lucide="edit-3"></i>Chỉnh sửa</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHEET: New Lead -->
+    <div class="overlay" id="sh-new-lead" onclick="closeSheetOut(event,'sh-new-lead')">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="shhd"><div><div class="shtitle">Thêm hồ sơ tư vấn mới</div><div class="shsub">Điền thông tin khách hàng tiềm năng</div></div><button class="closex" onclick="closeSheet('sh-new-lead')"><i data-lucide="x"></i></button></div>
+        <div class="shbody">
+          <div class="fl">Tên khách hàng *</div><input class="fi" placeholder="Nhập họ và tên...">
+          <div class="fl">Số điện thoại</div><input class="fi" placeholder="0901 234 567">
+          <div class="fl">Nguồn tiếp cận *</div><select class="fi"><option>PAGE THE WILL</option><option>PAGE FAMILY</option><option>PAGE GARDEN</option><option>KHÁCH CŨ</option><option>VÃNG LAI</option><option>ĐƯỢC GIỚI THIỆU</option></select>
+          <div class="fl">Gói dịch vụ quan tâm</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;margin-bottom:6px">
+            <label style="display:flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid #ebe4d8;border-radius:var(--r-sm);padding:6px 10px;font-size:10px;font-weight:700;color:#334155;cursor:pointer"><input type="checkbox" style="accent-color:var(--gold)"><i data-lucide="heart" style="width:11px;height:11px;color:#be123c"></i>Wedding</label>
+            <label style="display:flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid #ebe4d8;border-radius:var(--r-sm);padding:6px 10px;font-size:10px;font-weight:700;color:#334155;cursor:pointer"><input type="checkbox" style="accent-color:var(--gold)"><i data-lucide="users" style="width:11px;height:11px;color:#1d4ed8"></i>Family</label>
+            <label style="display:flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid #ebe4d8;border-radius:var(--r-sm);padding:6px 10px;font-size:10px;font-weight:700;color:#334155;cursor:pointer"><input type="checkbox" style="accent-color:var(--gold)"><i data-lucide="sparkles" style="width:11px;height:11px;color:#7c3aed"></i>Beauty</label>
+          </div>
+          <div class="fl">Ghi chú ban đầu</div>
+          <textarea class="fi" rows="2" placeholder="Khách muốn chụp phong cách..." style="resize:none;margin-bottom:14px"></textarea>
+          <button class="btn btn-p"><i data-lucide="plus-circle"></i>Tạo hồ sơ tư vấn</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+lucide.createIcons();
+const S=['login','dash','leads','orders','customers','tasks','objectives','chat','notif','staff','settings'];
+function show(id,btn){S.forEach(s=>{const e=document.getElementById('scr-'+s);if(e)e.classList.remove('active')});const t=document.getElementById('scr-'+id);if(t)t.classList.add('active');document.querySelectorAll('.np').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');closeSidebar();lucide.createIcons()}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sbov').classList.toggle('open')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sbov').classList.remove('open')}
+function navTo(id,n){show(id,document.querySelector('.np:nth-child('+n+')'))}
+function openSheet(id){document.getElementById(id).classList.add('open');lucide.createIcons()}
+function closeSheet(id){document.getElementById(id).classList.remove('open')}
+function closeSheetOut(e,id){if(e.target===document.getElementById(id))closeSheet(id)}
+</script>
+</body>
+</html>

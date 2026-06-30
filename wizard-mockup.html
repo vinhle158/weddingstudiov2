@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wizard Thiết Lập Ban Đầu - The Will Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    * { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .step-circle { transition: all 0.3s ease; }
+    .step-circle.active { background: linear-gradient(135deg, #d4a853, #b8922e); color: #fff; box-shadow: 0 0 0 4px rgba(212,168,83,0.2); }
+    .step-circle.done { background: #10b981; color: #fff; }
+    .step-line { transition: background 0.3s ease; }
+    input:focus, select:focus { outline: none; border-color: #d4a853; box-shadow: 0 0 0 3px rgba(212,168,83,0.15); }
+    .btn-gold { background: linear-gradient(135deg, #d4a853, #b8922e); }
+    .btn-gold:hover { background: linear-gradient(135deg, #c49a3a, #a88425); }
+    .btn-gold:disabled { opacity: 0.5; cursor: not-allowed; }
+    .spinner { border: 3px solid #e5e7eb; border-top-color: #d4a853; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="min-h-screen bg-[#faf9f6] flex items-center justify-center p-4">
+
+<div id="app" class="max-w-lg w-full">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <div class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200/50 px-4 py-1.5 rounded-full text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-4">
+      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z"/></svg>
+      Thiết lập lần đầu
+    </div>
+    <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">The Will Studio</h1>
+    <p class="text-slate-400 text-xs mt-1">Hệ thống quản lý studio chụp ảnh cưới</p>
+  </div>
+
+  <!-- Step Indicator -->
+  <div class="flex items-center justify-center mb-8" id="step-indicator">
+    <div class="flex items-center">
+      <div class="step-circle active w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold border-2 border-amber-300" id="step-dot-1">1</div>
+      <div class="step-line w-12 h-0.5 bg-slate-200" id="step-line-1"></div>
+      <div class="step-circle w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold border-2 border-slate-200 text-slate-400 bg-white" id="step-dot-2">2</div>
+      <div class="step-line w-12 h-0.5 bg-slate-200" id="step-line-2"></div>
+      <div class="step-circle w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold border-2 border-slate-200 text-slate-400 bg-white" id="step-dot-3">3</div>
+      <div class="step-line w-12 h-0.5 bg-slate-200" id="step-line-3"></div>
+      <div class="step-circle w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold border-2 border-slate-200 text-slate-400 bg-white" id="step-dot-4">4</div>
+    </div>
+  </div>
+
+  <!-- Card Container -->
+  <div class="bg-white rounded-3xl border border-slate-200/60 shadow-xl overflow-hidden">
+
+    <!-- ========== STEP 1: Welcome ========== -->
+    <div id="step-1" class="fade-in">
+      <div class="bg-gradient-to-br from-amber-50 to-orange-50/30 p-8 text-center border-b border-amber-100/50">
+        <div class="w-16 h-16 mx-auto bg-amber-100 rounded-2xl flex items-center justify-center mb-4">
+          <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        </div>
+        <h2 class="text-lg font-bold text-slate-900">Chào mừng bạn đến với The Will Studio!</h2>
+        <p class="text-slate-500 text-xs mt-2 max-w-sm mx-auto leading-relaxed">
+          Đây là lần khởi động đầu tiên. Trình thiết lập sẽ giúp bạn cấu hình cơ sở dữ liệu PostgreSQL và tạo tài khoản quản trị viên.
+        </p>
+      </div>
+      <div class="p-6 space-y-3">
+        <div class="flex items-start gap-3 bg-slate-50 p-3.5 rounded-xl">
+          <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-slate-800">Bước 1: Kết nối Database</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Nhập thông tin PostgreSQL để kết nối</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3 bg-slate-50 p-3.5 rounded-xl">
+          <div class="w-7 h-7 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center shrink-0 mt-0.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-slate-800">Bước 2: Tạo tài khoản Admin</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Thiết lập tài khoản quản trị viên đầu tiên</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3 bg-slate-50 p-3.5 rounded-xl">
+          <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-slate-800">Bước 3: Thông tin Studio</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Nhập tên và thông tin liên hệ studio</p>
+          </div>
+        </div>
+      </div>
+      <div class="p-6 pt-0">
+        <button onclick="goToStep(2)" class="btn-gold w-full text-white font-bold text-sm py-3 rounded-xl transition-all shadow-lg">
+          Bắt đầu thiết lập →
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== STEP 2: Database Connection ========== -->
+    <div id="step-2" class="fade-in hidden">
+      <div class="p-6 pb-4 border-b border-slate-100">
+        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+          Kết nối PostgreSQL
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">Nhập thông tin kết nối cơ sở dữ liệu của bạn</p>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Host (Địa chỉ máy chủ)</label>
+          <input type="text" id="db-host" value="localhost" placeholder="localhost" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-medium text-slate-800 transition-all">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Port</label>
+            <input type="text" id="db-port" value="5432" placeholder="5432" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-medium text-slate-800 transition-all">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Database Name</label>
+            <input type="text" id="db-name" value="studio_db" placeholder="studio_db" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-medium text-slate-800 transition-all">
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Username</label>
+          <input type="text" id="db-user" value="postgres" placeholder="postgres" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-medium text-slate-800 transition-all">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Password</label>
+          <input type="password" id="db-pass" value="" placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-medium text-slate-800 transition-all">
+        </div>
+
+        <!-- Test Connection Status -->
+        <div id="test-status" class="hidden rounded-xl p-3 text-xs font-semibold flex items-center gap-2"></div>
+      </div>
+      <div class="p-6 pt-0 flex gap-3">
+        <button onclick="goToStep(1)" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-sm py-3 rounded-xl transition-all">
+          ← Quay lại
+        </button>
+        <button onclick="testConnection()" id="btn-test" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Test kết nối
+        </button>
+        <button onclick="goToStep(3)" id="btn-next-2" disabled class="flex-1 btn-gold text-white font-bold text-sm py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+          Tiếp theo →
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== STEP 3: Admin Account ========== -->
+    <div id="step-3" class="fade-in hidden">
+      <div class="p-6 pb-4 border-b border-slate-100">
+        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          Tạo tài khoản Quản trị viên
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">Tài khoản này sẽ có quyền quản lý toàn bộ hệ thống</p>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Họ và tên *</label>
+          <input type="text" id="admin-name" placeholder="Ví dụ: Nguyễn Văn A" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-medium text-slate-800 transition-all">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email *</label>
+          <input type="email" id="admin-email" placeholder="admin@studio.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-medium text-slate-800 transition-all">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Mật khẩu *</label>
+          <input type="password" id="admin-pass" placeholder="Tối thiểu 8 ký tự" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-medium text-slate-800 transition-all">
+          <div id="pass-strength" class="mt-1.5 h-1 rounded-full bg-slate-100 overflow-hidden">
+            <div id="pass-bar" class="h-full rounded-full transition-all duration-300" style="width:0%"></div>
+          </div>
+          <p id="pass-label" class="text-[10px] text-slate-400 mt-1"></p>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Xác nhận mật khẩu *</label>
+          <input type="password" id="admin-pass-confirm" placeholder="Nhập lại mật khẩu" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-medium text-slate-800 transition-all">
+        </div>
+        <div id="pass-error" class="hidden text-rose-500 text-xs font-medium flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          <span></span>
+        </div>
+      </div>
+      <div class="p-6 pt-0 flex gap-3">
+        <button onclick="goToStep(2)" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-sm py-3 rounded-xl transition-all">
+          ← Quay lại
+        </button>
+        <button onclick="validateAdmin()" class="flex-1 btn-gold text-white font-bold text-sm py-3 rounded-xl transition-all">
+          Tiếp theo →
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== STEP 4: Studio Info ========== -->
+    <div id="step-4" class="fade-in hidden">
+      <div class="p-6 pb-4 border-b border-slate-100">
+        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          Thông tin Studio
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">Thông tin hiển thị trên hợp đồng và báo cáo</p>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tên Studio *</label>
+          <input type="text" id="studio-name" value="The Will Studio" placeholder="Ví dụ: The Will Studio" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-medium text-slate-800 transition-all">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Số điện thoại *</label>
+            <input type="text" id="studio-phone" placeholder="0901 234 567" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-medium text-slate-800 transition-all">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email *</label>
+            <input type="email" id="studio-email" placeholder="contact@studio.vn" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-medium text-slate-800 transition-all">
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Địa chỉ *</label>
+          <input type="text" id="studio-address" placeholder="123 Đường ABC, Quận 1, TP.HCM" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm font-medium text-slate-800 transition-all">
+        </div>
+      </div>
+      <div class="p-6 pt-0 flex gap-3">
+        <button onclick="goToStep(3)" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-sm py-3 rounded-xl transition-all">
+          ← Quay lại
+        </button>
+        <button onclick="finishSetup()" id="btn-finish" class="flex-1 btn-gold text-white font-bold text-sm py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          Hoàn tất thiết lập
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== SUCCESS ========== -->
+    <div id="step-success" class="fade-in hidden text-center p-8">
+      <div class="w-16 h-16 mx-auto bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+        <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <h2 class="text-lg font-bold text-slate-900">Thiết lập hoàn tất!</h2>
+      <p class="text-slate-500 text-xs mt-2 max-w-xs mx-auto leading-relaxed">
+        Hệ thống đã được cấu hình thành công. Bạn có thể đăng nhập bằng tài khoản Admin vừa tạo.
+      </p>
+      <div class="mt-6 bg-slate-50 rounded-xl p-4 text-left space-y-2">
+        <div class="flex justify-between text-xs">
+          <span class="text-slate-400">Database:</span>
+          <span class="font-semibold text-slate-700" id="success-db">PostgreSQL ✓</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="text-slate-400">Admin:</span>
+          <span class="font-semibold text-slate-700" id="success-admin">-</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="text-slate-400">Studio:</span>
+          <span class="font-semibold text-slate-700" id="success-studio">-</span>
+        </div>
+      </div>
+      <button onclick="alert('Demo: Chuyển sang màn hình đăng nhập thực tế')" class="mt-6 btn-gold text-white font-bold text-sm px-8 py-3 rounded-xl transition-all shadow-lg">
+        Đăng nhập ngay →
+      </button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <p class="text-center text-[10px] text-slate-300 mt-6 uppercase tracking-widest">© 2026 The Will Studio — Powered by Prisma + PostgreSQL</p>
+</div>
+
+<script>
+let currentStep = 1;
+
+function goToStep(step) {
+  // Hide all steps
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('step-' + i).classList.add('hidden');
+  }
+  document.getElementById('step-success').classList.add('hidden');
+
+  // Show target step
+  document.getElementById('step-' + step).classList.remove('hidden');
+  currentStep = step;
+
+  // Update step indicators
+  for (let i = 1; i <= 4; i++) {
+    const dot = document.getElementById('step-dot-' + i);
+    const line = document.getElementById('step-line-' + (i - 1));
+
+    if (i < step) {
+      dot.className = 'step-circle done w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold';
+      dot.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+    } else if (i === step) {
+      dot.className = 'step-circle active w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold border-2 border-amber-300';
+      dot.textContent = i;
+    } else {
+      dot.className = 'step-circle w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold border-2 border-slate-200 text-slate-400 bg-white';
+      dot.textContent = i;
+    }
+
+    if (line) {
+      line.className = i <= step ? 'step-line w-12 h-0.5 bg-amber-400' : 'step-line w-12 h-0.5 bg-slate-200';
+    }
+  }
+}
+
+function testConnection() {
+  const btn = document.getElementById('btn-test');
+  const status = document.getElementById('test-status');
+  const nextBtn = document.getElementById('btn-next-2');
+
+  btn.innerHTML = '<span class="spinner"></span> Đang kiểm tra...';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    const host = document.getElementById('db-host').value;
+    const port = document.getElementById('db-port').value;
+    const name = document.getElementById('db-name').value;
+
+    if (host && port && name) {
+      status.className = 'rounded-xl p-3 text-xs font-semibold flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100';
+      status.innerHTML = '<svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg> Kết nối thành công! Database PostgreSQL đã sẵn sàng.';
+      nextBtn.disabled = false;
+    } else {
+      status.className = 'rounded-xl p-3 text-xs font-semibold flex items-center gap-2 bg-rose-50 text-rose-700 border border-rose-100';
+      status.innerHTML = '<svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg> Không thể kết nối. Vui lòng kiểm tra lại thông tin.';
+    }
+
+    btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Test kết nối';
+    btn.disabled = false;
+    status.classList.remove('hidden');
+  }, 1500);
+}
+
+function validateAdmin() {
+  const name = document.getElementById('admin-name').value;
+  const email = document.getElementById('admin-email').value;
+  const pass = document.getElementById('admin-pass').value;
+  const confirm = document.getElementById('admin-pass-confirm').value;
+  const errorEl = document.getElementById('pass-error');
+
+  if (!name || !email || !pass) {
+    errorEl.classList.remove('hidden');
+    errorEl.querySelector('span').textContent = 'Vui lòng điền đầy đủ thông tin bắt buộc';
+    return;
+  }
+  if (pass.length < 8) {
+    errorEl.classList.remove('hidden');
+    errorEl.querySelector('span').textContent = 'Mật khẩu phải có tối thiểu 8 ký tự';
+    return;
+  }
+  if (pass !== confirm) {
+    errorEl.classList.remove('hidden');
+    errorEl.querySelector('span').textContent = 'Mật khẩu xác nhận không khớp';
+    return;
+  }
+
+  errorEl.classList.add('hidden');
+  goToStep(4);
+}
+
+// Password strength indicator
+document.getElementById('admin-pass')?.addEventListener('input', function(e) {
+  const val = e.target.value;
+  const bar = document.getElementById('pass-bar');
+  const label = document.getElementById('pass-label');
+  let score = 0;
+  if (val.length >= 8) score++;
+  if (val.length >= 12) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+
+  const pct = (score / 5) * 100;
+  bar.style.width = pct + '%';
+  if (score <= 1) { bar.style.backgroundColor = '#ef4444'; label.textContent = 'Yếu'; label.style.color = '#ef4444'; }
+  else if (score <= 2) { bar.style.backgroundColor = '#f59e0b'; label.textContent = 'Trung bình'; label.style.color = '#f59e0b'; }
+  else if (score <= 3) { bar.style.backgroundColor = '#d4a853'; label.textContent = 'Khá'; label.style.color = '#d4a853'; }
+  else { bar.style.backgroundColor = '#10b981'; label.textContent = 'Mạnh'; label.style.color = '#10b981'; }
+});
+
+function finishSetup() {
+  const name = document.getElementById('studio-name').value;
+  const phone = document.getElementById('studio-phone').value;
+  const email = document.getElementById('studio-email').value;
+  const address = document.getElementById('studio-address').value;
+
+  if (!name || !phone || !email || !address) {
+    alert('Vui lòng điền đầy đủ thông tin Studio');
+    return;
+  }
+
+  const btn = document.getElementById('btn-finish');
+  btn.innerHTML = '<span class="spinner"></span> Đang thiết lập...';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    // Show success
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById('step-' + i).classList.add('hidden');
+    }
+    document.getElementById('step-success').classList.remove('hidden');
+
+    document.getElementById('success-admin').textContent = document.getElementById('admin-email').value;
+    document.getElementById('success-studio').textContent = name;
+
+    // Update all dots to done
+    for (let i = 1; i <= 4; i++) {
+      const dot = document.getElementById('step-dot-' + i);
+      dot.className = 'step-circle done w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold';
+      dot.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+    }
+    for (let i = 1; i <= 3; i++) {
+      document.getElementById('step-line-' + i).className = 'step-line w-12 h-0.5 bg-emerald-400';
+    }
+  }, 2000);
+}
+</script>
+
+</body>
+</html>
