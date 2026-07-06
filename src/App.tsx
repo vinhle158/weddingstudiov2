@@ -10,6 +10,7 @@ import Notifications from './components/Notifications';
 import Staff from './components/Staff';
 import Settings from './components/Settings';
 import Leads from './components/Leads';
+import AiAssistantBubble from './components/AiAssistantBubble';
 import MobileApp from './components/mobile/MobileApp';
 import { useIsMobile } from './hooks/useIsMobile';
 import { 
@@ -609,6 +610,10 @@ export default function App() {
                 </button>
               </div>
 
+              {role?.id === 'role-admin' && (
+                <AiAssistantBubble userName={user?.full_name} placement="mobile" />
+              )}
+
             </div>
 
             {/* iOS Home Indicator - Only visible on simulated desktop */}
@@ -714,6 +719,7 @@ export default function App() {
           {renderMainContent()}
         </main>
       </div>
+      {role?.id === 'role-admin' && <AiAssistantBubble userName={user?.full_name} />}
     </div>
   );
 }

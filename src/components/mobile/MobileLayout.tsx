@@ -14,6 +14,7 @@ interface MobileLayoutProps {
   title: string;
   showBackButton?: boolean;
   onBackClick?: () => void;
+  assistantSlot?: React.ReactNode;
 }
 
 export default function MobileLayout({
@@ -27,7 +28,8 @@ export default function MobileLayout({
   hasPermission,
   title,
   showBackButton,
-  onBackClick
+  onBackClick,
+  assistantSlot
 }: MobileLayoutProps) {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[#faf9f6] w-full max-w-md mx-auto relative border-x border-slate-100">
@@ -47,6 +49,8 @@ export default function MobileLayout({
       <main className="flex-1 overflow-y-auto px-4 py-4 pb-24 scroll-smooth">
         {children}
       </main>
+
+      {assistantSlot}
 
       {/* Navigation */}
       <BottomNav

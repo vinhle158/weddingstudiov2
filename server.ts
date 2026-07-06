@@ -85,6 +85,910 @@ async function startServer() {
     };
   };
 
+  type AssistantToolName =
+    | 'get_business_overview'
+    | 'search_customers'
+    | 'search_orders'
+    | 'search_tasks'
+    | 'search_leads'
+    | 'get_schedule_range'
+    | 'get_operational_alerts'
+    | 'get_staff_workload';
+
+  const assistantTools = [
+    {
+      type: 'function',
+      function: {
+        name: 'get_business_overview',
+        description: 'Lay tong quan nhanh ve khach hang, don hang, doanh thu, task va lead trong he thong.',
+        parameters: {
+          type: 'object',
+          properties: {},
+          additionalProperties: false
+        }
+      }
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'search_customers',
+        description: 'Tim khach hang theo ten, so dien thoai hoac email.',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Tu khoa ten, so dien thoai hoac email.' },
+            limit: { type: 'number', description: 'So ket qua toi da, mac dinh 5.' }
+          },
+          required: ['query'],
+          additionalProperties: false
+        }
+      }
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'search_orders',
+        description: 'Tim don hang theo ma don, ten khach, so dien thoai, goi chup hoac trang thai.',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Tu khoa tim kiem.' },
+            status: { type: 'string', description: 'Trang thai don hang neu co.' },
+            limit: { type: 'number', description: 'So ket qua toi da, mac dinh 5.' }
+          },
+          additionalProperties: false
+        }
+      }
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'search_tasks',
+        description: 'Tim task theo tieu de, trang thai, nguoi duoc giao hoac task qua han.',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Tu khoa tim kiem.' },
+            status: { type: 'string', description: 'Trang thai task.' },
+            overdue_only: { type: 'boolean', description: 'Chi lay task qua han.' },
+            limit: { type: 'number', description: 'So ket qua toi da, mac dinh 5.' }
+          },
+          additionalProperties: false
+        }
+      }
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'search_leads',
+        description: 'Tim lead/tu van theo ten, so dien thoai, nguon hoac trang thai.',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Tu khoa tim kiem.' },
+            status: { type: 'string', description: 'Trang thai lead.' },
+            limit: { type: 'number', description: 'So ket qua toi da, mac dinh 5.' }
+          },
+          additionalProperties: false
+        }
+      }
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'get_schedule_range',
+        description: 'Xem lich chup/don hang theo khoang ngay, ho tro cau hoi hom nay, ngay mai, tuan nay, thang nay.',
+        parameters: {
+          type: 'object',
+          properties: {
+            range: { type: 'string', description: 'today, tomorrow, this_week, next_week, this_month hoac custom.' },
+            start_date: { type: 'string', description: 'Ngay bat dau YYYY-MM-DD neu custom.' },
+            end_date: { type: 'string', description: 'Ngay ket thuc YYYY-MM-DD neu custom.' },
+            limit: { type: 'number', description: 'So ket qua toi da, mac dinh 8.' }
+          },
+          additionalProperties: false
+        }
+      }
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'get_operational_alerts',
+        description: 'Tim canh bao van hanh: task tre, don sap chup thieu task, don chua coc, lead lau chua follow.',
+        parameters: {
+          type: 'object',
+          properties: {
+            days_ahead: { type: 'number', description: 'So ngay sap toi de kiem tra lich chup, mac dinh 7.' },
+            limit: { type: 'number', description: 'So canh bao toi da moi nhom, mac dinh 5.' }
+          },
+          additionalProperties: false
+        }
+      }
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'get_staff_workload',
+        description: 'Thong ke khoi luong cong viec theo nhan su: task dang lam, task tre, lich gan voi don hang.',
+        parameters: {
+          type: 'object',
+          properties: {
+            range: { type: 'string', description: 'today, this_week, next_week, this_month hoac all.' },
+            limit: { type: 'number', description: 'So nhan su toi da, mac dinh 8.' }
+          },
+          additionalProperties: false
+        }
+      }
+    }
+  ];
+
+  const clampLimit = (value: unknown, fallback = 5) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return fallback;
+    return Math.min(Math.max(Math.trunc(parsed), 1), 8);
+  };
+
+  const normalizeSearch = (value: unknown) => String(value || '').trim().toLowerCase();
+
+  const toDateKey = (date: Date) => date.toISOString().split('T')[0];
+
+  const addDays = (date: Date, days: number) => {
+    const next = new Date(date);
+    next.setDate(next.getDate() + days);
+    return next;
+  };
+
+  const getDateRange = (range?: string, startDate?: string, endDate?: string) => {
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    const rangeKey = normalizeSearch(range);
+
+    if (startDate && endDate) {
+      return { start: startDate, end: endDate, label: 'khoảng ngày đã chọn' };
+    }
+    if (rangeKey === 'tomorrow') {
+      const tomorrow = addDays(todayDate, 1);
+      return { start: toDateKey(tomorrow), end: toDateKey(tomorrow), label: 'ngày mai' };
+    }
+    if (rangeKey === 'next_week') {
+      const start = addDays(todayDate, 7 - todayDate.getDay() + 1);
+      const end = addDays(start, 6);
+      return { start: toDateKey(start), end: toDateKey(end), label: 'tuần sau' };
+    }
+    if (rangeKey === 'this_week') {
+      const mondayOffset = todayDate.getDay() === 0 ? -6 : 1 - todayDate.getDay();
+      const start = addDays(todayDate, mondayOffset);
+      const end = addDays(start, 6);
+      return { start: toDateKey(start), end: toDateKey(end), label: 'tuần này' };
+    }
+    if (rangeKey === 'this_month') {
+      const start = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1);
+      const end = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0);
+      return { start: toDateKey(start), end: toDateKey(end), label: 'tháng này' };
+    }
+
+    return { start: toDateKey(todayDate), end: toDateKey(todayDate), label: 'hôm nay' };
+  };
+
+  const runAssistantTool = (name: AssistantToolName, args: Record<string, any>) => {
+    const db = LocalDatabase.get();
+    const limit = clampLimit(args.limit);
+    const query = normalizeSearch(args.query);
+    const today = new Date().toISOString().split('T')[0];
+
+    if (name === 'get_business_overview') {
+      const activeOrders = db.orders.filter(o => o.status !== 'cancelled' && o.status !== 'delivered');
+      const overdueTasks = db.tasks.filter(t => t.status !== 'done' && t.due_date && t.due_date < today);
+      const openLeads = (db.leads || []).filter(l => l.status === 'consulting');
+      const revenue = db.orders.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
+      return {
+        customers: db.customers.length,
+        orders: db.orders.length,
+        active_orders: activeOrders.length,
+        total_order_value: revenue,
+        pending_tasks: db.tasks.filter(t => t.status !== 'done' && t.status !== 'cancelled').length,
+        overdue_tasks: overdueTasks.length,
+        active_leads: openLeads.length,
+        generated_at: new Date().toISOString()
+      };
+    }
+
+    if (name === 'search_customers') {
+      return db.customers
+        .filter(c => !query || [c.full_name, c.phone, c.email].some(v => normalizeSearch(v).includes(query)))
+        .slice(0, limit)
+        .map(c => {
+          const orders = db.orders.filter(o => o.customer_id === c.id);
+          return {
+            id: c.id,
+            full_name: c.full_name,
+            phone: c.phone,
+            email: c.email,
+            notes: c.notes,
+            orders_count: orders.length,
+            latest_order: orders.sort((a, b) => b.created_at.localeCompare(a.created_at))[0] || null
+          };
+        });
+    }
+
+    if (name === 'search_orders') {
+      const status = normalizeSearch(args.status);
+      return db.orders
+        .map(o => {
+          const customer = db.customers.find(c => c.id === o.customer_id);
+          return {
+            ...o,
+            customer_name: customer?.full_name || 'Unknown',
+            customer_phone: customer?.phone || null
+          };
+        })
+        .filter(o => !status || o.status === status)
+        .filter(o => !query || [
+          o.order_code,
+          o.package_name,
+          o.status,
+          o.customer_name,
+          o.customer_phone
+        ].some(v => normalizeSearch(v).includes(query)))
+        .slice(0, limit)
+        .map(o => ({
+          id: o.id,
+          order_code: o.order_code,
+          customer_name: o.customer_name,
+          customer_phone: o.customer_phone,
+          status: o.status,
+          shoot_date: o.shoot_date,
+          package_name: o.package_name,
+          total_amount: o.total_amount,
+          deposit_amount: o.deposit_amount,
+          notes: o.notes
+        }));
+    }
+
+    if (name === 'search_tasks') {
+      const status = normalizeSearch(args.status);
+      return db.tasks
+        .map(t => {
+          const assignee = db.users.find(u => u.id === t.assigned_to);
+          const order = db.orders.find(o => o.id === t.order_id);
+          return {
+            ...t,
+            assigned_to_name: assignee?.full_name || 'N/A',
+            order_code: order?.order_code || null
+          };
+        })
+        .filter(t => !status || t.status === status)
+        .filter(t => !args.overdue_only || (t.status !== 'done' && !!t.due_date && t.due_date < today))
+        .filter(t => !query || [
+          t.title,
+          t.description,
+          t.status,
+          t.priority,
+          t.assigned_to_name,
+          t.order_code
+        ].some(v => normalizeSearch(v).includes(query)))
+        .slice(0, limit)
+        .map(t => ({
+          id: t.id,
+          title: t.title,
+          status: t.status,
+          priority: t.priority,
+          due_date: t.due_date,
+          assigned_to_name: t.assigned_to_name,
+          order_code: t.order_code
+        }));
+    }
+
+    if (name === 'search_leads') {
+      const status = normalizeSearch(args.status);
+      return (db.leads || [])
+        .map(l => {
+          const assignee = db.users.find(u => u.id === l.assigned_sale_id);
+          return {
+            ...l,
+            assigned_sale_name: assignee?.full_name || 'N/A'
+          };
+        })
+        .filter(l => !status || l.status === status)
+        .filter(l => !query || [
+          l.customer_name,
+          l.phone,
+          l.source,
+          l.status,
+          l.assigned_sale_name
+        ].some(v => normalizeSearch(v).includes(query)))
+        .slice(0, limit)
+        .map(l => ({
+          id: l.id,
+          customer_name: l.customer_name,
+          phone: l.phone,
+          source: l.source,
+          sales_step: l.sales_step,
+          status: l.status,
+          revenue: l.revenue,
+          assigned_sale_name: l.assigned_sale_name,
+          support_needed: l.support_needed
+        }));
+    }
+
+    if (name === 'get_schedule_range') {
+      const range = getDateRange(args.range, args.start_date, args.end_date);
+      return {
+        range,
+        schedules: db.orders
+          .filter(o => o.shoot_date >= range.start && o.shoot_date <= range.end)
+          .sort((a, b) => `${a.shoot_date} ${a.shoot_time || ''}`.localeCompare(`${b.shoot_date} ${b.shoot_time || ''}`))
+          .slice(0, limit)
+          .map(o => {
+            const customer = db.customers.find(c => c.id === o.customer_id);
+            const tasks = db.tasks.filter(t => t.order_id === o.id);
+            return {
+              id: o.id,
+              order_code: o.order_code,
+              customer_name: customer?.full_name || 'Unknown',
+              customer_phone: customer?.phone || null,
+              shoot_date: o.shoot_date,
+              shoot_time: o.shoot_time,
+              status: o.status,
+              package_name: o.package_name,
+              assigned_staff: tasks.map(t => {
+                const user = db.users.find(u => u.id === t.assigned_to);
+                return {
+                  task_title: t.title,
+                  task_status: t.status,
+                  staff_name: user?.full_name || 'N/A'
+                };
+              })
+            };
+          })
+      };
+    }
+
+    if (name === 'get_operational_alerts') {
+      const daysAhead = clampLimit(args.days_ahead, 7);
+      const alertLimit = clampLimit(args.limit);
+      const rangeEnd = toDateKey(addDays(new Date(), daysAhead));
+      const activeOrders = db.orders.filter(o => o.status !== 'cancelled' && o.status !== 'delivered');
+      const upcomingOrders = activeOrders.filter(o => o.shoot_date >= today && o.shoot_date <= rangeEnd);
+
+      return {
+        checked_until: rangeEnd,
+        overdue_tasks: db.tasks
+          .filter(t => t.status !== 'done' && t.status !== 'cancelled' && !!t.due_date && t.due_date < today)
+          .slice(0, alertLimit)
+          .map(t => {
+            const user = db.users.find(u => u.id === t.assigned_to);
+            return {
+              type: 'overdue_task',
+              title: t.title,
+              due_date: t.due_date,
+              assigned_to_name: user?.full_name || 'N/A',
+              priority: t.priority
+            };
+          }),
+        upcoming_orders_missing_tasks: upcomingOrders
+          .filter(o => db.tasks.filter(t => t.order_id === o.id).length === 0)
+          .slice(0, alertLimit)
+          .map(o => {
+            const customer = db.customers.find(c => c.id === o.customer_id);
+            return {
+              type: 'missing_assignment',
+              order_code: o.order_code,
+              customer_name: customer?.full_name || 'Unknown',
+              shoot_date: o.shoot_date,
+              shoot_time: o.shoot_time,
+              note: 'Đơn sắp chụp nhưng chưa có task phân công.'
+            };
+          }),
+        orders_missing_deposit: activeOrders
+          .filter(o => Number(o.deposit_amount || 0) <= 0 && Number(o.total_amount || 0) > 0)
+          .slice(0, alertLimit)
+          .map(o => {
+            const customer = db.customers.find(c => c.id === o.customer_id);
+            return {
+              type: 'missing_deposit',
+              order_code: o.order_code,
+              customer_name: customer?.full_name || 'Unknown',
+              total_amount: o.total_amount,
+              note: 'Đơn có giá trị nhưng chưa ghi nhận đặt cọc.'
+            };
+          }),
+        active_leads_to_follow: (db.leads || [])
+          .filter(l => l.status === 'consulting')
+          .sort((a, b) => a.updated_at.localeCompare(b.updated_at))
+          .slice(0, alertLimit)
+          .map(l => {
+            const user = db.users.find(u => u.id === l.assigned_sale_id);
+            return {
+              type: 'active_lead',
+              customer_name: l.customer_name,
+              phone: l.phone,
+              source: l.source,
+              sales_step: l.sales_step,
+              assigned_sale_name: user?.full_name || 'N/A',
+              updated_at: l.updated_at
+            };
+          })
+      };
+    }
+
+    if (name === 'get_staff_workload') {
+      const rangeKey = normalizeSearch(args.range);
+      const range = rangeKey && rangeKey !== 'all' ? getDateRange(rangeKey) : null;
+      return db.users
+        .filter(u => u.is_active)
+        .map(user => {
+          const userTasks = db.tasks.filter(t => t.assigned_to === user.id);
+          const scopedTasks = range
+            ? userTasks.filter(t => !t.due_date || (t.due_date >= range.start && t.due_date <= range.end))
+            : userTasks;
+          const relatedOrderIds = new Set(scopedTasks.map(t => t.order_id).filter(Boolean));
+          return {
+            user_id: user.id,
+            full_name: user.full_name,
+            role_id: user.role_id,
+            total_tasks: scopedTasks.length,
+            pending_tasks: scopedTasks.filter(t => t.status === 'pending').length,
+            in_progress_tasks: scopedTasks.filter(t => t.status === 'in_progress').length,
+            overdue_tasks: scopedTasks.filter(t => t.status !== 'done' && t.status !== 'cancelled' && !!t.due_date && t.due_date < today).length,
+            linked_orders: relatedOrderIds.size,
+            next_due_task: scopedTasks
+              .filter(t => t.status !== 'done' && t.due_date)
+              .sort((a, b) => String(a.due_date).localeCompare(String(b.due_date)))[0] || null
+          };
+        })
+        .sort((a, b) => (b.overdue_tasks - a.overdue_tasks) || (b.in_progress_tasks - a.in_progress_tasks) || (b.pending_tasks - a.pending_tasks))
+        .slice(0, limit);
+    }
+
+    return { error: 'Unknown tool' };
+  };
+
+  const callMimoChat = async (body: Record<string, any>) => {
+    const apiKey = process.env.MIMO_API_KEY;
+    if (!apiKey) {
+      throw new Error('MIMO_API_KEY is not configured');
+    }
+
+    const baseUrl = (process.env.MIMO_API_BASE_URL || 'https://api.xiaomimimo.com/v1').replace(/\/$/, '');
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: process.env.MIMO_MODEL || 'mimo-v2.5-pro',
+        temperature: 0.1,
+        max_tokens: 260,
+        ...body
+      }),
+      signal: AbortSignal.timeout(25000)
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`MiMo API error ${response.status}: ${text.slice(0, 300)}`);
+    }
+
+    return response.json() as Promise<any>;
+  };
+
+  const compactGeminiSchema = (schema: Record<string, any>): Record<string, any> => {
+    const { additionalProperties, ...rest } = schema;
+    const compacted: Record<string, any> = { ...rest };
+    if (schema.properties) {
+      compacted.properties = Object.fromEntries(
+        Object.entries(schema.properties).map(([key, value]) => [
+          key,
+          typeof value === 'object' && value !== null
+            ? compactGeminiSchema(value as Record<string, any>)
+            : value
+        ])
+      );
+    }
+    return compacted;
+  };
+
+  const geminiTools = [{
+    functionDeclarations: assistantTools.map(tool => ({
+      name: tool.function.name,
+      description: tool.function.description,
+      parameters: compactGeminiSchema(tool.function.parameters)
+    }))
+  }];
+
+  const callGeminiGenerate = async (body: Record<string, any>) => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY is not configured');
+    }
+
+    const baseUrl = (process.env.GEMINI_API_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta').replace(/\/$/, '');
+    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+    const response = await fetch(`${baseUrl}/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 260
+        },
+        ...body
+      }),
+      signal: AbortSignal.timeout(25000)
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Gemini API error ${response.status}: ${text.slice(0, 300)}`);
+    }
+
+    return response.json() as Promise<any>;
+  };
+
+  const getGeminiText = (response: any) => {
+    const parts = response.candidates?.[0]?.content?.parts || [];
+    return parts
+      .map((part: any) => part.text)
+      .filter(Boolean)
+      .join('\n')
+      .trim();
+  };
+
+  const containsRawToolMarkup = (value: unknown) => {
+    const text = String(value || '').toLowerCase();
+    return text.includes('<tool_call') || text.includes('<function=') || text.includes('</tool_call>') || text.includes('function_call');
+  };
+
+  const inferAssistantToolFromQuestion = (question: string): { name: AssistantToolName; args: Record<string, any> } => {
+    const normalized = normalizeSearch(question);
+    const range =
+      normalized.includes('ngày mai') || normalized.includes('ngay mai') ? 'tomorrow' :
+      normalized.includes('tuần sau') || normalized.includes('tuan sau') ? 'next_week' :
+      normalized.includes('tuần này') || normalized.includes('tuan nay') ? 'this_week' :
+      normalized.includes('tháng này') || normalized.includes('thang nay') ? 'this_month' :
+      'today';
+
+    if (normalized.includes('ai bận') || normalized.includes('ai ban') || normalized.includes('rảnh') || normalized.includes('ranh') || normalized.includes('workload') || normalized.includes('khối lượng') || normalized.includes('khoi luong') || normalized.includes('nhân sự') || normalized.includes('nhan su')) {
+      return { name: 'get_staff_workload', args: { range: normalized.includes('tất cả') || normalized.includes('tat ca') ? 'all' : range, limit: 8 } };
+    }
+    if (normalized.includes('cảnh báo') || normalized.includes('canh bao') || normalized.includes('bất thường') || normalized.includes('bat thuong') || normalized.includes('thiếu') || normalized.includes('thieu') || normalized.includes('chưa cọc') || normalized.includes('chua coc') || normalized.includes('chưa phân công') || normalized.includes('chua phan cong')) {
+      return { name: 'get_operational_alerts', args: { days_ahead: 7, limit: 5 } };
+    }
+    if (normalized.includes('lịch') || normalized.includes('lich') || normalized.includes('sắp tới') || normalized.includes('sap toi') || normalized.includes('tuần') || normalized.includes('tuan') || normalized.includes('tháng') || normalized.includes('thang')) {
+      return { name: 'get_schedule_range', args: { range, limit: 8 } };
+    }
+    if (normalized.includes('trễ') || normalized.includes('tre') || normalized.includes('quá hạn') || normalized.includes('qua han') || normalized.includes('công việc') || normalized.includes('task')) {
+      return { name: 'search_tasks', args: { overdue_only: normalized.includes('trễ') || normalized.includes('tre') || normalized.includes('quá hạn') || normalized.includes('qua han'), limit: 5 } };
+    }
+    if (normalized.includes('lead') || normalized.includes('tư vấn') || normalized.includes('tu van') || normalized.includes('chăm sóc') || normalized.includes('cham soc')) {
+      return { name: 'search_leads', args: { status: normalized.includes('chăm sóc') || normalized.includes('cham soc') ? 'consulting' : undefined, limit: 5 } };
+    }
+    if (normalized.includes('khách') || normalized.includes('khach') || normalized.includes('số điện thoại') || normalized.includes('so dien thoai')) {
+      return { name: 'search_customers', args: { query: question, limit: 5 } };
+    }
+    if (normalized.includes('đơn') || normalized.includes('don') || normalized.includes('hợp đồng') || normalized.includes('hop dong') || normalized.includes('lịch chụp') || normalized.includes('lich chup') || normalized.includes('chụp') || normalized.includes('chup')) {
+      return { name: 'search_orders', args: { query: normalized.includes('lịch') || normalized.includes('lich') ? 'chụp' : question, limit: 5 } };
+    }
+    return { name: 'get_business_overview', args: {} };
+  };
+
+  const summarizeToolResultsWithMimo = async (messages: any[], name: AssistantToolName, result: unknown) => {
+    const second = await callMimoChat({
+      messages: [
+        ...messages,
+        {
+          role: 'assistant',
+          content: null,
+          tool_calls: [{
+            id: 'fallback-tool-call',
+            type: 'function',
+            function: {
+              name,
+              arguments: '{}'
+            }
+          }]
+        },
+        {
+          role: 'tool',
+          tool_call_id: 'fallback-tool-call',
+          name,
+          content: JSON.stringify(result).slice(0, 5000)
+        }
+      ]
+    });
+    return String(second.choices?.[0]?.message?.content || '').trim();
+  };
+
+  const summarizeToolResultsWithGemini = async (systemPrompt: string, question: string, name: AssistantToolName, result: unknown) => {
+    const response = await callGeminiGenerate({
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [
+        { role: 'user', parts: [{ text: question }] },
+        {
+          role: 'user',
+          parts: [{
+            text: `Du lieu he thong da kiem tra tu ${name}: ${JSON.stringify(result).slice(0, 5000)}. Hay tra loi ngan gon cho admin, khong nhac ten tool va khong in markup ky thuat.`
+          }]
+        }
+      ]
+    });
+    return getGeminiText(response);
+  };
+
+  const answerWithDeterministicTool = async (systemPrompt: string, question: string, messages: any[], providerName?: string) => {
+    const inferred = inferAssistantToolFromQuestion(question);
+    const result = runAssistantTool(inferred.name, inferred.args);
+    let answer = '';
+
+    if (providerName === 'mimo' && process.env.MIMO_API_KEY) {
+      answer = await summarizeToolResultsWithMimo(messages, inferred.name, result);
+    } else if (providerName === 'gemini' && process.env.GEMINI_API_KEY) {
+      answer = await summarizeToolResultsWithGemini(systemPrompt, question, inferred.name, result);
+    } else if (process.env.MIMO_API_KEY) {
+      answer = await summarizeToolResultsWithMimo(messages, inferred.name, result);
+    } else if (process.env.GEMINI_API_KEY) {
+      answer = await summarizeToolResultsWithGemini(systemPrompt, question, inferred.name, result);
+    }
+
+    if (!answer || containsRawToolMarkup(answer)) {
+      const compactResult = Array.isArray(result) ? result.slice(0, 5) : result;
+      answer = `Tôi đã kiểm tra dữ liệu. Kết quả: ${JSON.stringify(compactResult).slice(0, 700)}`;
+    }
+
+    return {
+      answer,
+      tools_used: [inferred.name]
+    };
+  };
+
+  const answerWithMimo = async (systemPrompt: string, question: string, messages: any[]) => {
+    const first = await callMimoChat({
+      messages,
+      tools: assistantTools,
+      tool_choice: 'auto'
+    });
+    const firstMessage = first.choices?.[0]?.message || {};
+    const toolCalls = (firstMessage.tool_calls || []).slice(0, 2);
+
+    if (toolCalls.length === 0) {
+      if (containsRawToolMarkup(firstMessage.content)) {
+        return answerWithDeterministicTool(systemPrompt, question, messages, 'mimo');
+      }
+      return {
+        answer: String(firstMessage.content || 'Tôi chưa có đủ dữ liệu để trả lời.').trim(),
+        tools_used: []
+      };
+    }
+
+    const toolResults = toolCalls.map((toolCall: any) => {
+      const name = toolCall.function?.name as AssistantToolName;
+      let args: Record<string, any> = {};
+      try {
+        args = JSON.parse(toolCall.function?.arguments || '{}');
+      } catch {
+        args = {};
+      }
+      return {
+        tool_call_id: toolCall.id,
+        name,
+        result: runAssistantTool(name, args)
+      };
+    });
+
+    const second = await callMimoChat({
+      messages: [
+        ...messages,
+        firstMessage,
+        ...toolResults.map(toolResult => ({
+          role: 'tool',
+          tool_call_id: toolResult.tool_call_id,
+          name: toolResult.name,
+          content: JSON.stringify(toolResult.result).slice(0, 5000)
+        }))
+      ]
+    });
+
+    return {
+      answer: String(second.choices?.[0]?.message?.content || 'Không có kết quả phù hợp.').trim(),
+      tools_used: toolResults.map(toolResult => toolResult.name)
+    };
+  };
+
+  const answerWithGemini = async (systemPrompt: string, question: string) => {
+    const first = await callGeminiGenerate({
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [{ role: 'user', parts: [{ text: question }] }],
+      tools: geminiTools
+    });
+
+    const parts = first.candidates?.[0]?.content?.parts || [];
+    const functionCalls = parts
+      .filter((part: any) => part.functionCall)
+      .map((part: any) => part.functionCall)
+      .slice(0, 2);
+
+    if (functionCalls.length === 0) {
+      if (containsRawToolMarkup(getGeminiText(first))) {
+        return answerWithDeterministicTool(systemPrompt, question, [], 'gemini');
+      }
+      return {
+        answer: getGeminiText(first) || 'Tôi chưa có đủ dữ liệu để trả lời.',
+        tools_used: []
+      };
+    }
+
+    const toolResults = functionCalls.map((call: any) => {
+      const name = call.name as AssistantToolName;
+      const args = call.args || {};
+      return {
+        name,
+        result: runAssistantTool(name, args)
+      };
+    });
+
+    const second = await callGeminiGenerate({
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [
+        { role: 'user', parts: [{ text: question }] },
+        { role: 'model', parts: functionCalls.map((call: any) => ({ functionCall: call })) },
+        {
+          role: 'user',
+          parts: toolResults.map(toolResult => ({
+            functionResponse: {
+              name: toolResult.name,
+              response: {
+                result: toolResult.result
+              }
+            }
+          }))
+        }
+      ]
+    });
+
+    return {
+      answer: getGeminiText(second) || 'Không có kết quả phù hợp.',
+      tools_used: toolResults.map(toolResult => toolResult.name)
+    };
+  };
+
+  const answerAssistant = async (systemPrompt: string, question: string, messages: any[]) => {
+    const providers = [
+      {
+        name: 'mimo',
+        enabled: !!process.env.MIMO_API_KEY,
+        run: () => answerWithMimo(systemPrompt, question, messages)
+      },
+      {
+        name: 'gemini',
+        enabled: !!process.env.GEMINI_API_KEY,
+        run: () => answerWithGemini(systemPrompt, question)
+      }
+    ];
+
+    let lastError: unknown = null;
+    for (const provider of providers) {
+      if (!provider.enabled) continue;
+      try {
+        const result = await provider.run();
+        if (containsRawToolMarkup(result.answer)) {
+          return await answerWithDeterministicTool(systemPrompt, question, messages, provider.name);
+        }
+        return result;
+      } catch (err) {
+        lastError = err;
+        console.error(`AI provider ${provider.name} failed, trying next provider if available:`, err);
+      }
+    }
+
+    throw lastError || new Error('No AI provider is configured');
+  };
+
+  // ----------------- AI ASSISTANT ENDPOINT -----------------
+  app.post('/api/ai/assistant', authenticate, async (req: AuthenticatedRequest, res: Response) => {
+    if (req.role?.id !== 'role-admin') {
+      return res.status(403).json({ error: 'Chỉ Admin được sử dụng trợ lý AI' });
+    }
+
+    const question = String(req.body?.question || '').trim();
+    if (!question) {
+      return res.status(400).json({ error: 'Vui lòng nhập câu hỏi' });
+    }
+    if (question.length > 500) {
+      return res.status(400).json({ error: 'Câu hỏi quá dài. Vui lòng hỏi ngắn hơn 500 ký tự.' });
+    }
+    if (!process.env.MIMO_API_KEY && !process.env.GEMINI_API_KEY) {
+      return res.status(503).json({
+        error: 'Chưa cấu hình API key cho trợ lý AI. Vui lòng thêm key vào môi trường chạy server.'
+      });
+    }
+
+    const systemPrompt = [
+      'Ban la tro ly tra cuu noi bo cho admin studio anh cuoi.',
+      'Tra loi bang tieng Viet, ngan gon, toi da 4 cau.',
+      'Khong suy doan du lieu. Khi can du lieu he thong, bat buoc goi tool.',
+      'Sau khi co tool result, chi doc lai ket qua quan trong va neu khong co ket qua thi noi ro khong tim thay.',
+      'Khong de xuat thay doi database, khong viet SQL, khong noi dai.'
+    ].join(' ');
+
+    const messages: any[] = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: question }
+    ];
+
+    try {
+      const assistantAnswer = await answerAssistant(systemPrompt, question, messages);
+      res.json(assistantAnswer);
+    } catch (err: any) {
+      console.error('AI assistant error:', err);
+      res.status(500).json({ error: 'Trợ lý AI đang lỗi kết nối hoặc quá tải. Vui lòng thử lại sau.' });
+    }
+  });
+
+  app.post('/api/ai/assistant/stream', authenticate, async (req: AuthenticatedRequest, res: Response) => {
+    if (req.role?.id !== 'role-admin') {
+      return res.status(403).json({ error: 'Chỉ Admin được sử dụng trợ lý AI' });
+    }
+
+    const question = String(req.body?.question || '').trim();
+    if (!question) {
+      return res.status(400).json({ error: 'Vui lòng nhập câu hỏi' });
+    }
+    if (question.length > 500) {
+      return res.status(400).json({ error: 'Câu hỏi quá dài. Vui lòng hỏi ngắn hơn 500 ký tự.' });
+    }
+    if (!process.env.MIMO_API_KEY && !process.env.GEMINI_API_KEY) {
+      return res.status(503).json({ error: 'Chưa cấu hình API key cho trợ lý AI. Vui lòng thêm key vào môi trường chạy server.' });
+    }
+
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no'
+    });
+
+    const sendEvent = (event: string, data: unknown) => {
+      res.write(`event: ${event}\n`);
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+
+    const systemPrompt = [
+      'Ban la tro ly tra cuu noi bo cho admin studio anh cuoi.',
+      'Tra loi bang tieng Viet, ngan gon, toi da 4 cau.',
+      'Khong suy doan du lieu. Khi can du lieu he thong, bat buoc goi tool.',
+      'Sau khi co tool result, chi doc lai ket qua quan trong va neu khong co ket qua thi noi ro khong tim thay.',
+      'Khong de xuat thay doi database, khong viet SQL, khong noi dai.'
+    ].join(' ');
+
+    const messages: any[] = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: question }
+    ];
+
+    try {
+      sendEvent('status', { message: 'checking' });
+      const assistantAnswer = await answerAssistant(systemPrompt, question, messages);
+      sendEvent('tools', { tools_used: assistantAnswer.tools_used || [] });
+
+      const chunks = Array.from(String(assistantAnswer.answer || 'Không có kết quả phù hợp.'));
+
+      for (const chunk of chunks) {
+        if (res.destroyed) return;
+        sendEvent('delta', { text: chunk });
+        await new Promise(resolve => setTimeout(resolve, 14));
+      }
+
+      sendEvent('done', { ok: true });
+      res.end();
+    } catch (err: any) {
+      console.error('AI assistant stream error:', err);
+      sendEvent('error', { error: 'Trợ lý AI đang lỗi kết nối hoặc quá tải. Vui lòng thử lại sau.' });
+      res.end();
+    }
+  });
+
   // ----------------- AUTH ENDPOINTS -----------------
   app.post('/api/auth/login', loginLimiter, async (req: Request, res: Response) => {
     const { email, password } = req.body;
