@@ -4,10 +4,28 @@
       "id": "user-admin",
       "full_name": "Viet Hoang",
       "email": "viet@studio.com",
-      "password_hash": "$2b$10$Q6heA07uRJzVv1wEm7F3kez.n6R02J9YuHiXvdowMb4e1TzWJX.rW",
+      "password_hash": "123abc456",
       "role_id": "role-admin",
       "is_active": true,
       "created_at": "2026-07-06T01:28:22.804Z"
+    },
+    {
+      "id": "user-sale",
+      "full_name": "Nguyễn Thị Sales",
+      "email": "sale@studio.com",
+      "password_hash": "staff123",
+      "role_id": "role-sales",
+      "is_active": true,
+      "created_at": "2026-06-01T00:00:00Z"
+    },
+    {
+      "id": "user-rbz3bmj",
+      "full_name": "Minh",
+      "email": "minh@studio.com",
+      "password_hash": "123456",
+      "role_id": "role-s0aio5l",
+      "is_active": true,
+      "created_at": "2026-07-06T01:48:12.555Z"
     }
   ],
   "roles": [
@@ -60,6 +78,18 @@
         "leads.manage",
         "tasks.view_own"
       ]
+    },
+    {
+      "id": "role-s0aio5l",
+      "name": "nhanvien",
+      "display_name": "Photographer",
+      "permissions": [
+        "orders.view",
+        "tasks.view_own",
+        "customers.view",
+        "tasks.view_all",
+        "tasks.assign"
+      ]
     }
   ],
   "customers": [],
@@ -73,7 +103,6 @@
   "notifications": [],
   "chat_messages": [],
   "studio_settings": {
-    "id": "singleton",
     "name": "The Will Studio",
     "phone": "0939 979 00 30",
     "email": "contact@thewillstudio.com",
@@ -81,7 +110,7 @@
     "website": "https://thewillstudio.com",
     "opening_hours": "09:00 - 20:00",
     "notes": "Studio váy cưới cao cấp & dịch vụ chụp ảnh trọn gói chuyên nghiệp.",
-    "backup_schedule": "daily",
+    "backup_schedule": "weekly",
     "last_backup_time": ""
   },
   "backups": [],

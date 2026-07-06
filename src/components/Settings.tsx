@@ -19,7 +19,10 @@ import {
   Mail,
   MapPin,
   Globe,
-  Loader2
+  Loader2,
+  Server,
+  Cpu,
+  Activity
 } from 'lucide-react';
 
 interface StudioSettings {
@@ -52,7 +55,7 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
   
   // Settings Form State
   const [settings, setSettings] = useState<StudioSettings>({
-    name: 'Aura Bridal Studio',
+    name: 'The Will Studio',
     phone: '',
     email: '',
     address: '',
@@ -82,10 +85,33 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
   // Confirm Modal State
   const [showRestoreConfirm, setShowRestoreConfirm] = useState<BackupItem | null>(null);
 
+  // System Status State
+  const [systemStatus, setSystemStatus] = useState<any>(null);
+  const [loadingSystemStatus, setLoadingSystemStatus] = useState(false);
+  const [systemStatusError, setSystemStatusError] = useState<string | null>(null);
+
+  const fetchSystemStatus = async () => {
+    try {
+      setLoadingSystemStatus(true);
+      setSystemStatusError(null);
+      const data = await apiRequest('/api/system/status');
+      setSystemStatus(data);
+    } catch (err: any) {
+      setSystemStatusError(err.message || 'Không thể lấy trạng thái hệ thống');
+    } finally {
+      setLoadingSystemStatus(false);
+    }
+  };
+
   useEffect(() => {
     fetchSettings();
     fetchBackups();
+    fetchSystemStatus();
+
+    const interval = setInterval(fetchSystemStatus, 30000);
+    return () => clearInterval(interval);
   }, []);
+
 
   const fetchSettings = async () => {
     try {
@@ -265,6 +291,90 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
         </div>
       </div>
 
+      {/* System Health Panel */}
+      <div className="bg-white rounded-2xl border border-gray-150 p-4 shadow-3xs grid grid-cols-1 sm:grid-cols-4 gap-4 items-center">
+        <div className="flex items-center justify-between sm:col-span-1 border-b sm:border-b-0 sm:border-r border-gray-100 pb-2 sm:pb-0 pr-2">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-gold-50 text-gold-600 rounded-xl">
+              <Activity className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Hệ thống</p>
+              <h4 className="text-xs font-bold text-gray-900 mt-0.5 flex items-center">
+                Trạng thái
+                <button 
+                  onClick={fetchSystemStatus} 
+                  disabled={loadingSystemStatus}
+                  className="p-1 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gold-600 transition-colors ml-1 cursor-pointer"
+                  title="Kiểm tra lại trạng thái"
+                >
+                  <RefreshCw className={`w-3 h-3 ${loadingSystemStatus ? 'animate-spin' : ''}`} />
+                </button>
+              </h4>
+            </div>
+          </div>
+        </div>
+        
+        {/* Backend Status */}
+        <div className="flex items-center justify-between sm:col-span-1 border-b sm:border-b-0 sm:border-r border-gray-100 pb-2 sm:pb-0 pr-4 pl-1">
+          <div className="flex items-center space-x-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-xs font-bold text-gray-700">Máy chủ API</span>
+          </div>
+          <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+            Đang chạy
+          </span>
+        </div>
+
+        {/* Database Status */}
+        <div className="flex items-center justify-between sm:col-span-1 border-b sm:border-b-0 sm:border-r border-gray-100 pb-2 sm:pb-0 pr-4 pl-1">
+          <div className="flex items-center space-x-2">
+            {systemStatus?.database === 'online' ? (
+              <>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-xs font-bold text-gray-700">PostgreSQL</span>
+              </>
+            ) : (
+              <>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                <span className="text-xs font-bold text-gray-700">PostgreSQL</span>
+              </>
+            )}
+          </div>
+          {systemStatus?.database === 'online' ? (
+            <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+              Kết nối tốt ({systemStatus?.db_latency_ms}ms)
+            </span>
+          ) : (
+            <span className="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+              Mất kết nối
+            </span>
+          )}
+        </div>
+
+        {/* Machine Stats */}
+        <div className="flex items-center justify-between sm:col-span-1 pr-2 pl-1">
+          <div className="flex items-center space-x-2">
+            <Cpu className="w-3.5 h-3.5 text-gray-400 animate-pulse" />
+            <span className="text-xs font-bold text-gray-700">Tài nguyên RAM</span>
+          </div>
+          {systemStatus?.memory ? (
+            <span className="text-[11px] text-gray-500 font-bold">
+              {systemStatus.memory.total - systemStatus.memory.free}MB / {systemStatus.memory.total}MB
+            </span>
+          ) : (
+            <span className="text-xs text-gray-400">---</span>
+          )}
+        </div>
+      </div>
+
+
       {/* Sub tabs navigation */}
       <div className="flex space-x-1 bg-slate-100 p-1 rounded-xl max-w-sm" id="settings-sub-tabs">
         <button
@@ -324,7 +434,7 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
                       value={settings.name}
                       onChange={e => setSettings({ ...settings, name: e.target.value })}
                       required
-                      placeholder="Ví dụ: Aura Bridal Studio"
+                      placeholder="Ví dụ: The Will Studio"
                       className="w-full text-sm border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 outline-hidden bg-slate-50/40"
                     />
                   </div>

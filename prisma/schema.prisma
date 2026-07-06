@@ -1,0 +1,208 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String   @id
+  full_name     String
+  email         String   @unique
+  password_hash String
+  role_id       String
+  is_active     Boolean
+  created_at    String
+}
+
+model Role {
+  id           String   @id
+  name         String   @unique
+  display_name String
+  permissions  String[]
+}
+
+model Customer {
+  id         String   @id
+  full_name  String
+  phone      String
+  email      String?
+  address    String?
+  notes      String?
+  created_at String
+  updated_at String
+}
+
+model Order {
+  id             String   @id
+  order_code     String   @unique
+  customer_id    String
+  status         String
+  shoot_date     String
+  shoot_time     String?
+  package_name   String
+  package_price  Float
+  deposit_amount Float
+  total_amount   Float
+  notes          String?
+  created_by     String
+  created_at     String
+  updated_at     String
+}
+
+model OrderStatusHistory {
+  id          String   @id
+  order_id    String
+  from_status String
+  to_status   String
+  changed_by  String
+  note        String?
+  changed_at  String
+}
+
+model DressInventory {
+  id         String   @id
+  code       String   @unique
+  name       String
+  category   String
+  size       String
+  color      String
+  status     String
+  image_url  String?
+  notes      String?
+  created_at String
+}
+
+model DressRental {
+  id          String   @id
+  dress_id    String
+  order_id    String
+  rented_date String
+  return_date String
+  returned_at String?
+  rental_fee  Float
+  status      String
+  notes       String?
+}
+
+model Task {
+  id          String   @id
+  title       String
+  description String?
+  order_id    String?
+  assigned_to String
+  assigned_by String
+  status      String
+  priority    String
+  due_date    String?
+  created_at  String
+  updated_at  String
+}
+
+model TaskUpdate {
+  id                String   @id
+  task_id           String
+  updated_by        String
+  status_changed_to String?
+  comment           String
+  created_at        String
+}
+
+model Objective {
+  id           String   @id
+  title        String
+  description  String?
+  status       String
+  created_by   String
+  created_at   String
+  updated_at   String
+  completed_at String?
+}
+
+model ObjectiveKeyResult {
+  id                  String   @id
+  objective_id        String
+  title               String
+  assigned_department String
+  assigned_to_user_id String?
+  status              String
+  progress            Float
+  notes               String?
+  updated_at          String
+}
+
+model ObjectiveProgressUpdate {
+  id             String   @id
+  key_result_id  String
+  updated_by     String
+  progress_from  Float
+  progress_to    Float
+  comment        String?
+  created_at     String
+}
+
+model Notification {
+  id         String   @id
+  sender_id  String
+  receiver_id String?
+  title      String
+  content    String
+  type       String
+  related_id String?
+  is_read_by String[]
+  created_at String
+}
+
+model ChatMessage {
+  id          String   @id
+  sender_id   String
+  receiver_id String?
+  content     String
+  created_at  String
+}
+
+model StudioSettings {
+  id              String @id @default("singleton")
+  name            String
+  phone           String
+  email           String
+  address         String
+  website         String
+  opening_hours   String
+  notes           String
+  backup_schedule String
+  last_backup_time String
+}
+
+model DatabaseBackup {
+  id           String @id
+  filename     String
+  created_at   String
+  size_bytes   Float
+  trigger_type String
+  status       String
+}
+
+model Lead {
+  id                  String   @id
+  date                String
+  customer_name       String
+  phone               String?
+  source              String
+  interested_packages Json
+  sales_step          Int
+  follow_up_status    Json
+  status              String
+  revenue             Float?
+  success_reason      String?
+  failure_reason      String?
+  assigned_sale_id    String
+  support_needed      String?
+  notes               String?
+  admin_feedbacks     Json
+  created_at          String
+  updated_at          String
+}
+

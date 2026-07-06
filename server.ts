@@ -1,8 +1,17 @@
+import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
+import cors from 'cors';
+import helmet from 'helmet';
 import { createServer as createViteServer } from 'vite';
-import { LocalDatabase, User, Customer, Order, OrderStatusHistory, Task, TaskUpdate, Role, Objective, ObjectiveKeyResult, ObjectiveProgressUpdate, Notification, ChatMessage, Lead, LeadFeedback } from './src/db_service';
+import { LocalDatabase, User, Customer, Order, OrderStatusHistory, Task, TaskUpdate, Role, Objective, ObjectiveKeyResult, ObjectiveProgressUpdate, Notification, ChatMessage, Lead, LeadFeedback, prisma } from './src/db_service';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-change-this-in-production';
 
 // Extend Express Request type to include authenticated user
 interface AuthenticatedRequest extends Request {
@@ -12,9 +21,31 @@ interface AuthenticatedRequest extends Request {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  
+  // Initialize the database connection and cache
+  await LocalDatabase.initialize();
 
+  const PORT = parseInt(process.env.PORT || '3000', 10);
+
+  app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  }));
+  app.use(cors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    credentials: true,
+  }));
   app.use(express.json());
+
+  // Setup login rate limiter
+  const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 requests per windowMs
+    message: { error: 'Quá nhiều yêu cầu đăng nhập từ IP này, vui lòng thử lại sau 15 phút' },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
 
   // ----------------- AUTHENTICATION MIDDLEWARE -----------------
   const authenticate = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -22,18 +53,23 @@ async function startServer() {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Unauthorized: Missing token' });
     }
-    const userId = authHeader.split(' ')[1];
-    const db = LocalDatabase.get();
-    const user = db.users.find(u => u.id === userId);
-    
-    if (!user || !user.is_active) {
-      return res.status(401).json({ error: 'Unauthorized: Invalid or inactive user' });
-    }
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+      const db = LocalDatabase.get();
+      const user = db.users.find(u => u.id === decoded.userId);
+      
+      if (!user || !user.is_active) {
+        return res.status(401).json({ error: 'Unauthorized: Invalid or inactive user' });
+      }
 
-    const role = db.roles.find(r => r.id === user.role_id);
-    req.user = user;
-    req.role = role;
-    next();
+      const role = db.roles.find(r => r.id === user.role_id);
+      req.user = user;
+      req.role = role;
+      next();
+    } catch (err) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
+    }
   };
 
   // Helper to check standard permission keys
@@ -50,7 +86,7 @@ async function startServer() {
   };
 
   // ----------------- AUTH ENDPOINTS -----------------
-  app.post('/api/auth/login', (req: Request, res: Response) => {
+  app.post('/api/auth/login', loginLimiter, async (req: Request, res: Response) => {
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: 'Vui lòng cung cấp email và mật khẩu' });
@@ -59,7 +95,12 @@ async function startServer() {
     const db = LocalDatabase.get();
     const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
-    if (!user || user.password_hash !== password) {
+    if (!user) {
+      return res.status(401).json({ error: 'Email hoặc mật khẩu không đúng' });
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    if (!isValidPassword) {
       return res.status(401).json({ error: 'Email hoặc mật khẩu không đúng' });
     }
 
@@ -68,6 +109,12 @@ async function startServer() {
     }
 
     const role = db.roles.find(r => r.id === user.role_id);
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
     res.json({
       user: {
         id: user.id,
@@ -75,7 +122,8 @@ async function startServer() {
         email: user.email,
         role_id: user.role_id
       },
-      role
+      role,
+      token
     });
   });
 
@@ -95,6 +143,33 @@ async function startServer() {
     });
   });
 
+  app.get('/api/system/status', authenticate, async (req: AuthenticatedRequest, res: Response) => {
+    const startTime = Date.now();
+    let dbStatus = 'online';
+    let dbLatency = 0;
+    try {
+      // Execute a lightweight query to test PostgreSQL connection health
+      await prisma.$queryRaw`SELECT 1`;
+      dbLatency = Date.now() - startTime;
+    } catch (err) {
+      console.error('Database health check failed:', err);
+      dbStatus = 'offline';
+    }
+
+    res.json({
+      backend: 'online',
+      database: dbStatus,
+      db_latency_ms: dbLatency,
+      platform: process.platform,
+      node_version: process.version,
+      uptime: Math.round(process.uptime()),
+      memory: {
+        free: Math.round(os.freemem() / (1024 * 1024)),
+        total: Math.round(os.totalmem() / (1024 * 1024))
+      }
+    });
+  });
+
   // ----------------- USERS & ROLES ENDPOINTS -----------------
   app.get('/api/users', authenticate, (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
@@ -105,10 +180,23 @@ async function startServer() {
         role_name: r ? r.display_name : 'No role'
       };
     });
+
+    if (req.query.page || req.query.limit) {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const skip = (page - 1) * limit;
+      const total = usersWithRoles.length;
+      const items = usersWithRoles.slice(skip, skip + limit);
+      return res.json({
+        items,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
+      });
+    }
+
     res.json(usersWithRoles);
   });
 
-  app.post('/api/users', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
+  app.post('/api/users', authenticate, requirePermission('users.manage'), async (req: AuthenticatedRequest, res: Response) => {
     const { full_name, email, password, role_id } = req.body;
     if (!full_name || !email || !password || !role_id) {
       return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
@@ -119,11 +207,12 @@ async function startServer() {
       return res.status(400).json({ error: 'Email này đã được sử dụng' });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
     const newUser: User = {
       id: 'user-' + LocalDatabase.uuid(),
       full_name,
       email,
-      password_hash: password,
+      password_hash: hashedPassword,
       role_id,
       is_active: true,
       created_at: new Date().toISOString()
@@ -135,7 +224,7 @@ async function startServer() {
     res.status(201).json(newUser);
   });
 
-  app.put('/api/users/:id', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
+  app.put('/api/users/:id', authenticate, requirePermission('users.manage'), async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
     const { full_name, email, password, role_id, is_active } = req.body;
 
@@ -153,7 +242,9 @@ async function startServer() {
     }
 
     if (full_name) db.users[idx].full_name = full_name;
-    if (password) db.users[idx].password_hash = password;
+    if (password) {
+      db.users[idx].password_hash = await bcrypt.hash(password, 10);
+    }
     if (role_id) db.users[idx].role_id = role_id;
     if (is_active !== undefined) db.users[idx].is_active = is_active;
 
@@ -207,6 +298,10 @@ async function startServer() {
     const { id } = req.params;
     const { display_name, permissions } = req.body;
 
+    if (id === 'role-admin') {
+      return res.status(400).json({ error: 'Không thể chỉnh sửa vai trò quản trị tối cao' });
+    }
+
     const db = LocalDatabase.get();
     const idx = db.roles.findIndex(r => r.id === id);
     if (idx === -1) {
@@ -219,6 +314,31 @@ async function startServer() {
     LocalDatabase.save(db);
     res.json(db.roles[idx]);
   });
+
+  app.delete('/api/roles/:id', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    if (id === 'role-admin') {
+      return res.status(400).json({ error: 'Không thể xóa vai trò quản trị tối cao của hệ thống' });
+    }
+
+    const db = LocalDatabase.get();
+    const idx = db.roles.findIndex(r => r.id === id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Không tìm thấy vai trò' });
+    }
+
+    // Check if any active user is using this role
+    const hasUsers = db.users.some(u => u.role_id === id && u.is_active);
+    if (hasUsers) {
+      return res.status(400).json({ error: 'Không thể xóa vai trò này vì đang có nhân sự sử dụng' });
+    }
+
+    db.roles.splice(idx, 1);
+    LocalDatabase.save(db);
+    res.json({ success: true, message: 'Đã xóa vai trò thành công' });
+  });
+
+
 
 
   // ----------------- CUSTOMERS ENDPOINTS -----------------
@@ -234,6 +354,19 @@ async function startServer() {
         (c.email && c.email.toLowerCase().includes(query))
       );
     }
+
+    if (req.query.page || req.query.limit) {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const skip = (page - 1) * limit;
+      const total = result.length;
+      const items = result.slice(skip, skip + limit);
+      return res.json({
+        items,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
+      });
+    }
+
     res.json(result);
   });
 
@@ -327,11 +460,23 @@ async function startServer() {
       result = result.filter(o => matchingOrderIds.includes(o.id));
     }
 
+    if (req.query.page || req.query.limit) {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const skip = (page - 1) * limit;
+      const total = result.length;
+      const items = result.slice(skip, skip + limit);
+      return res.json({
+        items,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
+      });
+    }
+
     res.json(result);
   });
 
   app.post('/api/orders', authenticate, requirePermission('orders.create'), (req: AuthenticatedRequest, res: Response) => {
-    const { customer_id, shoot_date, shoot_time, package_name, notes } = req.body;
+    const { customer_id, shoot_date, shoot_time, package_name, package_price, deposit_amount, total_amount, notes } = req.body;
     if (!customer_id || !shoot_date || !package_name) {
       return res.status(400).json({ error: 'Thiếu thông tin tạo đơn hàng' });
     }
@@ -350,6 +495,9 @@ async function startServer() {
       shoot_date,
       shoot_time: shoot_time || null,
       package_name,
+      package_price: Number(package_price) || 0,
+      deposit_amount: Number(deposit_amount) || 0,
+      total_amount: Number(total_amount) || Number(package_price) || 0,
       notes: notes || null,
       created_by: req.user!.id,
       created_at: new Date().toISOString(),
@@ -409,7 +557,7 @@ async function startServer() {
 
   app.put('/api/orders/:id', authenticate, requirePermission('orders.edit'), (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const { shoot_date, shoot_time, package_name, notes } = req.body;
+    const { shoot_date, shoot_time, package_name, package_price, deposit_amount, total_amount, notes } = req.body;
 
     const db = LocalDatabase.get();
     const idx = db.orders.findIndex(o => o.id === id);
@@ -420,6 +568,9 @@ async function startServer() {
     if (shoot_date) db.orders[idx].shoot_date = shoot_date;
     if (shoot_time !== undefined) db.orders[idx].shoot_time = shoot_time;
     if (package_name) db.orders[idx].package_name = package_name;
+    if (package_price !== undefined) db.orders[idx].package_price = Number(package_price) || 0;
+    if (deposit_amount !== undefined) db.orders[idx].deposit_amount = Number(deposit_amount) || 0;
+    if (total_amount !== undefined) db.orders[idx].total_amount = Number(total_amount) || 0;
     if (notes !== undefined) db.orders[idx].notes = notes;
     db.orders[idx].updated_at = new Date().toISOString();
 
@@ -447,6 +598,13 @@ async function startServer() {
     const statusOrder = ['new', 'confirmed', 'shooting', 'editing', 'ready', 'delivered', 'cancelled'];
     const oldIdx = statusOrder.indexOf(oldStatus);
     const newIdx = statusOrder.indexOf(status);
+
+    if (newIdx === -1) {
+      return res.status(400).json({
+        error: 'Trạng thái đơn hàng không hợp lệ',
+        allowedStatuses: statusOrder
+      });
+    }
 
     if (newIdx < oldIdx && req.role?.id !== 'role-admin' && status !== 'cancelled') {
       return res.status(400).json({ 
@@ -510,7 +668,7 @@ async function startServer() {
     });
 
     // Rule: Staff can only see their own tasks
-    if (req.role?.id === 'role-staff' || req.role?.id === 'role-photographer' || req.role?.id === 'role-editor' || req.role?.permissions.includes('tasks.view_own') && !req.role?.permissions.includes('tasks.view_all')) {
+    if (req.role?.id === 'role-staff' || req.role?.id === 'role-photographer' || req.role?.id === 'role-editor' || (req.role?.permissions.includes('tasks.view_own') && !req.role?.permissions.includes('tasks.view_all'))) {
       result = result.filter(t => t.assigned_to === req.user?.id);
     } else if (assigned_to) {
       result = result.filter(t => t.assigned_to === assigned_to);
@@ -526,6 +684,18 @@ async function startServer() {
 
     if (date) {
       result = result.filter(t => t.due_date === date);
+    }
+
+    if (req.query.page || req.query.limit) {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const skip = (page - 1) * limit;
+      const total = result.length;
+      const items = result.slice(skip, skip + limit);
+      return res.json({
+        items,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
+      });
     }
 
     res.json(result);
@@ -1404,9 +1574,11 @@ async function startServer() {
   // Export entire database as JSON file download
   app.get('/api/database/export', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
+    const cleanUsers = db.users.map(({ password_hash, ...u }) => u);
+    const exportDb = { ...db, users: cleanUsers };
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', 'attachment; filename=aura_bridal_database.json');
-    res.send(JSON.stringify(db, null, 2));
+    res.send(JSON.stringify(exportDb, null, 2));
   });
 
   // Import / Restore database from uploaded JSON
@@ -1553,7 +1725,26 @@ async function startServer() {
     }
 
     const db = LocalDatabase.get();
-    res.json(db.leads || []);
+    let result = db.leads || [];
+
+    // Filter by sales role if they don't have view_all
+    if (!hasViewAll && req.user) {
+      result = result.filter(l => l.assigned_sale_id === req.user?.id);
+    }
+
+    if (req.query.page || req.query.limit) {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const skip = (page - 1) * limit;
+      const total = result.length;
+      const items = result.slice(skip, skip + limit);
+      return res.json({
+        items,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
+      });
+    }
+
+    res.json(result);
   });
 
   app.post('/api/leads', authenticate, requirePermission('leads.manage'), (req: AuthenticatedRequest, res: Response) => {
@@ -1689,6 +1880,9 @@ async function startServer() {
         shoot_date: formattedShootDate,
         shoot_time: '09:00',
         package_name: packageName,
+        package_price: lead.revenue || 0,
+        deposit_amount: 0,
+        total_amount: lead.revenue || 0,
         notes: lead.notes || 'Đơn hàng tự động khởi tạo từ tư vấn CRM.',
         created_by: req.user!.id,
         created_at: new Date().toISOString(),
@@ -1835,8 +2029,9 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
+  const host = process.env.HOST || (fs.existsSync('/.dockerenv') ? '0.0.0.0' : '127.0.0.1');
+  app.listen(PORT as number, host, () => {
+    console.log(`Server running on port ${PORT} (bound to ${host})`);
   });
 }
 

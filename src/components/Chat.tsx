@@ -17,6 +17,7 @@ interface UserContact {
   id: string;
   full_name: string;
   email: string;
+  role_id: string;
   role_name: string;
   role_display_name: string;
   is_active: boolean;
@@ -87,10 +88,10 @@ export default function Chat({ userId, userRole, isMobile }: ChatProps) {
   useEffect(() => {
     fetchMessages();
     
-    // Poll for new messages every 3 seconds for active feel
+    // Poll for new messages every 15 seconds for active feel
     const interval = setInterval(() => {
       fetchMessages(true);
-    }, 3000);
+    }, 15000);
     
     return () => clearInterval(interval);
   }, [selectedReceiverId]);

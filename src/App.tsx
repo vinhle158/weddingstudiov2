@@ -10,6 +10,8 @@ import Notifications from './components/Notifications';
 import Staff from './components/Staff';
 import Settings from './components/Settings';
 import Leads from './components/Leads';
+import MobileApp from './components/mobile/MobileApp';
+import { useIsMobile } from './hooks/useIsMobile';
 import { 
   Briefcase, 
   Users, 
@@ -35,16 +37,19 @@ import {
 } from 'lucide-react';
 
 export default function App() {
+  const isMobile = useIsMobile();
   const [user, setUser] = useState<any>(null);
   const [role, setRole] = useState<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
   // Login form states
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => localStorage.getItem('remembered_email') || '');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem('remembered_email'));
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginLoading, setLoginLoading] = useState(false);
+
 
   // Navigation states
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -112,7 +117,7 @@ export default function App() {
     };
 
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 10000);
+    const interval = setInterval(fetchUnreadCount, 20000);
     return () => clearInterval(interval);
   }, [isAuthenticated, activeTab]);
 
@@ -123,7 +128,15 @@ export default function App() {
 
     try {
       const data = await apiRequest('/api/auth/login', 'POST', { email, password });
-      localStorage.setItem('studio_token', data.user.id);
+      localStorage.setItem('studio_token', data.token);
+      
+      if (rememberMe) {
+        localStorage.setItem('remembered_email', email);
+      } else {
+        localStorage.removeItem('remembered_email');
+      }
+      localStorage.removeItem('remembered_password');
+
       setUser(data.user);
       setRole(data.role);
       setIsAuthenticated(true);
@@ -133,6 +146,7 @@ export default function App() {
       setLoginLoading(false);
     }
   };
+
 
   const handleLogout = async () => {
     try {
@@ -161,7 +175,10 @@ export default function App() {
 
   // Clear navigation args on subsequent tab switches (to avoid repeating modal openings)
   useEffect(() => {
-    setNavigationArg(null);
+    const timer = setTimeout(() => {
+      setNavigationArg(null);
+    }, 500);
+    return () => clearTimeout(timer);
   }, [activeTab]);
 
   const hasPermission = (permission: string) => {
@@ -174,7 +191,7 @@ export default function App() {
       <div className="min-h-screen bg-[#faf9f6] flex items-center justify-center">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gold-500"></div>
-          <p className="mt-4 text-slate-500 text-xs font-semibold uppercase tracking-widest">Aura Bridal Studio...</p>
+          <p className="mt-4 text-slate-500 text-xs font-semibold uppercase tracking-widest">The Will Studio...</p>
         </div>
       </div>
     );
@@ -191,45 +208,11 @@ export default function App() {
             <div className="absolute top-4 right-4 bg-gold-200/30 text-gold-800 border border-gold-300/40 px-2.5 py-0.5 rounded-full text-[9px] font-bold flex items-center tracking-wider">
               <Sparkles className="w-2.5 h-2.5 mr-1 text-gold-600 animate-pulse" /> CLOUD LOCAL
             </div>
-            <h1 className="text-3xl font-semibold tracking-widest font-display text-gold-900 italic">AURA BRIDAL</h1>
+            <h1 className="text-3xl font-semibold tracking-widest font-display text-gold-900 italic">The Will</h1>
             <p className="text-gold-700/80 mt-1.5 text-[10px] uppercase tracking-widest font-medium">Hệ thống quản lý Studio cao cấp</p>
           </div>
 
           <div className="p-6 space-y-5">
-            
-            {/* Quick login helper dropdown (for reviewers) */}
-            <div className="bg-gold-50/40 border border-gold-200/30 p-4 rounded-xl">
-              <p className="text-[10px] font-bold text-gold-800 uppercase tracking-wider mb-2.5 flex items-center">
-                <Clock className="w-3.5 h-3.5 mr-1 text-gold-600" /> Trình diễn thử nghiệm (Quick Login):
-              </p>
-              <div className="grid grid-cols-2 gap-2 text-[10px]">
-                <button 
-                  onClick={() => handleQuickLogin('admin@studio.com', '123abc456')}
-                  className="bg-white hover:bg-gold-100/30 border border-gold-200/40 rounded-lg p-2 font-medium text-gold-900 transition-colors shadow-2xs"
-                >
-                  Admin (Nguyễn Văn Admin)
-                </button>
-                <button 
-                  onClick={() => handleQuickLogin('manager@studio.com', 'manager123')}
-                  className="bg-white hover:bg-gold-100/30 border border-gold-200/40 rounded-lg p-2 font-medium text-gold-900 transition-colors shadow-2xs"
-                >
-                  Manager (Trần Thị Manager)
-                </button>
-                <button 
-                  onClick={() => handleQuickLogin('sale@studio.com', 'staff123')}
-                  className="bg-white hover:bg-gold-100/30 border border-gold-200/40 rounded-lg p-2 font-medium text-gold-900 transition-colors shadow-2xs"
-                >
-                  Sales (Nguyễn Thị Sales)
-                </button>
-                <button 
-                  onClick={() => handleQuickLogin('photo@studio.com', 'staff123')}
-                  className="bg-white hover:bg-gold-100/30 border border-gold-200/40 rounded-lg p-2 font-medium text-gold-900 transition-colors shadow-2xs"
-                >
-                  Staff (Thợ chụp Hải Nam)
-                </button>
-              </div>
-            </div>
-
             {/* Normal login Form */}
             <form onSubmit={handleLogin} className="space-y-4">
               {loginError && (
@@ -265,17 +248,42 @@ export default function App() {
                 />
               </div>
 
+              <div className="flex items-center space-x-2 py-0.5">
+                <input 
+                  type="checkbox" 
+                  id="remember_chk"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded border-slate-300 text-gold-600 focus:ring-gold-400/30"
+                />
+                <label htmlFor="remember_chk" className="text-[11px] font-semibold text-slate-500 select-none cursor-pointer">
+                  Lưu mật khẩu cho lần sau
+                </label>
+              </div>
+
               <button 
                 type="submit"
                 disabled={loginLoading}
-                className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-white py-2.5 rounded-xl text-xs font-bold shadow-xs hover:shadow-md transition-all duration-150 disabled:opacity-50 mt-1"
+                className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-white py-2.5 rounded-xl text-xs font-bold shadow-xs hover:shadow-md transition-all duration-150 disabled:opacity-50 mt-1 cursor-pointer"
               >
                 {loginLoading ? 'Đang xác thực...' : 'Đăng nhập hệ thống'}
               </button>
             </form>
           </div>
+
         </div>
       </div>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <MobileApp
+        user={user}
+        role={role}
+        onLogout={handleLogout}
+        studioSettings={studioSettings}
+      />
     );
   }
 
@@ -423,7 +431,7 @@ export default function App() {
                   </button>
                 ) : (
                   <span className="font-display font-semibold tracking-widest text-gold-900 italic uppercase text-[12px] truncate max-w-[200px]">
-                    {studioSettings?.name || 'AURA BRIDAL'}
+                    {studioSettings?.name || 'The Will'}
                   </span>
                 )}
                 
@@ -451,7 +459,7 @@ export default function App() {
                     <div className="bg-gradient-to-r from-gold-500/10 to-gold-600/15 p-4 rounded-2xl border border-gold-200/20 text-slate-800">
                       <p className="text-[9px] uppercase font-bold text-gold-800 tracking-widest mb-1 font-mono">Bảng điều phối</p>
                       <h3 className="text-sm font-bold text-slate-900 leading-tight">Xin chào, {user?.full_name}</h3>
-                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">Hệ thống Aura Bridal đã đồng bộ hóa tối ưu cho thiết bị di động cá nhân.</p>
+                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">Hệ thống The Will đã đồng bộ hóa tối ưu cho thiết bị di động cá nhân.</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -622,7 +630,7 @@ export default function App() {
         {/* Mobile Header (When browser actually resized small) */}
         <header className="md:hidden bg-white text-slate-800 px-4 py-3 flex justify-between items-center z-20 shadow-xs border-b border-slate-200/60 shrink-0">
           <h1 className="text-base font-semibold tracking-widest font-display text-gold-900 italic uppercase truncate max-w-[200px]">
-            {studioSettings?.name || 'AURA BRIDAL'}
+            {studioSettings?.name || 'The Will'}
           </h1>
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -640,7 +648,7 @@ export default function App() {
             {/* Logo */}
             <div className="hidden md:block pb-3 border-b border-slate-100">
               <h1 className="text-lg font-semibold tracking-widest font-display text-gold-900 italic uppercase leading-tight line-clamp-2">
-                {studioSettings?.name || 'AURA BRIDAL'}
+                {studioSettings?.name || 'The Will'}
               </h1>
               <p className="text-[8px] text-slate-400 uppercase tracking-widest mt-1 font-medium truncate" title={studioSettings?.notes || 'Luxury Wedding Studio'}>
                 {studioSettings?.notes || 'Luxury Wedding Studio'}

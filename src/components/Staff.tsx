@@ -13,8 +13,10 @@ import {
   AlertCircle, 
   Lock,
   Mail,
-  Check
+  Check,
+  Trash2
 } from 'lucide-react';
+
 
 interface StaffProps {
   userRole: string;
@@ -39,23 +41,35 @@ export default function Staff({ userRole }: StaffProps) {
 
   // Role form states
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [isEditingRole, setIsEditingRole] = useState(false);
+  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
   const [roleName, setRoleName] = useState('');
   const [roleDisplayName, setRoleDisplayName] = useState('');
   const [rolePermissions, setRolePermissions] = useState<string[]>([]);
   const [roleError, setRoleError] = useState<string | null>(null);
 
+
   const permissionKeys = [
-    { key: 'orders.view', name: 'Xem đơn hàng (orders.view)' },
-    { key: 'orders.create', name: 'Ký mới đơn hàng (orders.create)' },
-    { key: 'orders.edit', name: 'Sửa thông tin/Chuyển trạng thái đơn (orders.edit)' },
-    { key: 'tasks.view_own', name: 'Xem công việc cá nhân được giao (tasks.view_own)' },
-    { key: 'tasks.view_all', name: 'Xem toàn bộ công việc của studio (tasks.view_all)' },
-    { key: 'tasks.assign', name: 'Phân công và giao việc (tasks.assign)' },
-    { key: 'customers.view', name: 'Xem thông tin khách hàng (customers.view)' },
-    { key: 'customers.edit', name: 'Thêm/Sửa hồ sơ khách hàng (customers.edit)' },
-    { key: 'reports.view', name: 'Xem thống kê doanh thu (reports.view)' },
-    { key: 'users.manage', name: 'Quản lý tài khoản và phân quyền (users.manage) *' }
+    { key: 'orders.view', name: 'Xem đơn hàng' },
+    { key: 'orders.create', name: 'Ký mới đơn hàng' },
+    { key: 'orders.edit', name: 'Sửa thông tin / Chuyển trạng thái đơn hàng' },
+    { key: 'tasks.view_own', name: 'Xem công việc cá nhân được giao' },
+    { key: 'tasks.view_all', name: 'Xem toàn bộ công việc của studio' },
+    { key: 'tasks.assign', name: 'Phân công và giao việc' },
+    { key: 'customers.view', name: 'Xem thông tin khách hàng' },
+    { key: 'customers.edit', name: 'Thêm / Sửa hồ sơ khách hàng' },
+    { key: 'leads.manage', name: 'Tư vấn và chăm sóc khách hàng' },
+    { key: 'leads.view_all', name: 'Xem toàn bộ dữ liệu tư vấn' },
+    { key: 'reports.view', name: 'Xem thống kê doanh thu' },
+    { key: 'users.manage', name: 'Quản lý tài khoản và phân quyền *' }
   ];
+
+  const getPermissionDisplayName = (key: string) => {
+    const found = permissionKeys.find(pk => pk.key === key);
+    return found ? found.name.replace(' *', '') : key;
+  };
+
+
 
   const fetchData = async () => {
     try {
@@ -147,11 +161,40 @@ export default function Staff({ userRole }: StaffProps) {
   };
 
   const handleOpenCreateRole = () => {
+    setIsEditingRole(false);
+    setSelectedRoleId(null);
     setRoleName('');
     setRoleDisplayName('');
     setRolePermissions([]);
     setRoleError(null);
     setIsRoleModalOpen(true);
+  };
+
+  const handleOpenEditRole = (role: any) => {
+    setIsEditingRole(true);
+    setSelectedRoleId(role.id);
+    setRoleName(role.name);
+    setRoleDisplayName(role.display_name);
+    setRolePermissions(role.permissions);
+    setRoleError(null);
+    setIsRoleModalOpen(true);
+  };
+
+  const handleDeleteRole = async (role: any) => {
+    if (role.id === 'role-admin') {
+      alert('Không thể xóa vai trò quản trị tối cao của hệ thống');
+      return;
+    }
+    const confirm = window.confirm(`Bạn có chắc chắn muốn xóa vai trò "${role.display_name}"? Hành động này không thể hoàn tác.`);
+
+    if (!confirm) return;
+
+    try {
+      await apiRequest(`/api/roles/${role.id}`, 'DELETE');
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || 'Không thể xóa vai trò');
+    }
   };
 
   const handlePermissionCheck = (permKey: string) => {
@@ -168,23 +211,35 @@ export default function Staff({ userRole }: StaffProps) {
     e.preventDefault();
     setRoleError(null);
 
-    if (!roleName || !roleDisplayName || rolePermissions.length === 0) {
-      setRoleError('Vui lòng điền tên vai trò và chọn ít nhất 1 quyền hạn');
+    if (!roleDisplayName || rolePermissions.length === 0) {
+      setRoleError('Vui lòng điền tên hiển thị vai trò và chọn ít nhất 1 quyền hạn');
       return;
     }
 
     try {
-      await apiRequest('/api/roles', 'POST', {
-        name: roleName.toLowerCase().replace(/\s+/g, '_'),
-        display_name: roleDisplayName,
-        permissions: rolePermissions
-      });
+      if (isEditingRole && selectedRoleId) {
+        await apiRequest(`/api/roles/${selectedRoleId}`, 'PUT', {
+          display_name: roleDisplayName,
+          permissions: rolePermissions
+        });
+      } else {
+        if (!roleName) {
+          setRoleError('Vui lòng nhập mã vai trò');
+          return;
+        }
+        await apiRequest('/api/roles', 'POST', {
+          name: roleName.toLowerCase().replace(/\s+/g, '_'),
+          display_name: roleDisplayName,
+          permissions: rolePermissions
+        });
+      }
       setIsRoleModalOpen(false);
       fetchData();
     } catch (err: any) {
-      setRoleError(err.message || 'Không thể tạo vai trò mới');
+      setRoleError(err.message || (isEditingRole ? 'Không thể cập nhật vai trò' : 'Không thể tạo vai trò mới'));
     }
   };
+
 
   if (userRole !== 'admin') {
     return (
@@ -204,7 +259,7 @@ export default function Staff({ userRole }: StaffProps) {
       {/* Title */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-gray-950">Quản trị nhân sự và vai trò</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-gray-950">Quản lý nhân sự và vai trò</h2>
           <p className="text-sm text-gray-500 mt-1">Tạo mới, phân bổ quyền và cấu hình tài khoản cho kỹ thuật viên.</p>
         </div>
         <div className="flex space-x-2">
@@ -288,7 +343,7 @@ export default function Staff({ userRole }: StaffProps) {
                           {usr.is_active ? (
                             <><CheckCircle className="w-3 h-3 mr-1" /> Hoạt động</>
                           ) : (
-                            <><XCircle className="w-3 h-3 mr-1" /> Vô hiệu hóa</>
+                            <><XCircle className="w-3 h-3 mr-1" /> Tạm dừng</>
                           )}
                         </button>
                       </td>
@@ -317,18 +372,41 @@ export default function Staff({ userRole }: StaffProps) {
               {roles.map((r) => (
                 <div key={r.id} className="p-4 rounded-xl border border-gray-100 bg-gray-50/50 space-y-2">
                   <div className="flex justify-between items-center">
-                    <h4 className="font-bold text-gray-950 text-sm capitalize">{r.display_name}</h4>
-                    <span className="text-[10px] bg-gold-100 text-gold-800 font-mono font-bold px-1.5 py-0.5 rounded">
-                      {r.name}
-                    </span>
+                    <div className="flex items-center space-x-2 min-w-0">
+                      <h4 className="font-bold text-gray-950 text-sm capitalize truncate">{r.display_name}</h4>
+                      <span className="text-[9px] bg-gold-100/70 text-gold-800 font-mono font-bold px-1.5 py-0.5 rounded shrink-0">
+                        {r.name}
+                      </span>
+                    </div>
+                    {/* Action buttons (only for non-admin roles) */}
+                    {r.id !== 'role-admin' && (
+
+                      <div className="flex items-center space-x-0.5 shrink-0 ml-2">
+                        <button 
+                          onClick={() => handleOpenEditRole(r)} 
+                          className="p-1 hover:bg-gold-50 text-gray-400 hover:text-gold-600 rounded-lg transition-colors cursor-pointer"
+                          title="Sửa vai trò"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteRole(r)} 
+                          className="p-1 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer"
+                          title="Xóa vai trò"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex flex-wrap gap-1 pt-1.5">
+                  <div className="flex flex-wrap gap-1.5 pt-2">
                     {r.permissions.map((perm: string) => (
-                      <span key={perm} className="bg-white border border-gray-100 text-gray-500 rounded px-1.5 py-0.5 text-[9px] font-mono">
-                        {perm}
+                      <span key={perm} className="bg-white border border-gray-200 text-gray-600 rounded-lg px-2.5 py-0.5 text-[10px] font-semibold shadow-3xs">
+                        {getPermissionDisplayName(perm)}
                       </span>
                     ))}
                   </div>
+
                 </div>
               ))}
             </div>
@@ -452,7 +530,9 @@ export default function Staff({ userRole }: StaffProps) {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-lg w-full shadow-xl overflow-hidden border border-gray-100 animate-scale-in">
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h3 className="font-bold text-gray-900 text-base">Tạo vai trò và phân quyền (Role)</h3>
+              <h3 className="font-bold text-gray-900 text-base">
+                {isEditingRole ? 'Chỉnh sửa vai trò & phân quyền' : 'Tạo vai trò và phân quyền (Role)'}
+              </h3>
               <button onClick={() => setIsRoleModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
                 <X className="w-5 h-5" />
               </button>
@@ -474,10 +554,12 @@ export default function Staff({ userRole }: StaffProps) {
                     placeholder="photographer_vip"
                     value={roleName}
                     onChange={(e) => setRoleName(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
+                    disabled={isEditingRole}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                     required
                   />
                 </div>
+
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Tên hiển thị</label>
                   <input 
@@ -524,9 +606,9 @@ export default function Staff({ userRole }: StaffProps) {
                 </button>
                 <button 
                   type="submit"
-                  className="w-1/2 bg-gold-500 hover:bg-gold-600 text-white py-2.5 rounded-xl text-xs font-semibold shadow-xs"
+                  className="w-1/2 bg-gold-500 hover:bg-gold-600 text-white py-2.5 rounded-xl text-xs font-semibold shadow-xs cursor-pointer"
                 >
-                  Xác nhận Tạo vai trò
+                  {isEditingRole ? 'Lưu thay đổi' : 'Xác nhận Tạo vai trò'}
                 </button>
               </div>
             </form>

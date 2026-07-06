@@ -76,8 +76,8 @@ export default function Notifications({ userRole, userId }: NotificationsProps) 
   useEffect(() => {
     fetchNotificationsAndMessages();
     
-    // Poll for updates every 10 seconds for a responsive feel
-    const interval = setInterval(fetchNotificationsAndMessages, 10000);
+    // Poll for updates every 20 seconds for a responsive feel
+    const interval = setInterval(fetchNotificationsAndMessages, 20000);
     return () => clearInterval(interval);
   }, []);
 
@@ -400,7 +400,7 @@ export default function Notifications({ userRole, userId }: NotificationsProps) 
                       <div className="flex-1 min-w-0 space-y-1">
                         <div className="flex justify-between items-start gap-2">
                           <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 uppercase tracking-wider block">
-                            {msg.sender_name} ({msg.sender_role_name === 'admin' ? 'ĐIỀU HÀNH' : msg.sender_role_name === 'manager' ? 'QUẢN LÝ' : 'NHÂN VIÊN'})
+                            {msg.sender_name} ({msg.sender_role_name === 'admin' ? 'QUẢN TRỊ' : msg.sender_role_name === 'manager' ? 'QUẢN LÝ' : 'NHÂN VIÊN'})
                           </span>
                           <span className="text-[9px] text-slate-400 font-mono">
                             {new Date(msg.created_at).toLocaleString('vi-VN', {

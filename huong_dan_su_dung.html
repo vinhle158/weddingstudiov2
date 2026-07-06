@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tài liệu Hướng dẫn Sử dụng - The Will Studio V2</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          colors: {
+            gold: {
+              50: '#faf8f5',
+              100: '#f3eee1',
+              200: '#e7dcc3',
+              300: '#d7c39c',
+              400: '#c3a670',
+              500: '#b08f51',
+              600: '#9f7a40',
+              700: '#856233',
+              800: '#6c4e2b',
+              900: '#593f24',
+            },
+            charcoal: {
+              50: '#f6f6f7',
+              100: '#eef0f1',
+              200: '#dce1e4',
+              300: '#c1c9cf',
+              400: '#9faab4',
+              500: '#818e9c',
+              600: '#697787',
+              700: '#566170',
+              800: '#48505c',
+              900: '#2d3238',
+              950: '#1a1d20',
+            }
+          },
+          boxShadow: {
+            'gold-sm': '0 2px 8px -2px rgba(176, 143, 81, 0.15)',
+            'gold-md': '0 8px 24px -4px rgba(176, 143, 81, 0.2)',
+            'premium': '0 10px 40px -10px rgba(0, 0, 0, 0.06), 0 2px 10px -2px rgba(0, 0, 0, 0.02)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style type="text/css">
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f6f6f7;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c3a670;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #b08f51;
+    }
+    
+    .glass-nav {
+      background: rgba(26, 29, 32, 0.95);
+      backdrop-filter: blur(8px);
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(231, 220, 195, 0.4);
+    }
+    
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #c3a670 0%, #b08f51 50%, #6c4e2b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .gold-gradient-bg {
+      background: linear-gradient(135deg, #c3a670 0%, #b08f51 100%);
+    }
+
+    .dark-gradient-bg {
+      background: linear-gradient(135deg, #2d3238 0%, #1a1d20 100%);
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    /* Animation classes */
+    .fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .pulse-glow {
+      animation: pulseGlow 2s infinite;
+    }
+    
+    @keyframes pulseGlow {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(176, 143, 81, 0.4);
+      }
+      50% {
+        box-shadow: 0 0 12px 4px rgba(176, 143, 81, 0.15);
+      }
+    }
+
+    .pipeline-step::after {
+      content: '';
+      position: absolute;
+      right: -24px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23c3a670' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M8.25 4.5l7.5 7.5-7.5 7.5' /%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      z-index: 10;
+    }
+    @media (max-width: 1024px) {
+      .pipeline-step::after {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[#faf9f6] text-charcoal-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- TOP HEADER -->
+  <header class="h-20 glass-nav border-b border-gold-900/20 text-white flex items-center justify-between px-6 md:px-12 sticky top-0 z-50 shadow-md">
+    <div class="flex items-center space-x-3">
+      <!-- Logo Graphic -->
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-300 to-gold-600 flex items-center justify-center shadow-gold-sm shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="white" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="font-display font-bold tracking-widest text-lg italic text-gold-300 uppercase">The Will Studio</h1>
+        <p class="text-[10px] text-charcoal-400 font-semibold tracking-widest uppercase">Hệ thống Quản trị Cao cấp V2</p>
+      </div>
+    </div>
+    
+    <!-- Top actions/tags -->
+    <div class="flex items-center space-x-4">
+      <div class="hidden lg:flex items-center space-x-2 bg-charcoal-800 border border-gold-900/30 px-3.5 py-1.5 rounded-full text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-slate-300">Tài liệu đào tạo chính thức</span>
+      </div>
+      <button onclick="window.print()" class="bg-gold-500 hover:bg-gold-600 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm transition-all duration-150 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0a2.25 2.25 0 0 1-2.25 2.25H8.59A2.25 2.25 0 0 1 6.34 18m11.318-4.171A8.25 8.25 0 0 0 18.02 9.75a8.293 8.293 0 0 0-.223-1.84M18.02 9.75H18.03M17.66 18H17.67m-11.33 0H6.34m0 0a2.25 2.25 0 0 1-2.24-2.25v-3.75m0 0h.008v-.008H4.07v.008ZM4.07 9.75a8.286 8.286 0 0 1 .223-1.84M4.07 9.75h.008v-.008h-.008V9.75Zm-.143-1.84a18.291 18.291 0 0 1 5.03-3.19M17.66 7.91a18.291 18.291 0 0 0-5.022-3.19M12.548 4.72a18.281 18.281 0 0 1-1.096 0m0 0V3m1.096 0v1.72M9 10.5h.008v.008H9V10.5Zm3 0h.008v.008H12V10.5Zm3 0h.008v.008H15V10.5Z" />
+        </svg>
+        <span>In tài liệu</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN WRAPPER -->
+  <div class="flex-1 flex flex-col lg:flex-row">
+    
+    <!-- LEFT SIDEBAR - NAVIGATION CHANNELS -->
+    <aside class="w-full lg:w-72 bg-charcoal-950 border-r border-charcoal-900 text-slate-300 flex flex-col shrink-0">
+      
+      <!-- Quick Search inside Document -->
+      <div class="p-4 border-b border-charcoal-900">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="docSearch" 
+            oninput="searchDocument()"
+            placeholder="Tìm kiếm chức năng..." 
+            class="w-full bg-charcoal-900 border border-charcoal-800 rounded-xl py-2 pl-9 pr-4 text-xs focus:outline-none focus:border-gold-400 text-white placeholder-slate-500 transition-all"
+          />
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 absolute left-3 top-2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Navigation tabs -->
+      <nav class="flex-1 overflow-y-auto p-4 space-y-1.5" id="navTabs">
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">MỤC LỤC CHÍNH</p>
+        
+        <button onclick="switchTab('tab-tongquan')" id="btn-tab-tongquan" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-3 transition-all duration-150 bg-charcoal-900 text-white border-l-4 border-gold-500">
+          <span class="text-gold-400">🏠</span>
+          <span>1. Tổng Quan Hệ Thống</span>
+        </button>
+        
+        <button onclick="switchTab('tab-crm')" id="btn-tab-crm" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-3 transition-all duration-150 hover:bg-charcoal-900 hover:text-white border-l-4 border-transparent text-slate-400">
+          <span>📈</span>
+          <span>2. CRM & Tư Vấn (Leads)</span>
+        </button>
+        
+        <button onclick="switchTab('tab-orders')" id="btn-tab-orders" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-3 transition-all duration-150 hover:bg-charcoal-900 hover:text-white border-l-4 border-transparent text-slate-400">
+          <span>💼</span>
+          <span>3. Hợp Đồng & Đơn Hàng</span>
+        </button>
+        
+        <button onclick="switchTab('tab-customers')" id="btn-tab-customers" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-3 transition-all duration-150 hover:bg-charcoal-900 hover:text-white border-l-4 border-transparent text-slate-400">
+          <span>👥</span>
+          <span>4. Hồ Sơ Khách Hàng</span>
+        </button>
+        
+        <button onclick="switchTab('tab-tasks')" id="btn-tab-tasks" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-3 transition-all duration-150 hover:bg-charcoal-900 hover:text-white border-l-4 border-transparent text-slate-400">
+          <span>📅</span>
+          <span>5. Phân Công Công Việc</span>
+        </button>
+        
+        <button onclick="switchTab('tab-okrs')" id="btn-tab-okrs" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-3 transition-all duration-150 hover:bg-charcoal-900 hover:text-white border-l-4 border-transparent text-slate-400">
+          <span>🎯</span>
+          <span>6. Quản Lý OKR Mục Tiêu</span>
+        </button>
+
+        <button onclick="switchTab('tab-chat')" id="btn-tab-chat" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-3 transition-all duration-150 hover:bg-charcoal-900 hover:text-white border-l-4 border-transparent text-slate-400">
+          <span>💬</span>
+          <span>7. Chat & Thông Báo Nội Bộ</span>
+        </button>
+        
+        <button onclick="switchTab('tab-settings')" id="btn-tab-settings" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-3 transition-all duration-150 hover:bg-charcoal-900 hover:text-white border-l-4 border-transparent text-slate-400">
+          <span>⚙️</span>
+          <span>8. Nhân Sự & Cài Đặt Hệ Thống</span>
+        </button>
+
+        <div class="pt-4 border-t border-charcoal-900 mt-4">
+          <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">QUY TRÌNH & PHÂN VAI</p>
+          
+          <button onclick="switchTab('tab-workflows')" id="btn-tab-workflows" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-3 transition-all duration-150 hover:bg-charcoal-900 hover:text-white border-l-4 border-transparent text-slate-400">
+            <span>🔄</span>
+            <span>Quy Trình Khách Hàng Chuẩn</span>
+          </button>
+          
+          <button onclick="switchTab('tab-roles')" id="btn-tab-roles" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-3 transition-all duration-150 hover:bg-charcoal-900 hover:text-white border-l-4 border-transparent text-slate-400">
+            <span>🛡️</span>
+            <span>Quy Trình Cho Từng Nhân Sự</span>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Sidebar Footer -->
+      <div class="p-4 bg-charcoal-950 border-t border-charcoal-900 text-center text-[10px] text-slate-500 font-medium">
+        <p>The Will Studio v2.0</p>
+        <p class="mt-0.5">© 2026 Toàn bộ quyền được bảo lưu</p>
+      </div>
+    </aside>
+
+    <!-- RIGHT CONTENT AREA -->
+    <main class="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full overflow-y-auto">
+      
+      <!-- BANNER TIÊU ĐỀ NỘI DUNG -->
+      <div class="mb-8 bg-gradient-to-r from-charcoal-900 to-charcoal-800 p-6 md:p-8 rounded-3xl border border-gold-900/10 shadow-lg text-white relative overflow-hidden">
+        <div class="absolute -right-16 -top-16 w-44 h-44 rounded-full bg-gold-500/5 blur-3xl"></div>
+        <div class="relative z-10 space-y-2">
+          <div class="inline-flex items-center space-x-2 bg-gold-500/10 border border-gold-400/20 px-3 py-1 rounded-full text-[10px] text-gold-300 font-bold tracking-wider uppercase">
+            ⚡ Hệ Thống CRM & ERP Studio Ảnh Cưới Cao Cấp
+          </div>
+          <h2 class="text-2xl md:text-3xl font-display font-bold" id="main-content-title">1. Tổng Quan Hệ Thống</h2>
+          <p class="text-xs md:text-sm text-slate-300 max-w-2xl leading-relaxed">
+            Chào mừng bạn đến với tài liệu hướng dẫn đào tạo vận hành hệ thống phần mềm The Will Studio. Hãy chọn các danh mục tương ứng ở thanh menu trái để bắt đầu buổi đào tạo.
+          </p>
+        </div>
+      </div>
+
+      <!-- ---------------------------------------------------- -->
+      <!-- TAB 1: TỔNG QUAN HỆ THỐNG -->
+      <!-- ---------------------------------------------------- -->
+      <section id="tab-tongquan" class="fade-in space-y-8">
+        
+        <!-- Grid: Thống Kê / Tóm tắt dự án -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow- premium space-y-3">
+            <div class="w-10 h-10 rounded-xl bg-gold-50 flex items-center justify-center text-gold-600 font-bold text-lg">💡</div>
+            <h3 class="font-display font-bold text-slate-800 text-sm">Mục tiêu Ứng dụng</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+              Quản lý chặt chẽ 100% vòng đời khách hàng từ khi tiếp cận (CRM), ký hợp đồng, chia lịch chụp, bàn giao sản phẩm hình ảnh và báo cáo số liệu mục tiêu OKR.
+            </p>
+          </div>
+          
+          <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-premium space-y-3">
+            <div class="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center text-sky-600 font-bold text-lg">📱</div>
+            <h3 class="font-display font-bold text-slate-800 text-sm">Tương thích Đa thiết bị</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+              Giao diện được thiết kế tối ưu cho cả máy tính để bàn (PC) tại quầy và có chế độ **Mô phỏng Mobile App (iPhone Frame)** vô cùng tiện dụng cho thợ chụp, chuyên viên trang điểm khi đi thực địa.
+            </p>
+          </div>
+
+          <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-premium space-y-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 font-bold text-lg">🔐</div>
+            <h3 class="font-display font-bold text-slate-800 text-sm">Phân Quyền Chi Tiết</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+              Hệ thống bảo vệ dữ liệu bằng cách phân chia 3 cấp bậc rõ rệt: **Admin (Toàn quyền)**, **Manager (Quản lý)**, **Sales (Nhân viên tư vấn)** và **Ekip Staff (Xem công việc & Chat)**.
+            </p>
+          </div>
+        </div>
+
+        <!-- Hướng Dẫn Đăng Nhập & Chế Độ View -->
+        <div class="bg-white rounded-2xl border border-slate-200/60 shadow-premium overflow-hidden">
+          <div class="bg-slate-50 border-b border-slate-100 p-5 flex items-center justify-between">
+            <h3 class="font-display font-bold text-slate-800 text-sm flex items-center gap-2">
+              <span class="text-gold-500">🔑</span> Hướng Dẫn Đăng Nhập & Chuyển Chế Độ Giao Diện
+            </h3>
+            <span class="text-[10px] bg-gold-100 text-gold-800 px-2 py-0.5 rounded-full font-bold uppercase">BƯỚC ĐẦU TIÊN</span>
+          </div>
+          <div class="p-6 md:p-8 space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              
+              <!-- Cột 1: Các tài khoản mặc định và đăng nhập -->
+              <div class="space-y-4">
+                <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Thông Tin Đăng Nhập Mẫu Đào Tạo:</h4>
+                <div class="space-y-2.5">
+                  <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">
+                    <div>
+                      <p class="font-bold text-slate-800">Quản trị hệ thống (Admin):</p>
+                      <p class="text-slate-500 font-mono text-[11px]">viet@studio.com</p>
+                    </div>
+                    <span class="bg-slate-200/60 text-slate-600 px-2 py-0.5 rounded-lg text-[10px] font-bold">Mật khẩu: admin123</span>
+                  </div>
+                  
+                  <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">
+                    <div>
+                      <p class="font-bold text-slate-800">Nhân viên Quản lý (Manager):</p>
+                      <p class="text-slate-500 font-mono text-[11px]">manager@studio.com</p>
+                    </div>
+                    <span class="bg-slate-200/60 text-slate-600 px-2 py-0.5 rounded-lg text-[10px] font-bold">Mật khẩu: manager123</span>
+                  </div>
+                  
+                  <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">
+                    <div>
+                      <p class="font-bold text-slate-800">Nhân viên Tư vấn (Sales):</p>
+                      <p class="text-slate-500 font-mono text-[11px]">sales@studio.com</p>
+                    </div>
+                    <span class="bg-slate-200/60 text-slate-600 px-2 py-0.5 rounded-lg text-[10px] font-bold">Mật khẩu: sales123</span>
+                  </div>
+                </div>
+                
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-start space-x-3 text-xs text-amber-900 leading-normal">
+                  <span class="text-amber-500 text-lg shrink-0">💡</span>
+                  <p>
+                    <strong>Lưu ý quan trọng:</strong> Hệ thống lưu trữ phiên đăng nhập bằng Token cục bộ. Trên màn hình máy tính, ở góc phải phía trên của Header, có biểu tượng **Switch View (PC / Mobile)** giúp người dùng mô phỏng trực quan ứng dụng hoạt động trên điện thoại iPhone.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Cột 2: Giao diện mô phỏng -->
+              <div class="border border-slate-200 rounded-2xl p-6 bg-slate-50 flex flex-col justify-between space-y-4">
+                <div class="space-y-2">
+                  <span class="text-[10px] font-bold text-gold-600 uppercase tracking-widest block">Tính năng đặc biệt</span>
+                  <h4 class="font-display font-bold text-slate-800 text-sm">Trình chuyển đổi thiết bị trực quan</h4>
+                  <p class="text-xs text-slate-500 leading-relaxed">
+                    Hệ thống cung cấp một nút bấm chuyển đổi giữa giao diện Máy tính để bàn và giao diện mô phỏng iPhone 14/15 Pro với màn hình Dynamic Island. Rất thích hợp để huấn luyện nhân viên sử dụng hệ thống ngay tại quầy bằng laptop của họ mà vẫn hình dung được cách nhân viên chụp ảnh thao tác trên điện thoại.
+                  </p>
+                </div>
+                
+                <!-- Mô phỏng nút bấm chuyển đổi -->
+                <div class="flex items-center space-x-2 bg-white border border-slate-200 p-2.5 rounded-xl shadow-3xs max-w-xs mx-auto lg:mx-0">
+                  <button class="flex-1 bg-gold-500 text-white font-bold text-[10px] py-1.5 px-3 rounded-lg flex items-center justify-center gap-1">
+                    💻 Giao diện PC
+                  </button>
+                  <button class="flex-1 hover:bg-slate-100 text-slate-500 font-bold text-[10px] py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 transition-all">
+                    📱 Mô phỏng Mobile
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ---------------------------------------------------- -->
+      <!-- TAB 2: CRM & TƯ VẤN (LEADS) -->
+      <!-- ---------------------------------------------------- -->
+      <section id="tab-crm" class="hidden fade-in space-y-8">
+        
+        <div class="bg-white rounded-2xl border border-slate-200/60 shadow-premium overflow-hidden">
+          <div class="bg-slate-50 border-b border-slate-100 p-5">
+            <h3 class="font-display font-bold text-slate-800 text-sm flex items-center gap-2">
+              <span class="text-gold-500">📈</span> Quy Trình Quản Lý Phễu Tư Vấn (CRM Leads)
+            </h3>
+          </div>
+          <div class="p-6 md:p-8 space-y-6">
+            
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Mục tiêu chính của phân hệ Leads là giúp đội ngũ Sales ghi nhận tất cả khách hàng mới đổ về từ các kênh Marketing, tiến hành chăm sóc theo đúng **6 bước tư vấn tiêu chuẩn**, tránh bỏ sót khách hàng và đánh giá hiệu suất nhân viên Sale qua tỷ lệ chốt đơn thành công.
+            </p>
+
+            <!-- 6 Bước Sale Tiêu Chuẩn -->
+            <div class="space-y-3">
+              <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">6 Bước Tư Vấn Tiêu Chuẩn Trong App:</h4>
+              <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-1 relative">
+                  <div class="w-6 h-6 rounded-full bg-gold-500 text-white font-bold text-[10px] flex items-center justify-center mx-auto">1</div>
+                  <p class="font-bold text-slate-800 text-[11px]">Khai thác nhu cầu</p>
+                  <p class="text-[9px] text-slate-400">Hiểu dịp chụp, mong muốn & lo lắng của khách.</p>
+                </div>
+                
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-1">
+                  <div class="w-6 h-6 rounded-full bg-gold-500 text-white font-bold text-[10px] flex items-center justify-center mx-auto">2</div>
+                  <p class="font-bold text-slate-800 text-[11px]">Tư vấn giải pháp</p>
+                  <p class="text-[9px] text-slate-400">Gửi các file ảnh cưới mẫu phù hợp phong cách.</p>
+                </div>
+
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-1">
+                  <div class="w-6 h-6 rounded-full bg-gold-500 text-white font-bold text-[10px] flex items-center justify-center mx-auto">3</div>
+                  <p class="font-bold text-slate-800 text-[11px]">Đề xuất phương án</p>
+                  <p class="text-[9px] text-slate-400">Đưa ra 1 - 2 gói dịch vụ chụp cưới tốt nhất.</p>
+                </div>
+
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-1">
+                  <div class="w-6 h-6 rounded-full bg-gold-500 text-white font-bold text-[10px] flex items-center justify-center mx-auto">4</div>
+                  <p class="font-bold text-slate-800 text-[11px]">Báo giá gói chụp</p>
+                  <p class="text-[9px] text-slate-400">Báo giá minh bạch, rõ ràng các quyền lợi đi kèm.</p>
+                </div>
+
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-1">
+                  <div class="w-6 h-6 rounded-full bg-gold-500 text-white font-bold text-[10px] flex items-center justify-center mx-auto">5</div>
+                  <p class="font-bold text-slate-800 text-[11px]">Thương lượng giá</p>
+                  <p class="text-[9px] text-slate-400">Tặng thêm quà, giảm giá nhẹ nếu khách do dự.</p>
+                </div>
+
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-1">
+                  <div class="w-6 h-6 rounded-full bg-gold-500 text-white font-bold text-[10px] flex items-center justify-center mx-auto">6</div>
+                  <p class="font-bold text-slate-800 text-[11px]">Chốt đơn / cọc</p>
+                  <p class="text-[9px] text-slate-400">Yêu cầu chuyển cọc giữ lịch, ký hợp đồng chụp.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Phân tích tính năng: Won / Lost -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+              
+              <div class="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-5 space-y-3">
+                <div class="flex items-center space-x-2">
+                  <span class="text-emerald-600 font-bold text-sm">🎉</span>
+                  <h4 class="font-display font-bold text-slate-800 text-xs uppercase tracking-wider text-emerald-800">Khi Chốt Thành Công (Won)</h4>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                  Khi khách đồng ý cọc tiền chụp, nhân viên bấm **"Chốt Thành Công"**. Hệ thống sẽ bắt buộc điền:
+                </p>
+                <ul class="text-xs text-slate-600 space-y-1.5 list-disc pl-5">
+                  <li><strong>Doanh thu (Revenue):</strong> Số tiền của gói chốt được.</li>
+                  <li><strong>Mã lý do thành công (Success Reason):</strong> Chọn lý do như <em>K1 (Nhu cầu rõ)</em>, <em>K3 (Tin tưởng thương hiệu)</em>, hoặc <em>S1 (Sale chốt đúng thời điểm)</em>...</li>
+                </ul>
+                <div class="text-[10px] bg-white border border-emerald-200 p-2.5 rounded-lg text-emerald-700 italic">
+                  👉 Nút hành động nhanh: Cho phép chuyển đổi thẳng Lead thành **Hợp đồng mới** mà không cần nhập lại thông tin khách hàng.
+                </div>
+              </div>
+
+              <div class="bg-rose-50/50 border border-rose-100 rounded-2xl p-5 space-y-3">
+                <div class="flex items-center space-x-2">
+                  <span class="text-rose-600 font-bold text-sm">❌</span>
+                  <h4 class="font-display font-bold text-slate-800 text-xs uppercase tracking-wider text-rose-800">Khi Thất Bại (Lost)</h4>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                  Nếu khách hàng từ chối dịch vụ hoặc không liên lạc được sau nhiều lần, nhân viên bấm **"Đóng Thất Bại"** và chọn:
+                </p>
+                <ul class="text-xs text-slate-600 space-y-1.5 list-disc pl-5">
+                  <li><strong>Mã lý do thất bại (Failure Reason):</strong> Chọn nguyên nhân như <em>K02 (Khách so sánh giá nơi khác)</em>, <em>S02 (Sale tư vấn lan man)</em>, <em>P01 (Giá cả chưa phù hợp)</em>...</li>
+                  <li><strong>Ghi chú chi tiết:</strong> Điền lý do thực tế của khách để phòng Marketing rút kinh nghiệm.</li>
+                </ul>
+              </div>
+
+            </div>
+
+            <!-- Tính năng hỗ trợ và phản hồi của Admin -->
+            <div class="bg-charcoal-50 rounded-2xl p-6 border border-slate-200/50 space-y-3.5">
+              <h4 class="font-display font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <span>🛡️</span> Cơ Chế Yêu Cầu Hỗ Trợ Từ Admin / Quản Lý
+              </h4>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Trong trường hợp gặp khách hàng khó tính, do dự về giá hoặc yêu cầu gói thiết kế riêng biệt, nhân viên Sales có thể nhập nội dung vào trường **"Yêu cầu hỗ trợ (Support Needed)"** và tích chọn gửi thông báo. 
+              </p>
+              <div class="p-3.5 bg-white rounded-xl border border-slate-200/80 text-xs space-y-2">
+                <p class="text-slate-500 font-medium">Quy trình phản hồi:</p>
+                <div class="flex items-start gap-2.5 text-slate-600">
+                  <span class="bg-gold-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold mt-0.5">Admin</span>
+                  <p>Quản trị viên nhận được thông báo đỏ tức thời &rarr; Nhấp vào Lead &rarr; Viết nhận xét chỉ đạo tại mục **"Admin Feedback"** &rarr; Nhân viên Sales nhận được thông báo chỉ đạo phản hồi để áp dụng thương lượng tiếp với khách.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ---------------------------------------------------- -->
+      <!-- TAB 3: HỢP ĐỒNG & ĐƠN HÀNG -->
+      <!-- ---------------------------------------------------- -->
+      <section id="tab-orders" class="hidden fade-in space-y-8">
+        
+        <div class="bg-white rounded-2xl border border-slate-200/60 shadow-premium overflow-hidden">
+          <div class="bg-slate-50 border-b border-slate-100 p-5">
+            <h3 class="font-display font-bold text-slate-800 text-sm flex items-center gap-2">
+              <span class="text-gold-500">💼</span> Quản Lý Hợp Đồng, Đơn Hàng & Lịch Quay Chụp
+            </h3>
+          </div>
+          <div class="p-6 md:p-8 space-y-6">
+            
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Mỗi khi khách hàng quyết định cọc tiền dịch vụ, một **Hợp đồng & Đơn hàng** sẽ được khởi tạo. Đây là nơi lưu trữ toàn bộ lịch trình tác nghiệp chụp ảnh cưới, trạng thái thanh toán và liên kết trực tiếp với Ekip chụp / makeup.
+            </p>
+
+            <!-- Cấu trúc đơn hàng -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              
+              <div class="space-y-4">
+                <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Thông Tin Quan Trọng Khi Tạo Đơn:</h4>
+                
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 text-xs space-y-3">
+                  <div class="flex justify-between border-b border-slate-200/50 pb-2">
+                    <span class="text-slate-500">Mã Đơn Hàng:</span>
+                    <strong class="text-slate-800">Tạo tự động (VD: ORD-202607-001)</strong>
+                  </div>
+                  <div class="flex justify-between border-b border-slate-200/50 pb-2">
+                    <span class="text-slate-500">Thông Tin Khách:</span>
+                    <strong class="text-slate-800">Tên, SĐT, Email, Địa chỉ khách</strong>
+                  </div>
+                  <div class="flex justify-between border-b border-slate-200/50 pb-2">
+                    <span class="text-slate-500">Lịch Quay Chụp:</span>
+                    <strong class="text-slate-800">Ngày chụp & Giờ chụp cụ thể</strong>
+                  </div>
+                  <div class="flex justify-between border-b border-slate-200/50 pb-2">
+                    <span class="text-slate-500">Tài chính:</span>
+                    <strong class="text-slate-800 text-gold-700">Giá trị gói, Tiền cọc & Số tiền còn lại phải thu</strong>
+                  </div>
+                  <div class="flex justify-between pb-1">
+                    <span class="text-slate-500">Người phụ trách:</span>
+                    <strong class="text-slate-800">Nhân viên Sales quản lý chính</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Trạng thái vòng đời Đơn Hàng -->
+              <div class="space-y-3">
+                <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Vòng Đời Trạng Thái Đơn Hàng cưới:</h4>
+                <div class="relative pl-6 space-y-3 text-xs border-l-2 border-gold-300">
+                  <div class="relative">
+                    <span class="absolute -left-[30px] top-0.5 w-3.5 h-3.5 rounded-full bg-slate-400 border-2 border-white"></span>
+                    <strong>Đơn mới (new)</strong>
+                    <p class="text-[11px] text-slate-500">Vừa chốt, đang chờ sắp xếp Ekip và kiểm tra váy.</p>
+                  </div>
+                  
+                  <div class="relative">
+                    <span class="absolute -left-[30px] top-0.5 w-3.5 h-3.5 rounded-full bg-sky-500 border-2 border-white"></span>
+                    <strong>Đã xác nhận (confirmed)</strong>
+                    <p class="text-[11px] text-slate-500">Đã chốt lịch chụp, cọc tiền thành công.</p>
+                  </div>
+
+                  <div class="relative">
+                    <span class="absolute -left-[30px] top-0.5 w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-white"></span>
+                    <strong>Đang chụp (shooting)</strong>
+                    <p class="text-[11px] text-slate-500">Ekip và dâu rể đang đi chụp ngoại cảnh / studio.</p>
+                  </div>
+
+                  <div class="relative">
+                    <span class="absolute -left-[30px] top-0.5 w-3.5 h-3.5 rounded-full bg-indigo-500 border-2 border-white"></span>
+                    <strong>Đang hậu kỳ (editing)</strong>
+                    <p class="text-[11px] text-slate-500">Photoshop đang lọc file, chỉnh sửa ảnh & làm album.</p>
+                  </div>
+
+                  <div class="relative">
+                    <span class="absolute -left-[30px] top-0.5 w-3.5 h-3.5 rounded-full bg-purple-500 border-2 border-white"></span>
+                    <strong>Ảnh đã xong (ready)</strong>
+                    <p class="text-[11px] text-slate-500">Gửi ảnh demo cho cô dâu chú rể duyệt.</p>
+                  </div>
+
+                  <div class="relative">
+                    <span class="absolute -left-[30px] top-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white"></span>
+                    <strong>Hoàn tất (delivered)</strong>
+                    <p class="text-[11px] text-slate-500">Bàn giao file gốc + album in, thu nốt tiền còn thiếu.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Nhật ký lịch sử trạng thái -->
+            <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200/50 space-y-4">
+              <h4 class="font-display font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <span>🔄</span> Nhật Ký Lịch Sử Trạng Thái (Status History)
+              </h4>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Mỗi khi người dùng cập nhật trạng thái đơn hàng (ví dụ: chuyển từ <em>Đang chụp</em> sang <em>Đang hậu kỳ</em>), hệ thống sẽ hiển thị một cửa sổ bật lên yêu cầu nhập **"Ghi chú lý do / Tiến độ"**. Hành động này ghi nhận chính xác thời gian và người thay đổi để tránh tranh chấp nội bộ.
+              </p>
+              <div class="bg-white p-4 rounded-xl border border-slate-200 text-xs space-y-3">
+                <div class="flex items-start space-x-2 text-slate-600">
+                  <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 shrink-0"></span>
+                  <p><strong>06/07/2026 14:30:</strong> Nhân viên <strong>Viet Hoang</strong> đã chuyển đơn sang <strong>[Đang hậu kỳ]</strong>. Ghi chú: <em>"Đã chụp xong 500 file gốc tại Đà Lạt, bàn giao ổ cứng cho thợ photoshop làm album."</em></p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ---------------------------------------------------- -->
+      <!-- TAB 4: HỒ SƠ KHÁCH HÀNG -->
+      <!-- ---------------------------------------------------- -->
+      <section id="tab-customers" class="hidden fade-in space-y-8">
+        
+        <div class="bg-white rounded-2xl border border-slate-200/60 shadow-premium overflow-hidden">
+          <div class="bg-slate-50 border-b border-slate-100 p-5">
+            <h3 class="font-display font-bold text-slate-800 text-sm flex items-center gap-2">
+              <span class="text-gold-500">👥</span> Quản Lý Cơ Sở Dữ Liệu Khách Hàng (Customer Profiles)
+            </h3>
+          </div>
+          <div class="p-6 md:p-8 space-y-6">
+            
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Trang Khách Hàng là danh bạ trung tâm lưu trữ thông tin lâu dài của tất cả các cặp đôi dâu rể hoặc cá nhân đã sử dụng dịch vụ chụp ảnh của Studio.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              <div class="p-5 border border-slate-200 rounded-2xl bg-slate-50/50 space-y-3">
+                <h4 class="font-display font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  <span>📋</span> Thông Tin Lưu Trữ Lâu Dài
+                </h4>
+                <ul class="text-xs text-slate-600 space-y-2 list-disc pl-5 leading-relaxed">
+                  <li>Họ và tên, Số điện thoại chính để liên lạc.</li>
+                  <li>Email nhận link tải ảnh (Google Drive/Dropbox).</li>
+                  <li>Địa chỉ gửi album in / quà tặng cưới tận nhà.</li>
+                  <li>Ghi chú đặc biệt (ví dụ: <em>"Cô dâu thích tông trang điểm nhẹ kiểu Hàn Quốc, chú rể hơi nhút nhát trước ống kính"</em>).</li>
+                </ul>
+              </div>
+
+              <div class="p-5 border border-slate-200 rounded-2xl bg-slate-50/50 space-y-3">
+                <h4 class="font-display font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  <span>🔗</span> Liên Kết Đa Chiều
+                </h4>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                  Khi nhấp chọn một Khách Hàng trong danh sách, hệ thống sẽ tự động quét cơ sở dữ liệu và hiển thị:
+                </p>
+                <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1.5">
+                  <div class="flex justify-between text-[11px]">
+                    <span class="text-slate-500">&bull; Lịch sử mua hàng:</span>
+                    <strong class="text-slate-800">Tất cả các hợp đồng/đơn hàng đã ký</strong>
+                  </div>
+                  <div class="flex justify-between text-[11px]">
+                    <span class="text-slate-500">&bull; Công việc liên quan:</span>
+                    <strong class="text-slate-800">Các task chụp, trang điểm, chỉnh sửa ảnh</strong>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ---------------------------------------------------- -->
+      <!-- TAB 5: PHÂN CÔNG CÔNG VIỆC -->
+      <!-- ---------------------------------------------------- -->
+      <section id="tab-tasks" class="hidden fade-in space-y-8">
+        
+        <div class="bg-white rounded-2xl border border-slate-200/60 shadow-premium overflow-hidden">
+          <div class="bg-slate-50 border-b border-slate-100 p-5 flex items-center justify-between">
+            <h3 class="font-display font-bold text-slate-800 text-sm flex items-center gap-2">
+              <span class="text-gold-500">📅</span> Phân Công Công Việc & Giám Sát Ekip (Task Management)
+            </h3>
+            <span class="text-[10px] bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full font-bold uppercase">KANBAN & LỊCH</span>
+          </div>
+          <div class="p-6 md:p-8 space-y-6">
+            
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Phân hệ Công việc giúp Admin & Manager phân công trách nhiệm chi tiết cho thợ chụp (Photographer), thợ make up và thiết kế (Editor) cho từng hợp đồng cưới cụ thể.
+            </p>
+
+            <!-- Trạng thái công việc và ưu tiên -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              <div class="p-5 border border-slate-200 rounded-2xl space-y-3 bg-slate-50">
+                <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Trạng Thái Công Việc (Task Status):</h4>
+                <div class="grid grid-cols-2 gap-2.5 text-xs text-center">
+                  <div class="p-2 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-lg font-semibold">Chờ nhận việc (pending)</div>
+                  <div class="p-2 bg-gold-50 text-gold-800 border border-gold-200/50 rounded-lg font-semibold">Đang làm (in_progress)</div>
+                  <div class="p-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg font-semibold">Đã hoàn thành (done)</div>
+                  <div class="p-2 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg font-semibold">Đã hủy (cancelled)</div>
+                </div>
+              </div>
+
+              <div class="p-5 border border-slate-200 rounded-2xl space-y-3 bg-slate-50">
+                <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Độ Ưu Tiên (Task Priority):</h4>
+                <div class="space-y-2 text-xs">
+                  <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-slate-200">
+                    <span class="font-semibold text-slate-600">Thấp (low)</span>
+                    <span class="text-[10px] text-slate-400">Các công việc chuẩn bị dài hạn</span>
+                  </div>
+                  <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-slate-200">
+                    <span class="font-semibold text-gold-700">Thường (normal)</span>
+                    <span class="text-[10px] text-slate-400">Lịch trình chụp ảnh cưới thông thường</span>
+                  </div>
+                  <div class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-red-200 bg-red-50/30">
+                    <span class="font-bold text-rose-600 animate-pulse">KHẨN CẤP (high)</span>
+                    <span class="text-[10px] text-rose-500 font-medium">Bàn giao album sát ngày cưới của khách!</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Các chế độ hiển thị -->
+            <div class="space-y-3">
+              <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Hai Chế Độ Hiển Thị Linh Hoạt:</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <div class="p-5 border border-slate-200 rounded-2xl bg-white space-y-2">
+                  <span class="text-lg">📋</span>
+                  <h5 class="font-bold text-slate-800 text-xs">Bảng Kanban Trực Quan</h5>
+                  <p class="text-xs text-slate-500 leading-relaxed">
+                    Giúp người quản lý nhìn tổng quát tất cả công việc của toàn bộ studio. Nhân sự được phân công có thể kéo thả công việc hoặc bấm chuyển trạng thái nhanh để báo cáo tiến độ.
+                  </p>
+                </div>
+
+                <div class="p-5 border border-slate-200 rounded-2xl bg-white space-y-2">
+                  <span class="text-lg">📅</span>
+                  <h5 class="font-bold text-slate-800 text-xs">Lịch Làm Việc (Calendar View)</h5>
+                  <p class="text-xs text-slate-500 leading-relaxed">
+                    Hiển thị các công việc theo dòng thời gian ngày tháng. Giúp thợ chụp và chuyên viên make up nhìn thấy ngay lịch đi tỉnh chụp ảnh cưới của mình trong tháng, tránh tình trạng trùng lịch.
+                  </p>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Tính năng giục việc / bình luận -->
+            <div class="p-5 bg-charcoal-50 rounded-2xl border border-slate-200/50 space-y-3">
+              <h4 class="font-display font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <span>💬</span> Cơ Chế Bình Luận & Giục Tiến Độ
+              </h4>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Tại trang chi tiết công việc, Admin / Quản lý có thể gửi tin nhắn **"Giục Việc"**. Hệ thống sẽ tự động đổi độ ưu tiên của công việc lên mức tối đa và bắn thông báo tới nhân viên phụ trách. Nhân viên cũng có thể nhập bình luận, đính kèm link Driver ảnh đã sửa xong để Admin duyệt.
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ---------------------------------------------------- -->
+      <!-- TAB 6: MỤC TIÊU OKR -->
+      <!-- ---------------------------------------------------- -->
+      <section id="tab-okrs" class="hidden fade-in space-y-8">
+        
+        <div class="bg-white rounded-2xl border border-slate-200/60 shadow-premium overflow-hidden">
+          <div class="bg-slate-50 border-b border-slate-100 p-5">
+            <h3 class="font-display font-bold text-slate-800 text-sm flex items-center gap-2">
+              <span class="text-gold-500">🎯</span> Thiết Lập OKR & Theo Dõi Tiến Độ Mục Tiêu Studio
+            </h3>
+          </div>
+          <div class="p-6 md:p-8 space-y-6">
+            
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Hệ thống tích hợp công cụ quản trị mục tiêu cao cấp (Objectives & Key Results) để định hướng toàn bộ studio hướng tới các chỉ số doanh số hoặc chất lượng phục vụ trong năm.
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              
+              <!-- Cột 1: Cấu trúc mục tiêu -->
+              <div class="space-y-4">
+                <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Cấu Trúc OKR Trong Studio:</h4>
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 text-xs text-slate-600">
+                  <div>
+                    <strong class="text-slate-800 text-xs block">🎯 Mục tiêu lớn (Objective):</strong>
+                    <span class="text-slate-500">Là định hướng định tính chung của studio.</span>
+                    <div class="mt-1.5 p-2 bg-white rounded border border-slate-200 font-medium text-gold-800">
+                      VD: "Trở thành Studio chụp cưới được tin tưởng nhất Rạch Giá Quý 3/2026"
+                    </div>
+                  </div>
+                  
+                  <div class="pt-2 border-t border-slate-200/60">
+                    <strong class="text-slate-800 text-xs block">📊 Kết quả then chốt (Key Result):</strong>
+                    <span class="text-slate-500">Chỉ số định lượng, đo lường cụ thể được gán cho từng phòng ban.</span>
+                    <div class="mt-1.5 p-2 bg-white rounded border border-slate-200 font-medium text-sky-800">
+                      VD: "Kênh Marketing tiếp cận được 10,000 cặp đôi chuẩn bị cưới" (Mục tiêu 100%)
+                    </div>
+                    <div class="mt-1.5 p-2 bg-white rounded border border-slate-200 font-medium text-emerald-800">
+                      VD: "Phòng Sales chốt thành công 100 hợp đồng chụp trọn gói" (Đã đạt 45%)
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cột 2: Cập nhật tiến độ -->
+              <div class="space-y-4">
+                <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Cách Thức Đánh Giá Tiến Độ:</h4>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                  Mỗi phòng ban được giao chỉ tiêu sẽ vào hệ thống nhập tỉ lệ hoàn thành từ **0% đến 100%**. Hệ thống sẽ tự động tính điểm trung bình cộng để cập nhật thanh tiến trình (progress bar) tổng của Mục tiêu lớn theo thời gian thực.
+                </p>
+                <div class="p-4 border border-slate-200 rounded-2xl bg-slate-50/50 space-y-3 text-xs">
+                  <span class="font-semibold text-slate-700">Trực quan thanh tiến độ OKR tổng:</span>
+                  <div class="space-y-1">
+                    <div class="flex justify-between font-bold text-slate-800 text-[11px]">
+                      <span>Tiến trình mục tiêu quý 3</span>
+                      <span>68%</span>
+                    </div>
+                    <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                      <div class="h-full bg-gradient-to-r from-gold-400 to-gold-600 rounded-full" style="width: 68%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ---------------------------------------------------- -->
+      <!-- TAB 7: CHAT & THÔNG BÁO NỘI BỘ -->
+      <!-- ---------------------------------------------------- -->
+      <section id="tab-chat" class="hidden fade-in space-y-8">
+        
+        <div class="bg-white rounded-2xl border border-slate-200/60 shadow-premium overflow-hidden">
+          <div class="bg-slate-50 border-b border-slate-100 p-5">
+            <h3 class="font-display font-bold text-slate-800 text-sm flex items-center gap-2">
+              <span class="text-gold-500">💬</span> Hệ Thống Trò Chuyện & Thông Báo Đẩy
+            </h3>
+          </div>
+          <div class="p-6 md:p-8 space-y-6">
+            
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Để tăng tốc độ làm việc và giảm thiểu thời gian trao đổi qua Zalo cá nhân, hệ thống tích hợp trực tiếp Kênh chat bảo mật nội bộ và Chuông thông báo đỏ.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              
+              <div class="p-5 border border-slate-200 rounded-2xl bg-slate-50 space-y-3">
+                <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  <span>💬</span> Trò chuyện Nội Bộ (In-app Chat)
+                </h4>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                  Nhân viên có thể chat trực tiếp với nhau (Chat 1-1) hoặc gửi tin nhắn vào group chung của Ekip cưới để thảo luận về kế hoạch chuẩn bị đạo cụ cưới hoặc thời gian di chuyển.
+                </p>
+                <div class="text-[11px] bg-white border border-slate-200 p-3 rounded-xl text-slate-500 italic">
+                  💡 Mẹo: Hệ thống tự động lưu trữ lịch sử chat, hỗ trợ gửi link công việc nhanh để nhân viên nhận việc ngay lập tức.
+                </div>
+              </div>
+
+              <div class="p-5 border border-slate-200 rounded-2xl bg-slate-50 space-y-3">
+                <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  <span>🔔</span> Chuông Thông Báo (System Notifications)
+                </h4>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                  Hệ thống liên tục kiểm tra và thông báo ở góc màn hình mỗi khi:
+                </p>
+                <ul class="text-xs text-slate-600 space-y-1.5 list-disc pl-5">
+                  <li>Admin vừa phân công một Task chụp cưới mới cho bạn.</li>
+                  <li>Có khách hàng tư vấn mới (Lead) đổ về được giao cho bạn.</li>
+                  <li>Admin phản hồi yêu cầu hỗ trợ chốt đơn của bạn.</li>
+                  <li>Hợp đồng của khách được chuyển trạng thái thanh toán.</li>
+                </ul>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ---------------------------------------------------- -->
+      <!-- TAB 8: NHÂN SỰ & CÀI ĐẶT HỆ THỐNG -->
+      <!-- ---------------------------------------------------- -->
+      <section id="tab-settings" class="hidden fade-in space-y-8">
+        
+        <!-- Quản lý nhân sự -->
+        <div class="bg-white rounded-2xl border border-slate-200/60 shadow-premium overflow-hidden">
+          <div class="bg-slate-50 border-b border-slate-100 p-5">
+            <h3 class="font-display font-bold text-slate-800 text-sm flex items-center gap-2">
+              <span>👥</span> Hướng Dẫn Quản Lý Tài Khoản Nhân Sự
+            </h3>
+          </div>
+          <div class="p-6 md:p-8 space-y-4">
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Tại phân hệ **Nhân Sự** (chỉ hiển thị với Admin), người dùng có quyền quản trị toàn bộ danh sách nhân sự của studio:
+            </p>
+            <ul class="text-xs text-slate-600 space-y-2 list-disc pl-5 leading-relaxed">
+              <li><strong>Thêm tài khoản nhân viên mới:</strong> Nhập tên, email làm việc, đặt mật khẩu ban đầu và phân vai trò cụ thể.</li>
+              <li><strong>Bật/Tắt trạng thái hoạt động:</strong> Cho phép khóa ngay lập tức tài khoản của nhân viên đã nghỉ việc để bảo mật thông tin data khách hàng không bị rò rỉ ra ngoài.</li>
+              <li><strong>Phân quyền vai trò:</strong> Chuyển nhân viên từ Sales sang Photographer/Makeup hoặc cấp quyền Quản lý (Manager).</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Cấu hình và sao lưu dữ liệu -->
+        <div class="bg-white rounded-2xl border border-slate-200/60 shadow-premium overflow-hidden">
+          <div class="bg-slate-50 border-b border-slate-100 p-5 flex items-center justify-between">
+            <h3 class="font-display font-bold text-slate-800 text-sm flex items-center gap-2">
+              <span>🛡️</span> Cấu Hình Cài Đặt Studio & Sao Lưu Dữ Liệu
+            </h3>
+            <span class="text-[10px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full font-bold uppercase">BẢO MẬT AN TOÀN</span>
+          </div>
+          <div class="p-6 md:p-8 space-y-6">
+            
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Để bảo vệ dữ liệu hợp đồng khách hàng trước mọi sự cố mất điện hoặc lỗi máy chủ, hệ thống được thiết lập cơ chế sao lưu tự động và cho phép Admin thao tác thủ công.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              
+              <!-- Backup settings -->
+              <div class="space-y-4">
+                <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Cấu Hình Lịch Sao Lưu:</h4>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                  Admin có thể chọn chu kỳ tự động lưu dự phòng cơ sở dữ liệu:
+                </p>
+                <div class="bg-slate-50 p-4 border border-slate-200 rounded-xl text-xs space-y-2 font-semibold text-slate-700">
+                  <p>✔ Hằng ngày (Daily Backup) - Khuyến nghị cho studio lớn</p>
+                  <p>✔ Hằng tuần (Weekly Backup) - Mặc định hệ thống</p>
+                  <p>✔ Hằng tháng (Monthly Backup)</p>
+                  <p>✔ Không tự động sao lưu (Không khuyến nghị)</p>
+                </div>
+              </div>
+
+              <!-- Sao lưu thủ công -->
+              <div class="space-y-4">
+                <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Tải Xuống Bản Sao Lưu Vật Lý & Khôi Phục:</h4>
+                <div class="p-4 border border-slate-200 rounded-xl space-y-3 text-xs bg-slate-50/50">
+                  <p class="text-slate-600">
+                    Admin có thể ấn **"Tạo Sao Lưu Ngay"** để xuất toàn bộ file dữ liệu định dạng `.json` về máy tính cá nhân.
+                  </p>
+                  <div class="text-[10px] bg-amber-50 border border-amber-200 p-2.5 rounded-lg text-amber-800">
+                    ⚠️ <strong>Cảnh báo khôi phục (Restore):</strong> Hành động khôi phục dữ liệu từ bản sao lưu cũ sẽ ghi đè lên toàn bộ dữ liệu hiện tại. Trình duyệt sẽ tự động đồng bộ lại sau 2 giây. Chỉ thực hiện khi có sự cố nghiêm trọng dưới sự hướng dẫn của bộ phận kỹ thuật.
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ---------------------------------------------------- -->
+      <!-- TAB 9: QUY TRÌNH KHÁCH HÀNG CHUẨN -->
+      <!-- ---------------------------------------------------- -->
+      <section id="tab-workflows" class="hidden fade-in space-y-8">
+        
+        <div class="bg-white rounded-2xl border border-slate-200/60 shadow-premium overflow-hidden">
+          <div class="bg-slate-50 border-b border-slate-100 p-5">
+            <h3 class="font-display font-bold text-slate-800 text-sm flex items-center gap-2">
+              <span>🔄</span> Sơ Đồ Quy Trình Đi Của Một Khách Hàng Chụp Ảnh Cưới
+            </h3>
+          </div>
+          
+          <div class="p-6 md:p-8 space-y-8">
+            
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Để tối ưu hiệu suất, hãy hướng dẫn nhân viên bám sát vòng đời di chuyển của dữ liệu khách hàng theo đúng sơ đồ luồng nghiệp vụ dưới đây:
+            </p>
+
+            <!-- INTERACTIVE PIPELINE FLOW -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 relative">
+              
+              <!-- Bước 1 -->
+              <div class="p-4 border border-slate-200 rounded-2xl bg-slate-50/80 space-y-2 relative pipeline-step hover:border-gold-400 hover:bg-white transition-all">
+                <span class="bg-gold-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Bước 1</span>
+                <h4 class="font-display font-bold text-xs text-slate-800">Tiếp Cận & CRM</h4>
+                <p class="text-[10px] text-slate-500 leading-normal">
+                  Sales tạo thông tin **Lead** mới đổ về từ fanpage. Chăm sóc tư vấn qua 6 bước sale.
+                </p>
+              </div>
+
+              <!-- Bước 2 -->
+              <div class="p-4 border border-slate-200 rounded-2xl bg-slate-50/80 space-y-2 relative pipeline-step hover:border-gold-400 hover:bg-white transition-all">
+                <span class="bg-sky-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Bước 2</span>
+                <h4 class="font-display font-bold text-xs text-slate-800">Ký Hợp Đồng</h4>
+                <p class="text-[10px] text-slate-500 leading-normal">
+                  Khách chuyển cọc. Sales đổi Lead thành **Đơn Hàng (Order)**. Thiết lập ngày chụp và thu tiền cọc đợt 1.
+                </p>
+              </div>
+
+              <!-- Bước 3 -->
+              <div class="p-4 border border-slate-200 rounded-2xl bg-slate-50/80 space-y-2 relative pipeline-step hover:border-gold-400 hover:bg-white transition-all">
+                <span class="bg-amber-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Bước 3</span>
+                <h4 class="font-display font-bold text-xs text-slate-800">Phân Công Ekip</h4>
+                <p class="text-[10px] text-slate-500 leading-normal">
+                  Admin tạo các **Task (Công việc)** gán trực tiếp cho thợ chụp ảnh, chuyên viên make up, thợ sửa ảnh.
+                </p>
+              </div>
+
+              <!-- Bước 4 -->
+              <div class="p-4 border border-slate-200 rounded-2xl bg-slate-50/80 space-y-2 relative pipeline-step hover:border-gold-400 hover:bg-white transition-all">
+                <span class="bg-indigo-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Bước 4</span>
+                <h4 class="font-display font-bold text-xs text-slate-800">Tác Nghiệp & Photoshop</h4>
+                <p class="text-[10px] text-slate-500 leading-normal">
+                  Thợ chụp ảnh và photoshop thực hiện. Nhân sự cập nhật tiến độ công việc liên tục bằng bình luận.
+                </p>
+              </div>
+
+              <!-- Bước 5 -->
+              <div class="p-4 border border-slate-200 rounded-2xl bg-slate-50/80 space-y-2 hover:border-gold-400 hover:bg-white transition-all">
+                <span class="bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Bước 5</span>
+                <h4 class="font-display font-bold text-xs text-slate-800">Bàn Giao & OKR</h4>
+                <p class="text-[10px] text-slate-500 leading-normal">
+                  Khách duyệt album. Thu nốt tiền còn lại. Đơn hàng chuyển sang **Hoàn tất**. Cập nhật chỉ số OKR.
+                </p>
+              </div>
+
+            </div>
+
+            <!-- Khuyến nghị vận hành -->
+            <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200/50 space-y-4">
+              <h4 class="font-display font-bold text-slate-800 text-xs uppercase tracking-wider">💡 Quy Tắc Vận Hành Vàng Cho Studio:</h4>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-600">
+                <div class="space-y-1">
+                  <strong class="text-slate-800">&bull; Quy tắc 1: Cập nhật ngay lập tức</strong>
+                  <p class="text-slate-500">Mọi thay đổi về ngày chụp, giờ chụp hoặc gói chụp phải được cập nhật trên đơn hàng ngay lập tức để Ekip chụp không bị động.</p>
+                </div>
+                <div class="space-y-1">
+                  <strong class="text-slate-800">&bull; Quy tắc 2: Tương tác qua bình luận Task</strong>
+                  <p class="text-slate-500">Hạn chế giục việc miệng. Hãy sử dụng tính năng bình luận và giục việc trên Task để lưu trữ lịch sử phản hồi phục vụ cho việc kiểm soát chất lượng sau này.</p>
+                </div>
+                <div class="space-y-1">
+                  <strong class="text-slate-800">&bull; Quy tắc 3: Bảo mật tuyệt đối dữ liệu</strong>
+                  <p class="text-slate-500">Chỉ Admin mới có quyền xuất database. Nhân viên Sales tuyệt đối không được chụp ảnh màn hình data khách hàng hoặc chia sẻ tài khoản cho người ngoài.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ---------------------------------------------------- -->
+      <!-- TAB 10: QUY TRÌNH CHO TỪNG VAI TRÒ NHÂN SỰ -->
+      <!-- ---------------------------------------------------- -->
+      <section id="tab-roles" class="hidden fade-in space-y-8">
+        
+        <div class="bg-white rounded-2xl border border-slate-200/60 shadow-premium overflow-hidden">
+          <div class="bg-slate-50 border-b border-slate-100 p-5">
+            <h3 class="font-display font-bold text-slate-800 text-sm flex items-center gap-2">
+              <span>🛡️</span> Cẩm Nang Công Việc Theo Từng Vai Trò (Role Guide)
+            </h3>
+          </div>
+          
+          <div class="p-6 md:p-8 space-y-8">
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Vui lòng chọn vai trò nhân viên dưới đây để xem hướng dẫn thao tác cụ thể dành riêng cho vị trí đó trong buổi đào tạo:
+            </p>
+
+            <!-- Nút bấm chọn vai trò -->
+            <div class="flex flex-wrap gap-3">
+              <button onclick="selectRoleGuide('role-guide-sales')" id="btn-role-sales" class="bg-gold-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-sm transition-all duration-150 cursor-pointer">
+                💼 Nhân viên Tư Vấn (Sales)
+              </button>
+              <button onclick="selectRoleGuide('role-guide-ekip')" id="btn-role-ekip" class="bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-xs px-5 py-2.5 rounded-xl transition-all duration-150 cursor-pointer">
+                📷 Nhân sự Ekip (Photo/MakeUp/Editor)
+              </button>
+              <button onclick="selectRoleGuide('role-guide-admin')" id="btn-role-admin" class="bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-xs px-5 py-2.5 rounded-xl transition-all duration-150 cursor-pointer">
+                👑 Chủ Studio / Quản Lý (Admin/Manager)
+              </button>
+            </div>
+
+            <!-- NỘI DUNG VAI TRÒ 1: SALES -->
+            <div id="role-guide-sales" class="space-y-4 fade-in">
+              <div class="p-5 border border-gold-200/40 rounded-2xl bg-gold-50/20 space-y-3.5">
+                <h4 class="font-display font-bold text-slate-800 text-xs uppercase tracking-wider text-gold-800">
+                  Nhiệm vụ chính của Chuyên Viên Tư Vấn (Sales):
+                </h4>
+                <div class="space-y-3 text-xs text-slate-600">
+                  <div class="flex items-start gap-2.5">
+                    <span class="bg-gold-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">1</span>
+                    <p><strong>Theo dõi danh sách Leads mới hàng ngày:</strong> Nhận data khách tiềm năng đổ về. Tiến hành liên hệ tư vấn và cập nhật 6 bước tư vấn.</p>
+                  </div>
+                  <div class="flex items-start gap-2.5">
+                    <span class="bg-gold-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">2</span>
+                    <p><strong>Cập nhật trạng thái chăm sóc:</strong> Tích chọn các lần follow (lần 1, lần 2, lần 3). Nhập phản hồi chi tiết của khách hàng.</p>
+                  </div>
+                  <div class="flex items-start gap-2.5">
+                    <span class="bg-gold-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">3</span>
+                    <p><strong>Chốt đơn:</strong> Chuyển trạng thái Lead sang **Won (Thành công)**, nhập doanh thu và chuyển đổi nhanh sang **Đơn hàng mới** để lập lịch chụp.</p>
+                  </div>
+                  <div class="flex items-start gap-2.5">
+                    <span class="bg-gold-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">4</span>
+                    <p><strong>Theo dõi công việc chụp:</strong> Đảm bảo thông tin yêu cầu cụ thể của cô dâu chú rể đã được ghi chú rõ để Ekip chuẩn bị phục trang và concept chụp phù hợp.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- NỘI DUNG VAI TRÒ 2: EKIP -->
+            <div id="role-guide-ekip" class="hidden space-y-4 fade-in">
+              <div class="p-5 border border-slate-200 rounded-2xl bg-slate-50 space-y-3.5">
+                <h4 class="font-display font-bold text-slate-800 text-xs uppercase tracking-wider text-slate-700">
+                  Nhiệm vụ chính của Photographer / MakeUp Artist / Editor:
+                </h4>
+                <div class="space-y-3 text-xs text-slate-600">
+                  <div class="flex items-start gap-2.5">
+                    <span class="bg-slate-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">1</span>
+                    <p><strong>Kiểm tra Lịch làm việc (Calendar):</strong> Xem lịch chụp ảnh, lịch trang điểm được phân công trong tuần để chủ động chuẩn bị đạo cụ, thiết bị.</p>
+                  </div>
+                  <div class="flex items-start gap-2.5">
+                    <span class="bg-slate-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">2</span>
+                    <p><strong>Nhận việc:</strong> Khi được giao Task mới, bấm chuyển trạng thái từ **Chờ nhận việc (Pending)** sang **Đang làm (In Progress)** để thông báo cho Admin biết đã sẵn sàng.</p>
+                  </div>
+                  <div class="flex items-start gap-2.5">
+                    <span class="bg-slate-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">3</span>
+                    <p><strong>Cập nhật kết quả:</strong> Sau khi hoàn thành chụp hoặc photoshop ảnh cưới xong, comment đính kèm đường link ảnh gốc / ảnh demo để Quản lý duyệt trước khi bàn giao cho khách.</p>
+                  </div>
+                  <div class="flex items-start gap-2.5">
+                    <span class="bg-slate-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">4</span>
+                    <p><strong>Bàn giao công việc:</strong> Bấm đổi trạng thái công việc sang **Đã hoàn thành (Done)** sau khi được duyệt.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- NỘI DUNG VAI TRÒ 3: ADMIN/MANAGER -->
+            <div id="role-guide-admin" class="hidden space-y-4 fade-in">
+              <div class="p-5 border border-slate-900/10 rounded-2xl bg-slate-950 text-slate-300 space-y-3.5">
+                <h4 class="font-display font-bold text-gold-300 text-xs uppercase tracking-wider">
+                  Quyền Hạn & Trách Nhiệm Của Chủ Studio / Quản Lý (Admin/Manager):
+                </h4>
+                <div class="space-y-3 text-xs text-slate-400">
+                  <div class="flex items-start gap-2.5">
+                    <span class="bg-gold-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">1</span>
+                    <p><strong>Quản trị mục tiêu OKRs:</strong> Thiết lập mục tiêu kinh doanh quý/năm của studio. Giám sát các phòng ban cập nhật số liệu kết quả then chốt.</p>
+                  </div>
+                  <div class="flex items-start gap-2.5">
+                    <span class="bg-gold-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">2</span>
+                    <p><strong>Kiểm soát chất lượng tư vấn:</strong> Nhận thông báo cứu trợ của nhân viên Sales. Đọc lịch sử trao đổi tư vấn khách hàng để trực tiếp viết chỉ đạo phản hồi (Admin Feedback).</p>
+                  </div>
+                  <div class="flex items-start gap-2.5">
+                    <span class="bg-gold-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">3</span>
+                    <p><strong>Quản lý tài chính đơn hàng:</strong> Giám sát tổng doanh thu, công nợ tiền còn thiếu của khách hàng trên trang Hợp đồng & Đơn hàng.</p>
+                  </div>
+                  <div class="flex items-start gap-2.5">
+                    <span class="bg-gold-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold shrink-0 mt-0.5">4</span>
+                    <p><strong>Bảo mật hệ thống:</strong> Thiết lập lịch tự động sao lưu dữ liệu, khóa tài khoản của nhân viên đã thôi việc.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- MAIN JS SCRIPTS FOR INTERACTIVITY -->
+  <script type="text/javascript">
+    
+    // Tab switching functionality
+    function switchTab(tabId) {
+      // List of all section IDs
+      const sections = [
+        'tab-tongquan', 
+        'tab-crm', 
+        'tab-orders', 
+        'tab-customers', 
+        'tab-tasks', 
+        'tab-okrs', 
+        'tab-chat',
+        'tab-settings', 
+        'tab-workflows',
+        'tab-roles'
+      ];
+      
+      // Hide all sections
+      sections.forEach(sec => {
+        const el = document.getElementById(sec);
+        if (el) {
+          el.classList.add('hidden');
+        }
+      });
+      
+      // Show active section
+      const activeEl = document.getElementById(tabId);
+      if (activeEl) {
+        activeEl.classList.remove('hidden');
+      }
+      
+      // Reset all nav button styles
+      const navButtons = document.querySelectorAll('#navTabs button');
+      navButtons.forEach(btn => {
+        btn.classList.remove('bg-charcoal-900', 'text-white', 'border-gold-500');
+        btn.classList.add('text-slate-400', 'border-transparent');
+      });
+      
+      // Highlight active nav button
+      const activeBtn = document.getElementById('btn-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-charcoal-900', 'text-white', 'border-gold-500');
+        activeBtn.classList.remove('text-slate-400', 'border-transparent');
+      }
+      
+      // Update Title Banner
+      const titlesMap = {
+        'tab-tongquan': '1. Tổng Quan Hệ Thống',
+        'tab-crm': '2. CRM & Tư Vấn (Leads)',
+        'tab-orders': '3. Hợp Đồng & Đơn Hàng',
+        'tab-customers': '4. Hồ Sơ Khách Hàng',
+        'tab-tasks': '5. Phân Công Công Việc',
+        'tab-okrs': '6. Quản Lý OKR Mục Tiêu',
+        'tab-chat': '7. Chat & Thông Báo Nội Bộ',
+        'tab-settings': '8. Nhân Sự & Cài Đặt Hệ Thống',
+        'tab-workflows': 'Quy Trình Khách Hàng Chuẩn',
+        'tab-roles': 'Quy Trình Cho Từng Nhân Sự'
+      };
+      
+      document.getElementById('main-content-title').innerText = titlesMap[tabId] || 'Hướng Dẫn Sử Dụng';
+      
+      // Scroll main content to top
+      document.querySelector('main').scrollTop = 0;
+    }
+    
+    // Role guide switcher
+    function selectRoleGuide(roleGuideId) {
+      const guides = ['role-guide-sales', 'role-guide-ekip', 'role-guide-admin'];
+      guides.forEach(g => {
+        const el = document.getElementById(g);
+        if (el) el.classList.add('hidden');
+      });
+      
+      const target = document.getElementById(roleGuideId);
+      if (target) target.classList.remove('hidden');
+      
+      // Reset button styles
+      const btns = {
+        'role-guide-sales': 'btn-role-sales',
+        'role-guide-ekip': 'btn-role-ekip',
+        'role-guide-admin': 'btn-role-admin'
+      };
+      
+      Object.keys(btns).forEach(key => {
+        const btnEl = document.getElementById(btns[key]);
+        if (btnEl) {
+          if (key === roleGuideId) {
+            btnEl.className = "bg-gold-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-sm transition-all duration-150 cursor-pointer";
+          } else {
+            btnEl.className = "bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-xs px-5 py-2.5 rounded-xl transition-all duration-150 cursor-pointer";
+          }
+        }
+      });
+    }
+
+    // Search document function
+    function searchDocument() {
+      const q = document.getElementById('docSearch').value.toLowerCase().trim();
+      const navButtons = document.querySelectorAll('#navTabs button');
+      
+      if (!q) {
+        // Show all
+        navButtons.forEach(btn => btn.style.display = 'flex');
+        return;
+      }
+      
+      navButtons.forEach(btn => {
+        const text = btn.innerText.toLowerCase();
+        if (text.includes(q)) {
+          btn.style.display = 'flex';
+        } else {
+          btn.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

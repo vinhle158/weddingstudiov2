@@ -1207,8 +1207,9 @@ export default function Leads({ userRole }: LeadsProps) {
                       <div className="relative">
                         {/* Progress Track */}
                         <div className="flex items-center gap-0">
-                          {stepNames.map((step, idx) => {
-                            const isCompleted = step.num < editStep || editStatus === 'won';
+                           {stepNames.map((step, idx) => {
+                            const isWon = editStatus === 'won';
+                            const isCompleted = step.num < editStep || isWon;
                             const isCurrent = step.num === editStep && editStatus === 'consulting';
                             const isPast = step.num < editStep;
                             return (
@@ -1216,11 +1217,11 @@ export default function Leads({ userRole }: LeadsProps) {
                                 {/* Connector line before */}
                                 <div className="w-full flex items-center">
                                   {idx > 0 && (
-                                    <div className={`flex-1 h-0.5 ${isPast || editStatus === 'won' ? 'bg-gold-400' : 'bg-slate-200'}`} />
+                                    <div className={`flex-1 h-0.5 ${isPast || isWon ? 'bg-gold-400' : 'bg-slate-200'}`} />
                                   )}
                                   {/* Circle */}
                                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold border-2 shrink-0 transition-all ${
-                                    editStatus === 'won'
+                                    isWon
                                       ? 'bg-emerald-500 border-emerald-500 text-white'
                                       : isCompleted
                                       ? 'bg-gold-500 border-gold-500 text-white'
@@ -1228,15 +1229,15 @@ export default function Leads({ userRole }: LeadsProps) {
                                       ? 'bg-white border-gold-500 text-gold-700 ring-2 ring-gold-300 ring-offset-1'
                                       : 'bg-white border-slate-200 text-slate-400'
                                   }`}>
-                                    {(isCompleted || editStatus === 'won') ? '✓' : step.num}
+                                    {(isCompleted || isWon) ? '✓' : step.num}
                                   </div>
                                   {idx < stepNames.length - 1 && (
-                                    <div className={`flex-1 h-0.5 ${(isPast && step.num < editStep - 1) || editStatus === 'won' ? 'bg-gold-400' : 'bg-slate-200'}`} />
+                                    <div className={`flex-1 h-0.5 ${(isPast && step.num < editStep - 1) || isWon ? 'bg-gold-400' : 'bg-slate-200'}`} />
                                   )}
                                 </div>
                                 {/* Label */}
                                 <p className={`text-[9px] font-semibold mt-1.5 text-center leading-tight max-w-[50px] ${
-                                  isCurrent ? 'text-gold-700' : isCompleted || editStatus === 'won' ? 'text-slate-600' : 'text-slate-400'
+                                  isCurrent ? 'text-gold-700' : isCompleted || isWon ? 'text-slate-600' : 'text-slate-400'
                                 }`}>
                                   {step.label}
                                 </p>

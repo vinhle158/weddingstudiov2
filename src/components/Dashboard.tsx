@@ -676,11 +676,11 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
         <div>
           <div className="flex items-center space-x-2.5 flex-wrap gap-y-2">
             <h2 className="text-2xl font-semibold tracking-widest text-gold-950 md:text-3xl font-display italic">
-              {studioSettings?.name || 'Aura Bridal Studio'}
+              {studioSettings?.name || 'The Will Studio'}
             </h2>
             {userRole === 'admin' && (
               <span className="bg-gold-500 text-white text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-gold-600/20 shadow-3xs flex items-center shrink-0">
-                <Shield className="w-2.5 h-2.5 mr-1" /> Điều hành (Full Quyền)
+                <Shield className="w-2.5 h-2.5 mr-1" /> Quản trị hệ thống
               </span>
             )}
             {userRole === 'manager' && (
@@ -695,7 +695,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
             )}
           </div>
           <p className="text-slate-500 mt-2 text-xs md:text-sm max-w-2xl font-medium">
-            {userRole === 'admin' && 'Hệ thống quản trị tối cao, điều hành toàn diện hợp đồng, khách hàng, nhân sự và mục tiêu studio.'}
+            {userRole === 'admin' && 'Hệ thống quản lý chung của studio cho các mục hợp đồng, khách hàng, nhân sự và mục tiêu.'}
             {userRole === 'manager' && 'Hệ thống quản lý hợp đồng, chăm sóc khách hàng, phân phối nhiệm vụ và trao đổi nội bộ.'}
             {(userRole === 'staff' || userRole === 'photographer' || userRole === 'editor') && 'Không gian làm việc nhân viên kỹ thuật: nhận việc được bàn giao, trao đổi trực tiếp và cập nhật tiến độ liên quan.'}
           </p>
@@ -1566,7 +1566,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
               )}
             </div>
             <div className="border-t border-gold-100 pt-4 flex justify-between items-center text-[10px] text-gray-400">
-              <span>Hệ thống {studioSettings?.name || 'Aura Bridal'} v1.0.0</span>
+              <span>Hệ thống {studioSettings?.name || 'The Will'} v1.0.0</span>
               <span className="text-emerald-600 font-semibold flex items-center">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span>
                 Kết nối Máy chủ Sẵn sàng
