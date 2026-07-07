@@ -27,7 +27,6 @@ import {
   Sliders,
   ArrowRight,
   History,
-  MessageSquare,
   Bell,
   X,
   Columns
@@ -153,7 +152,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
       setLoading(true);
       setError(null);
       
-      const [sumData, shootsData, overdueTasksData, ordersData, tasksData, objectivesData, customersData, usersData, notificationsData, chatMessagesData] = await Promise.all([
+      const [sumData, shootsData, overdueTasksData, ordersData, tasksData, objectivesData, customersData, usersData, notificationsData] = await Promise.all([
         apiRequest('/api/dashboard/summary'),
         apiRequest('/api/dashboard/upcoming-shoots'),
         apiRequest('/api/dashboard/overdue-tasks'),
@@ -162,8 +161,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
         apiRequest('/api/objectives').catch(() => []),
         apiRequest('/api/customers').catch(() => []),
         apiRequest('/api/users').catch(() => []),
-        apiRequest('/api/notifications').catch(() => []),
-        apiRequest('/api/chat/dashboard-messages').catch(() => [])
+        apiRequest('/api/notifications').catch(() => [])
       ]);
 
       setSummary(sumData);
@@ -177,15 +175,10 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
 
       const unreadNotifications = (notificationsData || [])
         .filter((n: any) => !n.is_read)
-        .slice(0, 3)
+        .slice(0, 4)
         .map((n: any) => ({ ...n, alert_kind: 'notification' }));
-      const recentMessages = (chatMessagesData || [])
-        .filter((m: any) => m.sender_id !== userId)
-        .slice(0, 2)
-        .map((m: any) => ({ ...m, alert_kind: 'message', title: `Tin nhắn từ ${m.sender_name || 'Nội bộ'}` }));
-      const alerts = [...unreadNotifications, ...recentMessages].slice(0, 4);
-      setDashboardAlerts(alerts);
-      setShowDashboardAlerts(alerts.length > 0);
+      setDashboardAlerts(unreadNotifications);
+      setShowDashboardAlerts(true);
 
       // Automatically select first task or staff if any exist for tracing
       if (tasksData && tasksData.length > 0) {
@@ -764,29 +757,49 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
         </div>
       </div>
 
-      {showDashboardAlerts && dashboardAlerts.length > 0 && (
-        <div className="relative overflow-hidden rounded-2xl border border-amber-200/70 bg-amber-50 shadow-2xs">
-          <div className="absolute left-0 top-0 h-full w-1 bg-amber-500" />
+      {showDashboardAlerts && (
+        <div className={`relative overflow-hidden rounded-2xl border shadow-2xs ${
+          dashboardAlerts.length > 0
+            ? 'border-amber-200/70 bg-amber-50'
+            : 'border-slate-200 bg-white'
+        }`}>
+          <div className={`absolute left-0 top-0 h-full w-1 ${dashboardAlerts.length > 0 ? 'bg-amber-500' : 'bg-slate-300'}`} />
           <div className="p-4 md:p-5 flex flex-col md:flex-row md:items-start gap-4">
-            <div className="w-10 h-10 rounded-2xl bg-white text-amber-600 border border-amber-200/60 flex items-center justify-center shrink-0 shadow-3xs">
-              <Bell className="w-5 h-5" />
+            <div className={`w-10 h-10 rounded-2xl bg-white border flex items-center justify-center shrink-0 shadow-3xs ${
+              dashboardAlerts.length > 0
+                ? 'text-amber-600 border-amber-200/60'
+                : 'text-slate-500 border-slate-200'
+            }`}>
+              {dashboardAlerts.length > 0 ? <Bell className="w-5 h-5" /> : <Check className="w-5 h-5" />}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
-                  <h3 className="text-sm font-extrabold text-slate-900">Có cập nhật nội bộ mới</h3>
-                  <p className="text-xs text-slate-600 mt-0.5">Thông báo và tin nhắn quan trọng vừa được đồng bộ khi bạn vào dashboard.</p>
+                  <h3 className="text-sm font-extrabold text-slate-900">
+                    {dashboardAlerts.length > 0 ? 'Có cập nhật nội bộ mới' : 'Không có tin nhắn hay thông báo mới.'}
+                  </h3>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    {dashboardAlerts.length > 0
+                      ? 'Thông báo quan trọng vừa được đồng bộ khi bạn vào dashboard.'
+                      : 'Các thông báo đã đọc và tin nhắn cũ sẽ không xuất hiện trong khu vực này.'}
+                  </p>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <button
-                    onClick={() => onNavigate('notifications')}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3 py-2 text-xs font-bold text-white hover:bg-amber-700 transition-colors"
-                  >
-                    Xem ngay <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  {dashboardAlerts.length > 0 && (
+                    <button
+                      onClick={() => onNavigate('notifications')}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3 py-2 text-xs font-bold text-white hover:bg-amber-700 transition-colors"
+                    >
+                      Xem ngay <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   <button
                     onClick={() => setShowDashboardAlerts(false)}
-                    className="rounded-xl border border-amber-200 bg-white p-2 text-amber-700 hover:bg-amber-100 transition-colors"
+                    className={`rounded-xl border bg-white p-2 transition-colors ${
+                      dashboardAlerts.length > 0
+                        ? 'border-amber-200 text-amber-700 hover:bg-amber-100'
+                        : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                    }`}
                     title="Ẩn thông báo"
                   >
                     <X className="w-4 h-4" />
@@ -794,27 +807,29 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
                 </div>
               </div>
 
-              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
-                {dashboardAlerts.map((alert) => (
-                  <button
-                    key={`${alert.alert_kind}-${alert.id}`}
-                    onClick={() => onNavigate('notifications')}
-                    className="text-left rounded-xl bg-white/85 border border-amber-100 px-3 py-2.5 hover:border-amber-300 hover:bg-white transition-colors min-w-0"
-                  >
-                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-amber-700">
-                      {alert.alert_kind === 'message' ? <MessageSquare className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
-                      <span>{alert.alert_kind === 'message' ? 'Tin nhắn nội bộ' : 'Thông báo'}</span>
-                      {alert.created_at && (
-                        <span className="ml-auto normal-case tracking-normal text-slate-400">
-                          {formatVietnamDate(alert.created_at, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-1 text-xs font-bold text-slate-900 truncate">{alert.title}</p>
-                    <p className="mt-0.5 text-[11px] text-slate-500 line-clamp-2">{alert.content}</p>
-                  </button>
-                ))}
-              </div>
+              {dashboardAlerts.length > 0 && (
+                <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {dashboardAlerts.map((alert) => (
+                    <button
+                      key={`${alert.alert_kind}-${alert.id}`}
+                      onClick={() => onNavigate('notifications')}
+                      className="text-left rounded-xl bg-white/85 border border-amber-100 px-3 py-2.5 hover:border-amber-300 hover:bg-white transition-colors min-w-0"
+                    >
+                      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                        <Bell className="w-3.5 h-3.5" />
+                        <span>Thông báo</span>
+                        {alert.created_at && (
+                          <span className="ml-auto normal-case tracking-normal text-slate-400">
+                            {formatVietnamDate(alert.created_at, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs font-bold text-slate-900 truncate">{alert.title}</p>
+                      <p className="mt-0.5 text-[11px] text-slate-500 line-clamp-2">{alert.content}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
