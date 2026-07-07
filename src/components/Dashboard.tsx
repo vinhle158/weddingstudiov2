@@ -64,6 +64,40 @@ const TASK_COLUMNS = [
   { id: 'done', label: 'Đã hoàn tất', color: 'bg-emerald-50 border-emerald-200 text-emerald-800', dot: 'bg-emerald-500' },
 ];
 
+const padDatePart = (value: number) => String(value).padStart(2, '0');
+
+const parseLocalDate = (value: string | Date | null | undefined) => {
+  if (!value) return null;
+  if (value instanceof Date) return new Date(value);
+
+  const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (dateOnly) {
+    return new Date(
+      Number(dateOnly[1]),
+      Number(dateOnly[2]) - 1,
+      Number(dateOnly[3])
+    );
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const formatDateKey = (date: Date) =>
+  `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`;
+
+const addDays = (date: Date, days: number) => {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+};
+
+const formatVietnamDate = (value: string | Date | null | undefined, options?: Intl.DateTimeFormatOptions) => {
+  const date = parseLocalDate(value);
+  if (!date) return 'Chưa có ngày';
+  return date.toLocaleDateString('vi-VN', options);
+};
+
 export default function Dashboard({ userRole, userId, onNavigate, studioSettings, isMobile }: DashboardProps) {
   const isStaff = userRole === 'staff' || userRole === 'photographer' || userRole === 'editor';
 
@@ -76,6 +110,8 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
   const [orders, setOrders] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [dashboardAlerts, setDashboardAlerts] = useState<any[]>([]);
+  const [showDashboardAlerts, setShowDashboardAlerts] = useState(false);
   const [kanbanError, setKanbanError] = useState<string | null>(null);
   const [kanbanSuccess, setKanbanSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -117,7 +153,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
       setLoading(true);
       setError(null);
       
-      const [sumData, shootsData, overdueTasksData, ordersData, tasksData, objectivesData, customersData, usersData] = await Promise.all([
+      const [sumData, shootsData, overdueTasksData, ordersData, tasksData, objectivesData, customersData, usersData, notificationsData, chatMessagesData] = await Promise.all([
         apiRequest('/api/dashboard/summary'),
         apiRequest('/api/dashboard/upcoming-shoots'),
         apiRequest('/api/dashboard/overdue-tasks'),
@@ -125,7 +161,9 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
         apiRequest('/api/tasks').catch(() => []),
         apiRequest('/api/objectives').catch(() => []),
         apiRequest('/api/customers').catch(() => []),
-        apiRequest('/api/users').catch(() => [])
+        apiRequest('/api/users').catch(() => []),
+        apiRequest('/api/notifications').catch(() => []),
+        apiRequest('/api/chat/dashboard-messages').catch(() => [])
       ]);
 
       setSummary(sumData);
@@ -136,6 +174,18 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
       setObjectives(objectivesData || []);
       setCustomers(customersData || []);
       setUsers(usersData || []);
+
+      const unreadNotifications = (notificationsData || [])
+        .filter((n: any) => !n.is_read)
+        .slice(0, 3)
+        .map((n: any) => ({ ...n, alert_kind: 'notification' }));
+      const recentMessages = (chatMessagesData || [])
+        .filter((m: any) => m.sender_id !== userId)
+        .slice(0, 2)
+        .map((m: any) => ({ ...m, alert_kind: 'message', title: `Tin nhắn từ ${m.sender_name || 'Nội bộ'}` }));
+      const alerts = [...unreadNotifications, ...recentMessages].slice(0, 4);
+      setDashboardAlerts(alerts);
+      setShowDashboardAlerts(alerts.length > 0);
 
       // Automatically select first task or staff if any exist for tracing
       if (tasksData && tasksData.length > 0) {
@@ -270,6 +320,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
 
   const renderGanttTimeline = () => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const dateRange: Date[] = [];
     
     if (ganttRange === 'week') {
@@ -281,9 +332,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
       monday.setHours(0, 0, 0, 0);
       
       for (let i = 0; i < 7; i++) {
-        const d = new Date(monday);
-        d.setDate(monday.getDate() + i);
-        dateRange.push(d);
+        dateRange.push(addDays(monday, i));
       }
     } else {
       // Current Calendar Month (from 1st to last day of month)
@@ -292,23 +341,24 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
       const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
       
-      for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+      for (let d = new Date(firstDay); d <= lastDay; d = addDays(d, 1)) {
         dateRange.push(new Date(d));
       }
     }
 
-    const formatDateKey = (d: Date) => d.toISOString().split('T')[0];
-    const todayStr = formatDateKey(new Date());
+    const todayStr = formatDateKey(today);
 
     const getColIndices = (startStr: string, endStr: string) => {
-      const start = new Date(startStr);
+      const start = parseLocalDate(startStr);
+      const end = parseLocalDate(endStr);
+      if (!start || !end || dateRange.length === 0) return null;
+
       start.setHours(0,0,0,0);
-      const end = new Date(endStr);
       end.setHours(23,59,59,999);
 
-      const rangeStart = dateRange[0];
+      const rangeStart = new Date(dateRange[0]);
       rangeStart.setHours(0,0,0,0);
-      const rangeEnd = dateRange[dateRange.length - 1];
+      const rangeEnd = new Date(dateRange[dateRange.length - 1]);
       rangeEnd.setHours(23,59,59,999);
 
       if (end.getTime() < rangeStart.getTime() || start.getTime() > rangeEnd.getTime()) {
@@ -359,19 +409,25 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
       }
     };
     const visibleOrders = orders.filter(order => {
-      const shootDateVal = new Date(order.shoot_date);
-      let defaultEnd = new Date(shootDateVal);
-      defaultEnd.setDate(defaultEnd.getDate() + 14);
+      const shootDateVal = parseLocalDate(order.shoot_date);
+      if (!shootDateVal) return false;
+      const defaultEnd = addDays(shootDateVal, 14);
       
       const orderTasks = tasks.filter(t => t.order_id === order.id);
-      const taskDueDates = orderTasks.map(t => t.due_date).filter(Boolean);
+      const taskDueDates = orderTasks
+        .map(t => parseLocalDate(t.due_date))
+        .filter(Boolean) as Date[];
       const maxTaskDue = taskDueDates.length > 0 
-        ? new Date(Math.max(...taskDueDates.map((d: any) => new Date(d).getTime()))) 
+        ? new Date(Math.max(...taskDueDates.map((d: Date) => d.getTime()))) 
         : defaultEnd;
 
       const endDateVal = maxTaskDue.getTime() > shootDateVal.getTime() ? maxTaskDue : defaultEnd;
       return getColIndices(order.shoot_date, formatDateKey(endDateVal)) !== null;
-    }).sort((a, b) => new Date(a.shoot_date).getTime() - new Date(b.shoot_date).getTime());
+    }).sort((a, b) => {
+      const aDate = parseLocalDate(a.shoot_date)?.getTime() || 0;
+      const bDate = parseLocalDate(b.shoot_date)?.getTime() || 0;
+      return aDate - bDate;
+    });
 
     const bubbleOrder = activeGanttBubbleOrderId ? orders.find(o => o.id === activeGanttBubbleOrderId) : null;
     const bubbleTasks = bubbleOrder ? tasks.filter(t => t.order_id === bubbleOrder.id) : [];
@@ -417,14 +473,16 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
                 </div>
               ) : (
                 visibleOrders.map(order => {
-                  const shootDateVal = new Date(order.shoot_date);
-                  let defaultEnd = new Date(shootDateVal);
-                  defaultEnd.setDate(defaultEnd.getDate() + 14);
+                  const shootDateVal = parseLocalDate(order.shoot_date);
+                  if (!shootDateVal) return null;
+                  const defaultEnd = addDays(shootDateVal, 14);
                   
                   const orderTasks = tasks.filter(t => t.order_id === order.id);
-                  const taskDueDates = orderTasks.map(t => t.due_date).filter(Boolean);
+                  const taskDueDates = orderTasks
+                    .map(t => parseLocalDate(t.due_date))
+                    .filter(Boolean) as Date[];
                   const maxTaskDue = taskDueDates.length > 0 
-                    ? new Date(Math.max(...taskDueDates.map((d: any) => new Date(d).getTime()))) 
+                    ? new Date(Math.max(...taskDueDates.map((d: Date) => d.getTime()))) 
                     : defaultEnd;
 
                   const endDateVal = maxTaskDue.getTime() > shootDateVal.getTime() ? maxTaskDue : defaultEnd;
@@ -432,8 +490,8 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
                   if (!colIndices) return null;
 
                   const { startIdx, endIdx } = colIndices;
-                  const leftPercent = (startIdx / 30) * 100;
-                  const widthPercent = ((endIdx - startIdx + 1) / 30) * 100;
+                  const leftPercent = (startIdx / dateRange.length) * 100;
+                  const widthPercent = ((endIdx - startIdx + 1) / dateRange.length) * 100;
 
                   const totalTasksCount = orderTasks.length;
                   const completedTasksCount = orderTasks.filter(t => t.status === 'done').length;
@@ -564,7 +622,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
                   <div className="border border-slate-100 rounded-2xl p-3.5 space-y-1">
                     <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Ngày chụp</span>
                     <strong className="text-slate-800 text-xs font-mono">
-                      {new Date(bubbleOrder.shoot_date).toLocaleDateString('vi-VN')}
+                      {formatVietnamDate(bubbleOrder.shoot_date)}
                     </strong>
                   </div>
                   <div className="border border-slate-100 rounded-2xl p-3.5 space-y-1">
@@ -702,9 +760,65 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
         </div>
         <div className="mt-4 md:mt-0 bg-gold-100/60 text-gold-800 px-4 py-2 rounded-full border border-gold-200/40 text-[11px] font-bold tracking-wide flex items-center">
           <Calendar className="w-3.5 h-3.5 mr-2 text-gold-600" />
-          Hôm nay: {new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          Hôm nay: {new Date().toLocaleDateString('vi-VN', { timeZone: 'Asia/Bangkok', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
       </div>
+
+      {showDashboardAlerts && dashboardAlerts.length > 0 && (
+        <div className="relative overflow-hidden rounded-2xl border border-amber-200/70 bg-amber-50 shadow-2xs">
+          <div className="absolute left-0 top-0 h-full w-1 bg-amber-500" />
+          <div className="p-4 md:p-5 flex flex-col md:flex-row md:items-start gap-4">
+            <div className="w-10 h-10 rounded-2xl bg-white text-amber-600 border border-amber-200/60 flex items-center justify-center shrink-0 shadow-3xs">
+              <Bell className="w-5 h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">Có cập nhật nội bộ mới</h3>
+                  <p className="text-xs text-slate-600 mt-0.5">Thông báo và tin nhắn quan trọng vừa được đồng bộ khi bạn vào dashboard.</p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={() => onNavigate('notifications')}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3 py-2 text-xs font-bold text-white hover:bg-amber-700 transition-colors"
+                  >
+                    Xem ngay <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setShowDashboardAlerts(false)}
+                    className="rounded-xl border border-amber-200 bg-white p-2 text-amber-700 hover:bg-amber-100 transition-colors"
+                    title="Ẩn thông báo"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+                {dashboardAlerts.map((alert) => (
+                  <button
+                    key={`${alert.alert_kind}-${alert.id}`}
+                    onClick={() => onNavigate('notifications')}
+                    className="text-left rounded-xl bg-white/85 border border-amber-100 px-3 py-2.5 hover:border-amber-300 hover:bg-white transition-colors min-w-0"
+                  >
+                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                      {alert.alert_kind === 'message' ? <MessageSquare className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
+                      <span>{alert.alert_kind === 'message' ? 'Tin nhắn nội bộ' : 'Thông báo'}</span>
+                      {alert.created_at && (
+                        <span className="ml-auto normal-case tracking-normal text-slate-400">
+                          {formatVietnamDate(alert.created_at, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs font-bold text-slate-900 truncate">{alert.title}</p>
+                    <p className="mt-0.5 text-[11px] text-slate-500 line-clamp-2">{alert.content}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid */}
       {!isStaff && summary && (
@@ -1033,7 +1147,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
                                 <div key={up.id} className="p-2 flex flex-col gap-0.5">
                                   <div className="flex justify-between items-center text-[10px]">
                                     <span className="font-bold text-slate-700">{up.created_by_name || traceTask.assigned_to_name}</span>
-                                    <span className="text-[9px] text-slate-400">{new Date(up.created_at).toLocaleDateString('vi-VN')}</span>
+                                    <span className="text-[9px] text-slate-400">{formatVietnamDate(up.created_at)}</span>
                                   </div>
                                   <p className="text-[10px] text-slate-600 mt-0.5 leading-snug">
                                     Cập nhật: <span className="font-medium text-gold-700">[{up.status_from} → {up.status_to}]</span>
@@ -1136,7 +1250,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
                                   <div className="min-w-0 flex-1 pr-2">
                                     <p className="font-semibold text-slate-800 truncate">{ut.title}</p>
                                     <p className="text-slate-400 text-[9px] mt-0.5">
-                                      Hạn: {ut.due_date ? new Date(ut.due_date).toLocaleDateString('vi-VN') : 'Không hạn'}
+                                      Hạn: {ut.due_date ? formatVietnamDate(ut.due_date) : 'Không hạn'}
                                       {ut.customer_name && ` | Khách: ${ut.customer_name}`}
                                     </p>
                                   </div>
@@ -1315,7 +1429,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {upcomingShoots.map((shoot) => {
-                        const isToday = shoot.shoot_date === new Date().toISOString().split('T')[0];
+                        const isToday = shoot.shoot_date === formatDateKey(new Date());
                         return (
                           <tr key={shoot.id} className={`hover:bg-gray-50/80 transition-colors ${isToday ? 'bg-amber-50/20' : ''}`}>
                             <td className="p-4 pl-6 font-mono font-bold text-gray-700">
@@ -1329,7 +1443,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
                             </td>
                             <td className="p-4">
                               <p className="font-bold text-gray-900">
-                                {new Date(shoot.shoot_date).toLocaleDateString('vi-VN')}
+                                {formatVietnamDate(shoot.shoot_date)}
                               </p>
                               <p className="text-gray-400 flex items-center mt-0.5">
                                 <Clock className="w-3 h-3 mr-1" /> {shoot.shoot_time || 'Chưa hẹn giờ'}
@@ -1413,7 +1527,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
                             )}
                             {task.due_date && (
                               <span className="flex items-center">
-                                <Clock className="w-3.5 h-3.5 mr-1" /> Hạn: {new Date(task.due_date).toLocaleDateString('vi-VN')}
+                                <Clock className="w-3.5 h-3.5 mr-1" /> Hạn: {formatVietnamDate(task.due_date)}
                               </span>
                             )}
                           </div>
@@ -1468,7 +1582,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
                             <span className="font-mono font-bold">Đơn: {task.order_code}</span>
                           )}
                           <span className="text-red-600 font-bold">
-                            Hạn: {new Date(task.due_date).toLocaleDateString('vi-VN')}
+                            Hạn: {formatVietnamDate(task.due_date)}
                           </span>
                         </div>
                       </div>
