@@ -1179,6 +1179,10 @@ async function startServer() {
   const chatbotSessions = new Map<string, ChatbotSessionContext>();
 
   app.post('/api/chatbot', authenticate, async (req: AuthenticatedRequest, res: Response) => {
+    if (req.user?.email?.toLowerCase() !== 'viet@studio.com') {
+      return res.status(403).json({ reply: 'Chatbot tra cứu chỉ được cấp quyền cho tài khoản viet@studio.com.' });
+    }
+
     const message = String(req.body?.message || '').trim();
     const sessionId = String(req.body?.sessionId || 'default-session');
 

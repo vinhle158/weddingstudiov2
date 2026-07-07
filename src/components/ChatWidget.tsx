@@ -4,6 +4,7 @@ import { apiRequest } from '../lib/api';
 
 interface ChatWidgetProps {
   userName?: string;
+  userEmail?: string;
   placement?: 'desktop' | 'mobile';
 }
 
@@ -20,7 +21,8 @@ interface ChatbotApiResponse {
   sessionId?: string;
 }
 
-export default function ChatWidget({ userName, placement = 'desktop' }: ChatWidgetProps) {
+export default function ChatWidget({ userName, userEmail, placement = 'desktop' }: ChatWidgetProps) {
+  const canUseChatbot = userEmail?.toLowerCase() === 'viet@studio.com';
   const [open, setOpen] = useState(() => sessionStorage.getItem('studio_chatbot_seen') !== 'true');
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
@@ -181,14 +183,18 @@ export default function ChatWidget({ userName, placement = 'desktop' }: ChatWidg
     ? 'w-12 h-12 rounded-full bg-slate-950 active:bg-slate-800 text-white shadow-2xl border border-white/20 flex items-center justify-center pointer-events-auto relative overflow-hidden'
     : 'w-14 h-14 rounded-full bg-slate-950 hover:bg-slate-800 text-white shadow-2xl border border-white/20 flex items-center justify-center pointer-events-auto transition-transform hover:scale-105 relative overflow-hidden';
 
+  if (!canUseChatbot) {
+    return null;
+  }
+
   return (
     <div className={rootClass}>
       {open && (
         <div className={panelClass}>
           {/* Header */}
           <div className="px-4 py-3 bg-slate-950 text-white flex items-center justify-between relative overflow-hidden shrink-0">
-            <div className="absolute inset-y-0 right-0 w-24 bg-gold-500/10 skew-x-[-18deg] translate-x-8" />
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="absolute inset-y-0 right-0 w-24 bg-gold-500/10 skew-x-[-18deg] translate-x-8 pointer-events-none" />
+            <div className="flex items-center gap-2 min-w-0 relative z-10">
               <div className="w-9 h-9 rounded-full bg-gold-500 text-white flex items-center justify-center shrink-0 shadow-lg relative">
                 <Bot className="w-4 h-4" />
                 <span className="absolute -right-0.5 -top-0.5 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-950 rounded-full animate-pulse" />
@@ -203,8 +209,17 @@ export default function ChatWidget({ userName, placement = 'desktop' }: ChatWidg
             </div>
             <button
               type="button"
-              onClick={closeChat}
-              className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                closeChat();
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                closeChat();
+              }}
+              className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors relative z-20 cursor-pointer"
               aria-label="Đóng Chatbot"
             >
               <X className="w-4 h-4" />

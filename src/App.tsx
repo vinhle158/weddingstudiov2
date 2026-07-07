@@ -630,8 +630,8 @@ export default function App() {
                 </button>
               </div>
 
-              {role?.id === 'role-admin' && (
-                <ChatWidget userName={user?.full_name} placement="mobile" />
+              {user?.email === 'viet@studio.com' && (
+                <ChatWidget userName={user?.full_name} userEmail={user?.email} placement="mobile" />
               )}
 
             </div>
@@ -738,7 +738,7 @@ export default function App() {
           {renderMainContent()}
         </main>
       </div>
-      {role?.id === 'role-admin' && <ChatWidget userName={user?.full_name} />}
+      {user?.email === 'viet@studio.com' && <ChatWidget userName={user?.full_name} userEmail={user?.email} />}
       {isDemoActive && (
         <ProductDemoPlayer
           onClose={() => {
