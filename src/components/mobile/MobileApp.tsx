@@ -13,7 +13,7 @@ import MobileChat from './screens/MobileChat';
 import MobileNotifications from './screens/MobileNotifications';
 import MobileStaff from './screens/MobileStaff';
 import MobileSettings from './screens/MobileSettings';
-import AiAssistantBubble from '../AiAssistantBubble';
+import ChatWidget from '../ChatWidget';
 
 // Icons for launcher menu
 import { Users, Target, Bell, ShieldAlert, Settings, MessageSquare, LogOut, Sparkles } from 'lucide-react';
@@ -282,7 +282,7 @@ export default function MobileApp({ user, role, onLogout, studioSettings }: Mobi
       title={getScreenTitle(activeTab)}
       showBackButton={showBackButton}
       onBackClick={() => handleNavigate('menu')}
-      assistantSlot={role?.id === 'role-admin' ? <AiAssistantBubble userName={user?.full_name} placement="mobile" /> : null}
+      assistantSlot={role?.id === 'role-admin' ? <ChatWidget userName={user?.full_name} placement="mobile" /> : null}
     >
       {renderActiveScreen()}
     </MobileLayout>

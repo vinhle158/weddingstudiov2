@@ -10,6 +10,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { createServer as createViteServer } from 'vite';
 import { LocalDatabase, User, Customer, Order, OrderStatusHistory, Task, TaskUpdate, Role, Objective, ObjectiveKeyResult, ObjectiveProgressUpdate, Notification, ChatMessage, Lead, LeadFeedback, prisma } from './src/db_service';
+import { classifyIntent } from './src/lib/chatbot/nlp';
+import { extractEntities } from './src/lib/chatbot/entityExtractor';
+import { buildAndExecuteQuery } from './src/lib/chatbot/queryBuilder';
+import { renderResponse } from './src/lib/chatbot/responseTemplates';
+import { resolveCustomer } from './src/lib/chatbot/fuzzyMatch';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-change-this-in-production';
 
@@ -545,12 +550,13 @@ async function startServer() {
   };
 
   const callMimoChat = async (body: Record<string, any>) => {
-    const apiKey = process.env.MIMO_API_KEY;
+    const db = LocalDatabase.get();
+    const apiKey = db.studio_settings?.mimo_api_key || process.env.MIMO_API_KEY;
     if (!apiKey) {
       throw new Error('MIMO_API_KEY is not configured');
     }
 
-    const baseUrl = (process.env.MIMO_API_BASE_URL || 'https://api.xiaomimimo.com/v1').replace(/\/$/, '');
+    const baseUrl = (db.studio_settings?.mimo_api_base_url || process.env.MIMO_API_BASE_URL || 'https://api.xiaomimimo.com/v1').replace(/\/$/, '');
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -558,7 +564,7 @@ async function startServer() {
         Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: process.env.MIMO_MODEL || 'mimo-v2.5-pro',
+        model: db.studio_settings?.mimo_model || process.env.MIMO_MODEL || 'mimo-v2.5-pro',
         temperature: 0.1,
         max_tokens: 260,
         ...body
@@ -599,13 +605,14 @@ async function startServer() {
   }];
 
   const callGeminiGenerate = async (body: Record<string, any>) => {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const db = LocalDatabase.get();
+    const apiKey = db.studio_settings?.gemini_api_key || process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    const baseUrl = (process.env.GEMINI_API_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta').replace(/\/$/, '');
-    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+    const baseUrl = (db.studio_settings?.gemini_api_base_url || process.env.GEMINI_API_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta').replace(/\/$/, '');
+    const model = db.studio_settings?.gemini_model || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     const response = await fetch(`${baseUrl}/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -643,6 +650,29 @@ async function startServer() {
 
   const inferAssistantToolFromQuestion = (question: string): { name: AssistantToolName; args: Record<string, any> } => {
     const normalized = normalizeSearch(question);
+    
+    // 1. Phone number check (6+ digits)
+    const cleanPhone = normalized.replace(/[^\d]/g, '');
+    if (cleanPhone.length >= 6) {
+      return { name: 'search_customers', args: { query: cleanPhone, limit: 5 } };
+    }
+    
+    // 2. Order code check (e.g. OD123 or ORD-456)
+    const orderCodeMatch = normalized.match(/(od|ord)\s*\d+/i);
+    if (orderCodeMatch) {
+      return { name: 'search_orders', args: { query: orderCodeMatch[0].toUpperCase(), limit: 5 } };
+    }
+
+    // 3. Specific date check (e.g. 15/7, 15-07-2026)
+    const dateMatch = normalized.match(/(\d{1,2})[\/\-](\d{1,2})([\/\-](\d{4}))?/);
+    if (dateMatch) {
+      const day = parseInt(dateMatch[1]);
+      const month = parseInt(dateMatch[2]);
+      const year = dateMatch[4] ? parseInt(dateMatch[4]) : new Date().getFullYear();
+      const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      return { name: 'get_schedule_range', args: { range: 'custom', start_date: formattedDate, end_date: formattedDate, limit: 10 } };
+    }
+
     const range =
       normalized.includes('ngày mai') || normalized.includes('ngay mai') ? 'tomorrow' :
       normalized.includes('tuần sau') || normalized.includes('tuan sau') ? 'next_week' :
@@ -660,17 +690,32 @@ async function startServer() {
       return { name: 'get_schedule_range', args: { range, limit: 8 } };
     }
     if (normalized.includes('trễ') || normalized.includes('tre') || normalized.includes('quá hạn') || normalized.includes('qua han') || normalized.includes('công việc') || normalized.includes('task')) {
-      return { name: 'search_tasks', args: { overdue_only: normalized.includes('trễ') || normalized.includes('tre') || normalized.includes('quá hạn') || normalized.includes('qua han'), limit: 5 } };
+      const isGeneralList = ['danh sách', 'danh sach', 'nào', 'nao', 'ai', 'tất cả', 'tat ca', 'những', 'nhung', 'hôm nay', 'hom nay', 'ngày mai', 'ngay mai'].some(w => normalized.includes(w));
+      const queryVal = isGeneralList ? '' : question;
+      return { name: 'search_tasks', args: { query: queryVal, overdue_only: normalized.includes('trễ') || normalized.includes('tre') || normalized.includes('quá hạn') || normalized.includes('qua han'), limit: 5 } };
     }
     if (normalized.includes('lead') || normalized.includes('tư vấn') || normalized.includes('tu van') || normalized.includes('chăm sóc') || normalized.includes('cham soc')) {
-      return { name: 'search_leads', args: { status: normalized.includes('chăm sóc') || normalized.includes('cham soc') ? 'consulting' : undefined, limit: 5 } };
+      const isGeneralList = ['danh sách', 'danh sach', 'nào', 'nao', 'ai', 'tất cả', 'tat ca', 'những', 'nhung', 'cần', 'can'].some(w => normalized.includes(w));
+      const queryVal = isGeneralList ? '' : question;
+      return { name: 'search_leads', args: { query: queryVal, status: 'consulting', limit: 5 } };
     }
     if (normalized.includes('khách') || normalized.includes('khach') || normalized.includes('số điện thoại') || normalized.includes('so dien thoai')) {
-      return { name: 'search_customers', args: { query: question, limit: 5 } };
+      const isGeneralList = ['danh sách', 'danh sach', 'nào', 'nao', 'ai', 'tất cả', 'tat ca', 'những', 'nhung'].some(w => normalized.includes(w));
+      const queryVal = isGeneralList ? '' : question;
+      return { name: 'search_customers', args: { query: queryVal, limit: 5 } };
     }
     if (normalized.includes('đơn') || normalized.includes('don') || normalized.includes('hợp đồng') || normalized.includes('hop dong') || normalized.includes('lịch chụp') || normalized.includes('lich chup') || normalized.includes('chụp') || normalized.includes('chup')) {
-      return { name: 'search_orders', args: { query: normalized.includes('lịch') || normalized.includes('lich') ? 'chụp' : question, limit: 5 } };
+      const isGeneralList = ['danh sách', 'danh sach', 'nào', 'nao', 'ai', 'tất cả', 'tat ca', 'những', 'nhung', 'hôm nay', 'hom nay', 'ngày mai', 'ngay mai'].some(w => normalized.includes(w));
+      const queryVal = isGeneralList ? '' : question;
+      return { name: 'search_orders', args: { query: queryVal, limit: 5 } };
     }
+    
+    // Default fallback for any query text
+    const isGreeting = ['chào', 'chao', 'hello', 'hi', 'xin chao', 'bắt đầu', 'bat dau'].some(w => normalized.includes(w));
+    if (normalized && normalized.length > 2 && !isGreeting) {
+      return { name: 'search_customers', args: { query: question, limit: 5 } };
+    }
+    
     return { name: 'get_business_overview', args: {} };
   };
 
@@ -717,24 +762,255 @@ async function startServer() {
     return getGeminiText(response);
   };
 
+  const translateStatus = (status: string): string => {
+    const map: Record<string, string> = {
+      new: 'Đơn mới',
+      confirmed: 'Đã xác nhận',
+      shooting: 'Đang chụp',
+      editing: 'Đang hậu kỳ',
+      ready: 'Sẵn sàng',
+      delivered: 'Đã giao',
+      cancelled: 'Đã hủy',
+      pending: 'Chờ thực hiện',
+      in_progress: 'Đang làm',
+      done: 'Đã xong',
+      consulting: 'Đang tư vấn',
+      won: 'Thành công',
+      lost: 'Thất bại',
+      low: 'Thấp',
+      normal: 'Trung bình',
+      high: 'Cao'
+    };
+    return map[status.toLowerCase()] || status;
+  };
+
+  const formatOfflineAnswer = (name: AssistantToolName, result: any, args: any): string => {
+    let output = '';
+    
+    if (name === 'get_business_overview') {
+      output += `Chào bạn! Dưới đây là thông tin hoạt động tổng quan của studio:\n\n`;
+      output += `• **Khách hàng:** Tổng số **${result.customers}** khách hàng đã đăng ký.\n`;
+      output += `• **Đơn hàng:** Có **${result.orders}** đơn hàng (trong đó đang xử lý **${result.active_orders}** đơn).\n`;
+      output += `• **Doanh thu:** Tổng doanh thu đạt **${result.total_order_value ? result.total_order_value.toLocaleString('vi-VN') : 0} đ**.\n`;
+      output += `• **Công việc:** Có **${result.pending_tasks}** việc cần làm (trong đó **${result.overdue_tasks}** việc đã quá hạn).\n`;
+      output += `• **Lead tư vấn:** Hiện có **${result.active_leads}** khách hàng tiềm năng đang được chăm sóc.`;
+      return output;
+    }
+    
+    if (name === 'get_schedule_range') {
+      const schedules = result.schedules || [];
+      if (schedules.length === 0) return `Không có lịch chụp nào trong khoảng thời gian từ ${result.range?.start} đến ${result.range?.end}.`;
+      output += `Dưới đây là danh sách lịch chụp từ ngày ${result.range?.start} đến ${result.range?.end}:\n\n`;
+      schedules.forEach((s: any) => {
+        output += `• **[${s.order_code}]** KH: **${s.customer_name}** - Gói: **"${s.package_name}"** lúc **${s.shoot_time || '08:30'}** ngày **${s.shoot_date}** (Trạng thái: **${translateStatus(s.status)}**)\n`;
+      });
+      return output;
+    }
+    
+    if (name === 'get_operational_alerts') {
+      const overdue = result.overdue_tasks || [];
+      const missingTasks = result.upcoming_orders_missing_tasks || [];
+      const missingDeposit = result.orders_missing_deposit || [];
+      
+      if (overdue.length === 0 && missingTasks.length === 0 && missingDeposit.length === 0) {
+        return 'Tôi đã kiểm tra hệ thống và hiện tại không có cảnh báo vận hành nào bất thường.';
+      }
+      
+      output += 'Dưới đây là một số điểm cần lưu ý về mặt vận hành:\n\n';
+      if (overdue.length > 0) {
+        output += `⚠️ **Công việc quá hạn:**\n`;
+        overdue.forEach((t: any) => {
+          output += `  - **"${t.title}"** (Hạn: **${t.due_date}**, Người làm: **${t.assigned_to_name}**)\n`;
+        });
+      }
+      if (missingTasks.length > 0) {
+        output += `\n⚠️ **Đơn sắp chụp chưa phân công công việc:**\n`;
+        missingTasks.forEach((o: any) => {
+          output += `  - Đơn **[${o.order_code}]** KH: **${o.customer_name}** chụp lúc **${o.shoot_date} ${o.shoot_time || ''}**\n`;
+        });
+      }
+      if (missingDeposit.length > 0) {
+        output += `\n⚠️ **Hợp đồng chưa đặt cọc:**\n`;
+        missingDeposit.forEach((o: any) => {
+          output += `  - Đơn **[${o.order_code}]** KH: **${o.customer_name}** (Tổng: **${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0} đ**)\n`;
+        });
+      }
+      return output;
+    }
+    
+    if (name === 'get_staff_workload') {
+      if (!Array.isArray(result) || result.length === 0) return 'Không tìm thấy dữ liệu khối lượng công việc của nhân viên.';
+      output += `Dưới đây là thống kê khối lượng công việc hiện tại của đội ngũ nhân viên:\n\n`;
+      result.forEach((w: any) => {
+        output += `• **${w.full_name}**: Đang phụ trách **${w.pending_tasks}** việc chưa hoàn thành (quá hạn: **${w.overdue_tasks}**)\n`;
+      });
+      return output;
+    }
+    
+    if (name === 'search_leads') {
+      if (!Array.isArray(result) || result.length === 0) return 'Không tìm thấy lead nào phù hợp.';
+      output += `Dưới đây là danh sách khách hàng tiềm năng (Lead) đang tư vấn:\n\n`;
+      result.forEach((l: any) => {
+        output += `• KH: **${l.customer_name}** - SĐT: **${l.phone || 'N/A'}** - Nguồn: **${l.source}**\n`;
+        output += `  - Bước bán hàng: **${l.sales_step}/6** - Trạng thái: **${translateStatus(l.status)}** (Người phụ trách: **${l.assigned_sale_name}**)\n`;
+        if (l.notes) {
+          output += `  - Ghi chú: *${l.notes}*\n`;
+        }
+      });
+      return output;
+    }
+
+    if (name === 'search_tasks') {
+      if (!Array.isArray(result) || result.length === 0) return 'Không tìm thấy công việc nào phù hợp.';
+      output += `Tìm thấy các công việc phù hợp với yêu cầu của bạn:\n\n`;
+      result.forEach((t: any) => {
+        output += `• [**${translateStatus(t.status)}**] **"${t.title}"** (Độ ưu tiên: **${translateStatus(t.priority)}**, Hạn: **${t.due_date || 'Không giới hạn'}**, Giao cho: **${t.assigned_to_name}**)\n`;
+      });
+      return output;
+    }
+
+    if (name === 'search_orders') {
+      if (!Array.isArray(result) || result.length === 0) return 'Không tìm thấy đơn hàng nào phù hợp.';
+      output += `Tìm thấy các đơn hàng/hợp đồng phù hợp:\n\n`;
+      result.forEach((o: any) => {
+        output += `• Hợp đồng **[${o.order_code}]** - KH: **${o.customer_name}** - Trạng thái: **${translateStatus(o.status)}** - Gói: **"${o.package_name}"** - Ngày chụp: **${o.shoot_date}**\n`;
+      });
+      return output;
+    }
+
+    if (name === 'search_customers') {
+      if (!Array.isArray(result) || result.length === 0) {
+        // Fallback multi-index search
+        const db = LocalDatabase.get();
+        const query = normalizeSearch(args?.query || '');
+
+        // 1. Search leads (CRM) first
+        const leads = (db.leads || [])
+          .map(l => {
+            const assignee = db.users.find(u => u.id === l.assigned_sale_id);
+            return {
+              ...l,
+              assigned_sale_name: assignee?.full_name || 'N/A'
+            };
+          })
+          .filter(l => !query || [
+            l.customer_name,
+            l.phone || '',
+            l.source,
+            l.status,
+            l.assigned_sale_name
+          ].some(v => normalizeSearch(v).includes(query)))
+          .slice(0, 5);
+
+        if (leads.length > 0) {
+          output += `Không tìm thấy khách hàng chính thức với từ khóa "${args?.query || ''}", nhưng tìm thấy thông tin trong mục CRM / Tư vấn (Leads):\n\n`;
+          leads.forEach((l: any) => {
+            output += `• KH: **${l.customer_name}** - SĐT: **${l.phone || 'N/A'}** - Nguồn: **${l.source}**\n`;
+            output += `  - Bước bán hàng: **${l.sales_step}/6** - Trạng thái: **${translateStatus(l.status)}** (Người chăm sóc: **${l.assigned_sale_name}**)\n`;
+            if (l.notes) {
+              output += `  - Ghi chú: *${l.notes}*\n`;
+            }
+          });
+          return output;
+        }
+        
+        // 2. Search orders
+        const orders = db.orders
+          .map(o => {
+            const customer = db.customers.find(c => c.id === o.customer_id);
+            return {
+              ...o,
+              customer_name: customer?.full_name || 'Unknown',
+              customer_phone: customer?.phone || null
+            };
+          })
+          .filter(o => !query || [
+            o.order_code,
+            o.package_name,
+            o.status,
+            o.customer_name,
+            o.customer_phone
+          ].some(v => normalizeSearch(v).includes(query)))
+          .slice(0, 5);
+          
+        if (orders.length > 0) {
+          output += `Không tìm thấy khách hàng trực tiếp với từ khóa "${args?.query || ''}", nhưng tìm thấy các hợp đồng liên quan:\n\n`;
+          orders.forEach((o: any) => {
+            output += `• Hợp đồng **[${o.order_code}]** - KH: **${o.customer_name}** - Trạng thái: **${translateStatus(o.status)}** - Gói: **"${o.package_name}"** - Ngày chụp: **${o.shoot_date}**\n`;
+          });
+          return output;
+        }
+
+        // 3. Search tasks
+        const tasks = db.tasks
+          .map(t => {
+            const assignee = db.users.find(u => u.id === t.assigned_to);
+            const order = db.orders.find(o => o.id === t.order_id);
+            return {
+              ...t,
+              assigned_to_name: assignee?.full_name || 'N/A',
+              order_code: order?.order_code || null
+            };
+          })
+          .filter(t => !query || [
+            t.title,
+            t.description,
+            t.status,
+            t.priority,
+            t.assigned_to_name,
+            t.order_code
+          ].some(v => normalizeSearch(v).includes(query)))
+          .slice(0, 5);
+          
+        if (tasks.length > 0) {
+          output += `Không tìm thấy khách hàng, nhưng tìm thấy các công việc liên quan đến "${args?.query || ''}":\n\n`;
+          tasks.forEach((t: any) => {
+            output += `• [**${translateStatus(t.status)}**] **"${t.title}"** (Người làm: **${t.assigned_to_name}**, Hạn: **${t.due_date || 'Không có'}**)\n`;
+          });
+          return output;
+        }
+
+        return `Không tìm thấy khách hàng, đơn hàng, lead hay công việc nào khớp với từ khóa "${args?.query || ''}".`;
+      }
+      
+      output += `Tìm thấy thông tin khách hàng phù hợp:\n\n`;
+      result.forEach((c: any) => {
+        output += `• KH: **${c.full_name}** - SĐT: **${c.phone || 'N/A'}** - Email: **${c.email || 'N/A'}**\n`;
+        if (c.orders_count > 0) {
+          output += `  - Có **${c.orders_count}** đơn hàng. Đơn mới nhất: **[${c.latest_order?.order_code}]** Gói: **"${c.latest_order?.package_name}"** (**${translateStatus(c.latest_order?.status)}**)\n`;
+        }
+      });
+      return output;
+    }
+    
+    const compactResult = Array.isArray(result) ? result.slice(0, 5) : result;
+    return `Đã kiểm tra hệ thống. Kết quả: ${JSON.stringify(compactResult).slice(0, 700)}`;
+  };
+
   const answerWithDeterministicTool = async (systemPrompt: string, question: string, messages: any[], providerName?: string) => {
     const inferred = inferAssistantToolFromQuestion(question);
     const result = runAssistantTool(inferred.name, inferred.args);
     let answer = '';
+    const db = LocalDatabase.get();
+    const hasMimo = !!(db.studio_settings?.mimo_api_key || process.env.MIMO_API_KEY);
+    const hasGemini = !!(db.studio_settings?.gemini_api_key || process.env.GEMINI_API_KEY);
 
-    if (providerName === 'mimo' && process.env.MIMO_API_KEY) {
-      answer = await summarizeToolResultsWithMimo(messages, inferred.name, result);
-    } else if (providerName === 'gemini' && process.env.GEMINI_API_KEY) {
-      answer = await summarizeToolResultsWithGemini(systemPrompt, question, inferred.name, result);
-    } else if (process.env.MIMO_API_KEY) {
-      answer = await summarizeToolResultsWithMimo(messages, inferred.name, result);
-    } else if (process.env.GEMINI_API_KEY) {
-      answer = await summarizeToolResultsWithGemini(systemPrompt, question, inferred.name, result);
+    try {
+      if (providerName === 'mimo' && hasMimo) {
+        answer = await summarizeToolResultsWithMimo(messages, inferred.name, result);
+      } else if (providerName === 'gemini' && hasGemini) {
+        answer = await summarizeToolResultsWithGemini(systemPrompt, question, inferred.name, result);
+      } else if (hasMimo) {
+        answer = await summarizeToolResultsWithMimo(messages, inferred.name, result);
+      } else if (hasGemini) {
+        answer = await summarizeToolResultsWithGemini(systemPrompt, question, inferred.name, result);
+      }
+    } catch (e) {
+      console.error('Offline summary failed, using raw output formatting:', e);
     }
 
     if (!answer || containsRawToolMarkup(answer)) {
-      const compactResult = Array.isArray(result) ? result.slice(0, 5) : result;
-      answer = `Tôi đã kiểm tra dữ liệu. Kết quả: ${JSON.stringify(compactResult).slice(0, 700)}`;
+      answer = formatOfflineAnswer(inferred.name, result, inferred.args);
     }
 
     return {
@@ -854,15 +1130,19 @@ async function startServer() {
   };
 
   const answerAssistant = async (systemPrompt: string, question: string, messages: any[]) => {
+    const db = LocalDatabase.get();
+    const hasMimo = !!(db.studio_settings?.mimo_api_key || process.env.MIMO_API_KEY);
+    const hasGemini = !!(db.studio_settings?.gemini_api_key || process.env.GEMINI_API_KEY);
+
     const providers = [
       {
         name: 'mimo',
-        enabled: !!process.env.MIMO_API_KEY,
+        enabled: hasMimo,
         run: () => answerWithMimo(systemPrompt, question, messages)
       },
       {
         name: 'gemini',
-        enabled: !!process.env.GEMINI_API_KEY,
+        enabled: hasGemini,
         run: () => answerWithGemini(systemPrompt, question)
       }
     ];
@@ -885,107 +1165,194 @@ async function startServer() {
     throw lastError || new Error('No AI provider is configured');
   };
 
-  // ----------------- AI ASSISTANT ENDPOINT -----------------
-  app.post('/api/ai/assistant', authenticate, async (req: AuthenticatedRequest, res: Response) => {
-    if (req.role?.id !== 'role-admin') {
-      return res.status(403).json({ error: 'Chỉ Admin được sử dụng trợ lý AI' });
-    }
-
-    const question = String(req.body?.question || '').trim();
-    if (!question) {
-      return res.status(400).json({ error: 'Vui lòng nhập câu hỏi' });
-    }
-    if (question.length > 500) {
-      return res.status(400).json({ error: 'Câu hỏi quá dài. Vui lòng hỏi ngắn hơn 500 ký tự.' });
-    }
-    if (!process.env.MIMO_API_KEY && !process.env.GEMINI_API_KEY) {
-      return res.status(503).json({
-        error: 'Chưa cấu hình API key cho trợ lý AI. Vui lòng thêm key vào môi trường chạy server.'
-      });
-    }
-
-    const systemPrompt = [
-      'Ban la tro ly tra cuu noi bo cho admin studio anh cuoi.',
-      'Tra loi bang tieng Viet, ngan gon, toi da 4 cau.',
-      'Khong suy doan du lieu. Khi can du lieu he thong, bat buoc goi tool.',
-      'Sau khi co tool result, chi doc lai ket qua quan trong va neu khong co ket qua thi noi ro khong tim thay.',
-      'Khong de xuat thay doi database, khong viet SQL, khong noi dai.'
-    ].join(' ');
-
-    const messages: any[] = [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: question }
-    ];
-
-    try {
-      const assistantAnswer = await answerAssistant(systemPrompt, question, messages);
-      res.json(assistantAnswer);
-    } catch (err: any) {
-      console.error('AI assistant error:', err);
-      res.status(500).json({ error: 'Trợ lý AI đang lỗi kết nối hoặc quá tải. Vui lòng thử lại sau.' });
-    }
-  });
-
-  app.post('/api/ai/assistant/stream', authenticate, async (req: AuthenticatedRequest, res: Response) => {
-    if (req.role?.id !== 'role-admin') {
-      return res.status(403).json({ error: 'Chỉ Admin được sử dụng trợ lý AI' });
-    }
-
-    const question = String(req.body?.question || '').trim();
-    if (!question) {
-      return res.status(400).json({ error: 'Vui lòng nhập câu hỏi' });
-    }
-    if (question.length > 500) {
-      return res.status(400).json({ error: 'Câu hỏi quá dài. Vui lòng hỏi ngắn hơn 500 ký tự.' });
-    }
-    if (!process.env.MIMO_API_KEY && !process.env.GEMINI_API_KEY) {
-      return res.status(503).json({ error: 'Chưa cấu hình API key cho trợ lý AI. Vui lòng thêm key vào môi trường chạy server.' });
-    }
-
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream; charset=utf-8',
-      'Cache-Control': 'no-cache, no-transform',
-      Connection: 'keep-alive',
-      'X-Accel-Buffering': 'no'
-    });
-
-    const sendEvent = (event: string, data: unknown) => {
-      res.write(`event: ${event}\n`);
-      res.write(`data: ${JSON.stringify(data)}\n\n`);
+  // ----------------- RULE-BASED CHATBOT ENDPOINT -----------------
+  interface ChatbotSessionContext {
+    intent?: any;
+    entities?: any;
+    pendingClarification?: {
+      type: 'customer';
+      rawCustomerName: string;
+      options: any[];
     };
+  }
 
-    const systemPrompt = [
-      'Ban la tro ly tra cuu noi bo cho admin studio anh cuoi.',
-      'Tra loi bang tieng Viet, ngan gon, toi da 4 cau.',
-      'Khong suy doan du lieu. Khi can du lieu he thong, bat buoc goi tool.',
-      'Sau khi co tool result, chi doc lai ket qua quan trong va neu khong co ket qua thi noi ro khong tim thay.',
-      'Khong de xuat thay doi database, khong viet SQL, khong noi dai.'
-    ].join(' ');
+  const chatbotSessions = new Map<string, ChatbotSessionContext>();
 
-    const messages: any[] = [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: question }
-    ];
+  app.post('/api/chatbot', authenticate, async (req: AuthenticatedRequest, res: Response) => {
+    const message = String(req.body?.message || '').trim();
+    const sessionId = String(req.body?.sessionId || 'default-session');
+
+    if (!message) {
+      return res.status(400).json({ reply: 'Bạn vui lòng nhập câu hỏi.' });
+    }
 
     try {
-      sendEvent('status', { message: 'checking' });
-      const assistantAnswer = await answerAssistant(systemPrompt, question, messages);
-      sendEvent('tools', { tools_used: assistantAnswer.tools_used || [] });
-
-      const chunks = Array.from(String(assistantAnswer.answer || 'Không có kết quả phù hợp.'));
-
-      for (const chunk of chunks) {
-        if (res.destroyed) return;
-        sendEvent('delta', { text: chunk });
-        await new Promise(resolve => setTimeout(resolve, 14));
+      let session = chatbotSessions.get(sessionId);
+      if (!session) {
+        session = {};
+        chatbotSessions.set(sessionId, session);
       }
 
-      sendEvent('done', { ok: true });
-      res.end();
-    } catch (err: any) {
-      console.error('AI assistant stream error:', err);
-      sendEvent('error', { error: 'Trợ lý AI đang lỗi kết nối hoặc quá tải. Vui lòng thử lại sau.' });
-      res.end();
+      // 1. Check if we have a pending customer clarification
+      if (session.pendingClarification && session.intent && session.entities) {
+        const options = session.pendingClarification.options;
+        const numChoice = parseInt(message, 10);
+        let selectedCustomer: any = null;
+
+        if (!isNaN(numChoice) && numChoice >= 1 && numChoice <= options.length) {
+          selectedCustomer = options[numChoice - 1];
+        } else {
+          // Try fuzzy matching message directly against options
+          const match = options.find((o: any) => 
+            o.full_name.toLowerCase().includes(message.toLowerCase()) || 
+            message.toLowerCase().includes(o.full_name.toLowerCase())
+          );
+          if (match) {
+            selectedCustomer = match;
+          }
+        }
+
+        if (selectedCustomer) {
+          // Resolved successfully! Update entities and execute query
+          session.entities.customerName = selectedCustomer.full_name;
+          const intent = session.intent;
+          const entities = session.entities;
+          
+          // Clear pending clarification state
+          delete session.pendingClarification;
+          
+          const data = await buildAndExecuteQuery(intent, entities);
+          const reply = renderResponse(intent, data);
+          return res.json({ reply, intent, data, sessionId });
+        } else {
+          // If not matching, treat it as a new customer name first to see if they entered a completely different name
+          const resolveRes = await resolveCustomer(message);
+          if (!resolveRes.needsClarification && resolveRes.customer) {
+            session.entities.customerName = resolveRes.customer.full_name;
+            const intent = session.intent;
+            const entities = session.entities;
+            
+            delete session.pendingClarification;
+            
+            const data = await buildAndExecuteQuery(intent, entities);
+            const reply = renderResponse(intent, data);
+            return res.json({ reply, intent, data, sessionId });
+          } else if (resolveRes.needsClarification && resolveRes.options) {
+            session.pendingClarification = {
+              type: 'customer',
+              rawCustomerName: message,
+              options: resolveRes.options
+            };
+            return res.json({
+              reply: resolveRes.clarificationQuestion,
+              intent: session.intent,
+              needsClarification: true,
+              sessionId
+            });
+          } else {
+            return res.json({
+              reply: `Lựa chọn không hợp lệ. Bạn vui lòng chọn từ 1 đến ${options.length} hoặc nhập lại tên chính xác:`,
+              intent: session.intent,
+              needsClarification: true,
+              sessionId
+            });
+          }
+        }
+      }
+
+      // 2. Normal flow: Classify intent
+      let { intent, score } = await classifyIntent(message);
+
+      // Preemptive/Override logic for customer names (P2-2 Cách A)
+      const lowerMsg = message.toLowerCase().trim();
+      const CONTRACT_KEYWORDS = ['hợp đồng', 'hop dong', 'đơn hàng', 'don hang', 'trạng thái', 'trang thai', 'tình hình', 'tinh hinh'];
+      const containsContractKeyword = CONTRACT_KEYWORDS.some(kw => lowerMsg.includes(kw));
+
+      const STATS_KEYWORDS = [
+        'doanh số', 'doanh thu', 'doanhso', 'doanhthu',
+        'thống kê', 'thong ke', 'báo cáo', 'bao cao',
+        'thu nhập', 'thu nhap', 'tổng thu', 'tong thu'
+      ];
+      const containsStatsKeyword = STATS_KEYWORDS.some(kw => lowerMsg.includes(kw));
+      const wordsCount = message.trim().split(/\s+/).length;
+      const isShortMessage = wordsCount <= 5;
+
+      if (isShortMessage || intent === 'thong_ke_doanh_so' || intent === 'unknown' || score < 0.6) {
+        const resolveRes = await resolveCustomer(message);
+        const hasCustomerMatch = resolveRes.customer || (resolveRes.needsClarification && resolveRes.options && resolveRes.options.length > 0);
+        
+        if (hasCustomerMatch) {
+          if (containsStatsKeyword) {
+            // Keep stats intent
+          } else {
+            intent = containsContractKeyword ? 'CONTRACT_STATUS' : 'CUSTOMER_LIST';
+            score = 1.0; // Force classification success
+          }
+        }
+      }
+
+      if (intent === 'unknown' || score < 0.6) {
+        return res.json({
+          reply: 'Xin lỗi, tôi chưa hiểu rõ câu hỏi. Bạn có thể hỏi về doanh số, hồ sơ khách hàng, hoặc trạng thái hợp đồng nhé.',
+          intent: 'unknown',
+          sessionId
+        });
+      }
+
+      // 3. Extract entities
+      const rawEntities = await extractEntities(message, intent as any);
+
+      // 4. Handle resolution for customer searches
+      if (intent === 'CUSTOMER_LIST' || intent === 'CONTRACT_STATUS') {
+        if (!rawEntities.customerName) {
+          session.intent = intent;
+          session.entities = rawEntities;
+          session.pendingClarification = {
+            type: 'customer',
+            rawCustomerName: '',
+            options: []
+          };
+          
+          return res.json({
+            reply: intent === 'CUSTOMER_LIST' 
+              ? 'Bạn muốn tra cứu thông tin của khách hàng nào ạ?' 
+              : 'Bạn muốn kiểm tra trạng thái hợp đồng của khách hàng nào ạ?',
+            intent,
+            needsClarification: true,
+            sessionId
+          });
+        }
+
+        const resolveRes = await resolveCustomer(rawEntities.customerName);
+        if (resolveRes.needsClarification) {
+          session.intent = intent;
+          session.entities = rawEntities;
+          session.pendingClarification = {
+            type: 'customer',
+            rawCustomerName: rawEntities.customerName,
+            options: resolveRes.options || []
+          };
+
+          return res.json({
+            reply: resolveRes.clarificationQuestion,
+            intent,
+            needsClarification: true,
+            sessionId
+          });
+        }
+        
+        // Found single match
+        rawEntities.customerName = resolveRes.customer!.full_name;
+      }
+
+      // 5. Execute query
+      const data = await buildAndExecuteQuery(intent as any, rawEntities);
+      const reply = renderResponse(intent as any, data);
+
+      return res.json({ reply, intent, data, sessionId });
+    } catch (error) {
+      console.error('[chatbot] error:', error);
+      return res.status(500).json({ reply: 'Đã có lỗi xảy ra ở hệ thống chatbot, vui lòng thử lại sau.' });
     }
   });
 
@@ -1106,12 +1473,14 @@ async function startServer() {
       return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
     }
 
+    // Yield control for hashing before fetching database state to prevent race conditions
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const db = LocalDatabase.get();
     if (db.users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
       return res.status(400).json({ error: 'Email này đã được sử dụng' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
     const newUser: User = {
       id: 'user-' + LocalDatabase.uuid(),
       full_name,
@@ -1132,6 +1501,12 @@ async function startServer() {
     const { id } = req.params;
     const { full_name, email, password, role_id, is_active } = req.body;
 
+    // Yield control for hashing before fetching database state to prevent race conditions
+    let hashedPassword = undefined;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+
     const db = LocalDatabase.get();
     const idx = db.users.findIndex(u => u.id === id);
     if (idx === -1) {
@@ -1146,8 +1521,8 @@ async function startServer() {
     }
 
     if (full_name) db.users[idx].full_name = full_name;
-    if (password) {
-      db.users[idx].password_hash = await bcrypt.hash(password, 10);
+    if (hashedPassword) {
+      db.users[idx].password_hash = hashedPassword;
     }
     if (role_id) db.users[idx].role_id = role_id;
     if (is_active !== undefined) db.users[idx].is_active = is_active;
@@ -2452,7 +2827,11 @@ async function startServer() {
 
   app.put('/api/studio/settings', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
-    const { name, phone, email, address, website, opening_hours, notes, backup_schedule } = req.body;
+    const { 
+      name, phone, email, address, website, opening_hours, notes, backup_schedule,
+      mimo_api_key, mimo_api_base_url, mimo_model,
+      gemini_api_key, gemini_api_base_url, gemini_model
+    } = req.body;
 
     if (!name || !phone || !email || !address) {
       return res.status(400).json({ error: 'Các trường Tên, Số điện thoại, Email và Địa chỉ không được để trống' });
@@ -2467,11 +2846,44 @@ async function startServer() {
       opening_hours: opening_hours || '',
       notes: notes || '',
       backup_schedule: backup_schedule || 'weekly',
-      last_backup_time: db.studio_settings?.last_backup_time || ''
+      last_backup_time: db.studio_settings?.last_backup_time || '',
+      mimo_api_key: mimo_api_key || '',
+      mimo_api_base_url: mimo_api_base_url || '',
+      mimo_model: mimo_model || '',
+      gemini_api_key: gemini_api_key || '',
+      gemini_api_base_url: gemini_api_base_url || '',
+      gemini_model: gemini_model || ''
     };
 
     LocalDatabase.save(db);
     res.json(db.studio_settings);
+  });
+
+  // Get database synchronization status, conflicts, and dead letter queue
+  app.get('/api/admin/sync-status', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
+    const queue = LocalDatabase.getDeadLetterQueue();
+    const conflicts = LocalDatabase.getConflicts();
+    
+    // Strip payloads to keep response small and performant
+    const cleanQueue = queue.map(({ payload, ...item }) => item);
+    
+    res.json({
+      pending_sync_failures_count: cleanQueue.length,
+      dead_letter_queue: cleanQueue,
+      conflicts_count: conflicts.length,
+      conflicts: conflicts
+    });
+  });
+
+  // Manually retry a failed database sync item from the Dead Letter Queue
+  app.post('/api/admin/sync-retry/:id', authenticate, requirePermission('users.manage'), async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const success = await LocalDatabase.retryDeadLetterItem(id);
+    if (success) {
+      res.json({ success: true, message: 'Đã đồng bộ thử lại thành công sang PostgreSQL!' });
+    } else {
+      res.status(500).json({ error: 'Đồng bộ lại thất bại. Vui lòng khắc phục lỗi kết nối hoặc dữ liệu trước.' });
+    }
   });
 
   // ----------------- DATABASE MANAGEMENT ENDPOINTS -----------------
@@ -2806,7 +3218,8 @@ async function startServer() {
       db.order_status_history.push(history);
 
       const notifId = 'notif-' + LocalDatabase.uuid();
-      db.notifications?.push({
+      if (!db.notifications) db.notifications = [];
+      db.notifications.push({
         id: notifId,
         sender_id: req.user!.id,
         receiver_id: null,
@@ -2850,7 +3263,8 @@ async function startServer() {
 
     const assignedSaleId = db.leads[idx].assigned_sale_id;
     if (assignedSaleId !== req.user!.id) {
-      db.notifications?.push({
+      if (!db.notifications) db.notifications = [];
+      db.notifications.push({
         id: 'notif-' + LocalDatabase.uuid(),
         sender_id: req.user!.id,
         receiver_id: assignedSaleId,
@@ -2916,6 +3330,25 @@ async function startServer() {
       failureReasons,
       steps
     });
+  });
+
+  app.post('/api/demo/cleanup', authenticate, (req: AuthenticatedRequest, res: Response) => {
+    const db = LocalDatabase.get();
+    
+    // Clean up lead "Nguyễn Hoàng Nam"
+    if (db.leads) {
+      db.leads = db.leads.filter(l => l.customer_name !== 'Nguyễn Hoàng Nam');
+    }
+    
+    // Clean up chat messages sent by this user that contain the demo text
+    if (db.chat_messages) {
+      db.chat_messages = db.chat_messages.filter(m => 
+        !(m.sender_id === req.user!.id && m.content.includes('Chào cả nhà, chúc studio mình tuần mới'))
+      );
+    }
+    
+    LocalDatabase.save(db);
+    res.json({ success: true, message: 'Dữ liệu demo đã được dọn dẹp sạch sẽ!' });
   });
 
   // ----------------- VITE DEVELOPMENT / STATIC PROD SERVING -----------------

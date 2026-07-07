@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: studiov2_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: studio_user
+      POSTGRES_PASSWORD: studio_password
+      POSTGRES_DB: studio_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

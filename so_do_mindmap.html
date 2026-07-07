@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Bridal - Sơ Đồ Luồng Hoạt Động & Kiến Trúc Hệ Thống</title>
+  
+  <!-- Google Fonts (Optional, falls back to sans-serif if offline) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons (Optional, falls back to Emojis if offline) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* --- VANILLA CSS DESIGN SYSTEM --- */
+    :root {
+      --bg-dark: #070a13;
+      --bg-card: rgba(15, 23, 42, 0.75);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.25);
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      
+      /* Category Colors */
+      --color-fe: #ec4899;     /* Pink */
+      --color-api: #06b6d4;    /* Cyan */
+      --color-db: #10b981;     /* Emerald */
+      --color-sync: #f59e0b;   /* Amber */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 0),
+        radial-gradient(rgba(30, 41, 59, 0.4) 2px, transparent 0);
+      background-size: 24px 24px, 120px 120px;
+      background-position: 0 0, 10px 10px;
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* HEADER */
+    header {
+      height: 70px;
+      border-b: 1px solid var(--border-color);
+      background-color: rgba(7, 10, 19, 0.95);
+      backdrop-filter: blur(8px);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 50;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      height: 40px;
+      width: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--color-fe), #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+    }
+
+    .brand-title h1 {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: linear-gradient(to right, #f472b6, #a78bfa, #22d3ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-title p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* HEADER CONTROLS */
+    .controls-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .search-container {
+      position: relative;
+      width: 240px;
+    }
+
+    .search-container input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 12px 8px 36px;
+      font-size: 13px;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-container input:focus {
+      border-color: var(--color-api);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: none;
+    }
+
+    .flow-select-wrapper {
+      position: relative;
+    }
+
+    .flow-select-wrapper select {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-size: 13px;
+      border-radius: 8px;
+      padding: 8px 36px 8px 12px;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      min-w-[280px];
+    }
+
+    .flow-select-wrapper select:focus {
+      border-color: var(--color-api);
+    }
+
+    .flow-select-arrow {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+      display: flex;
+    }
+
+    .zoom-buttons {
+      display: flex;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 4px;
+      gap: 2px;
+    }
+
+    .zoom-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .zoom-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+    }
+
+    /* VIEWPORT */
+    #viewport {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      cursor: grab;
+    }
+
+    #viewport:active {
+      cursor: grabbing;
+    }
+
+    #content {
+      position: absolute;
+      transform-origin: 0 0;
+      padding: 40px;
+    }
+
+    /* CONNECTIONS CANVAS */
+    #connector-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4000px;
+      height: 3000px;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* MINDMAP COLUMNS */
+    .mindmap-layout {
+      display: flex;
+      gap: 120px;
+      align-items: start;
+      min-width: 2000px;
+      z-index: 10;
+      position: relative;
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 320px;
+      flex-shrink: 0;
+    }
+
+    .column-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 12px;
+      margin-bottom: 8px;
+    }
+
+    .column-icon {
+      height: 32px;
+      width: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .column-title h2 {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .column-title p {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    /* COLUMNS UTILS */
+    .col-fe .column-icon { background: rgba(236, 72, 153, 0.15); border: 1px solid rgba(236, 72, 153, 0.3); color: var(--color-fe); }
+    .col-fe .column-header { border-color: rgba(236, 72, 153, 0.3); }
+    .col-fe h2 { color: var(--color-fe); }
+
+    .col-api .column-icon { background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); color: var(--color-api); }
+    .col-api .column-header { border-color: rgba(6, 182, 212, 0.3); }
+    .col-api h2 { color: var(--color-api); }
+
+    .col-db .column-icon { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--color-db); }
+    .col-db .column-header { border-color: rgba(16, 185, 129, 0.3); }
+    .col-db h2 { color: var(--color-db); }
+
+    .col-sync .column-icon { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: var(--color-sync); }
+    .col-sync .column-header { border-color: rgba(245, 158, 11, 0.3); }
+    .col-sync h2 { color: var(--color-sync); }
+
+    /* NODE CARDS */
+    .node-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      z-index: 20;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
+      backdrop-filter: blur(8px);
+    }
+
+    .node-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.2) !important;
+      background-color: rgba(21, 32, 54, 0.85);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 12px rgba(255, 255, 255, 0.05);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .card-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .node-card p {
+      font-size: 12px;
+      color: var(--text-main);
+      opacity: 0.85;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-meta {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 8px;
+      margin-top: 4px;
+      font-family: monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Node Category Card Highlights */
+    .glow-fe { border-color: rgba(236, 72, 153, 0.2); }
+    .glow-fe .card-title-group { color: var(--color-fe); }
+    .glow-fe .card-badge { background: rgba(236, 72, 153, 0.1); color: var(--color-fe); border: 1px solid rgba(236, 72, 153, 0.2); }
+
+    .glow-api { border-color: rgba(6, 182, 212, 0.2); }
+    .glow-api .card-title-group { color: var(--color-api); }
+    .glow-api .card-badge { background: rgba(6, 182, 212, 0.1); color: var(--color-api); border: 1px solid rgba(6, 182, 212, 0.2); }
+
+    .glow-db { border-color: rgba(16, 185, 129, 0.2); }
+    .glow-db .card-title-group { color: var(--color-db); }
+    .glow-db .card-badge { background: rgba(16, 185, 129, 0.1); color: var(--color-db); border: 1px solid rgba(16, 185, 129, 0.2); }
+
+    .glow-sync { border-color: rgba(245, 158, 11, 0.2); }
+    .glow-sync .card-title-group { color: var(--color-sync); }
+    .glow-sync .card-badge { background: rgba(245, 158, 11, 0.1); color: var(--color-sync); border: 1px solid rgba(245, 158, 11, 0.2); }
+
+    /* CARD SELECTION IN MINDMAP */
+    .selected-card {
+      border-color: #06b6d4 !important;
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.4) !important;
+      transform: scale(1.02);
+    }
+
+    /* SYSTEM LEGEND IN OVERLAY */
+    .legend-panel {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      z-index: 40;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      backdrop-filter: blur(12px);
+      width: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    .legend-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-items {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    .legend-color {
+      height: 10px;
+      width: 10px;
+      border-radius: 50%;
+    }
+
+    .lg-fe { background-color: var(--color-fe); box-shadow: 0 0 6px var(--color-fe); }
+    .lg-api { background-color: var(--color-api); box-shadow: 0 0 6px var(--color-api); }
+    .lg-db { background-color: var(--color-db); box-shadow: 0 0 6px var(--color-db); }
+    .lg-sync { background-color: var(--color-sync); box-shadow: 0 0 6px var(--color-sync); }
+
+    .legend-help {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 8px;
+      font-size: 10px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* SIDE PANEL SIDEBAR */
+    .sidebar {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 440px;
+      background: rgba(7, 10, 19, 0.96);
+      border-left: 1px solid var(--border-color);
+      z-index: 60;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -15px 0 35px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(16px);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .sidebar-header {
+      padding: 24px;
+      border-b: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .side-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .side-icon-box {
+      height: 40px;
+      width: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .side-title-info h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .side-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 10px;
+      display: inline-block;
+      margin-top: 2px;
+      text-transform: uppercase;
+    }
+
+    .close-side-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      display: flex;
+      transition: background 0.2s;
+    }
+
+    .close-side-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+    }
+
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .side-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+
+    .side-desc-text {
+      font-size: 13px;
+      line-clamp: normal;
+      line-height: 1.6;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      color: #cbd5e1;
+    }
+
+    .side-meta-box {
+      font-family: monospace;
+      font-size: 11px;
+      background: #090e17;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--color-api);
+      overflow-x: auto;
+    }
+
+    .side-details-box {
+      background: #090e17;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+
+    .side-details-box code {
+      font-family: monospace;
+      color: #f472b6;
+      background: rgba(255,255,255,0.04);
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+
+    .side-connections {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .side-conn-card {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .side-conn-list {
+      list-style: none;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .side-conn-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: #94a3b8;
+      transition: color 0.2s;
+    }
+
+    .side-conn-item:hover {
+      color: var(--color-api);
+    }
+
+    .sidebar-footer {
+      padding: 16px 24px;
+      border-t: 1px solid var(--border-color);
+      background: rgba(0, 0, 0, 0.2);
+      font-size: 10px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* FLOW STEPS PANEL */
+    .flow-panel {
+      position: absolute;
+      bottom: 24px;
+      left: 320px;
+      right: 24px;
+      z-index: 30;
+      background: rgba(7, 10, 19, 0.95);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      transform: translateY(150px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .flow-panel.open {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .flow-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+
+    .flow-panel-title {
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .flow-steps-scroll {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .flow-step-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      width: 250px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .flow-step-card:hover {
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .flow-step-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .flow-step-meta span.badge {
+      padding: 1px 4px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .flow-step-text {
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 6px;
+      color: var(--text-main);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.4;
+    }
+
+    /* ANIMATING FLOW Packets */
+    .flowing-line {
+      stroke-dasharray: 8, 8;
+      animation: svgFlow 1.2s linear infinite;
+      filter: drop-shadow(0 0 4px var(--flow-color, #06b6d4));
+    }
+    @keyframes svgFlow {
+      to {
+        stroke-dashoffset: -16;
+      }
+    }
+
+    /* PULSING node highlights */
+    .pulse-node {
+      animation: nodePulse 2s infinite ease-in-out;
+    }
+    @keyframes nodePulse {
+      0%, 100% {
+        box-shadow: 0 0 12px var(--pulse-color, rgba(6, 182, 212, 0.2));
+      }
+      50% {
+        box-shadow: 0 0 22px var(--pulse-color, rgba(6, 182, 212, 0.5));
+        border-color: var(--pulse-color, rgba(6, 182, 212, 0.6)) !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">📸</div>
+      <div class="brand-title">
+        <h1>AURA BRIDAL (STUDIO V2)</h1>
+        <p>Sơ đồ hoạt động & Thiết kế kiến trúc hệ thống (Độc lập)</p>
+      </div>
+    </div>
+
+    <!-- HEADER CONTROLS -->
+    <div class="controls-wrapper">
+      <!-- Search -->
+      <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Tìm tên API, View, Model...">
+        <button id="clear-search" class="clear-btn">✕</button>
+      </div>
+
+      <!-- Flows selector -->
+      <div class="flow-select-wrapper">
+        <select id="flow-select">
+          <option value="none">-- Chọn Luồng Nghiệp Vụ Thực Tế --</option>
+          <option value="crm-won">1. CRM chốt Won ➜ Tự động tạo Hợp Đồng & Khách Hàng</option>
+          <option value="task-assign">2. Tạo việc ➜ Phân công & Cập nhật tiến độ</option>
+          <option value="okr-progress">3. Quản lý OKRs mục tiêu & Đánh giá KPIs</option>
+          <option value="db-backup">4. Backup ➜ Tự động/Thủ công & Khôi phục</option>
+        </select>
+        <span class="flow-select-arrow">▼</span>
+      </div>
+
+      <!-- Zoom -->
+      <div class="zoom-buttons">
+        <button id="btn-zoom-out" class="zoom-btn" title="Thu nhỏ">➖</button>
+        <button id="btn-zoom-reset" class="zoom-btn" title="Đặt lại zoom">⛶</button>
+        <button id="btn-zoom-in" class="zoom-btn" title="Phóng to">➕</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- VIEWPORT -->
+  <div id="viewport">
+    <div id="content" style="transform: translate(40px, 40px) scale(1);">
+      
+      <!-- SVG connections -->
+      <svg id="connector-svg"></svg>
+      
+      <!-- MINDMAP LAYOUT -->
+      <div class="mindmap-layout">
+        
+        <!-- Column 1: Frontend -->
+        <div class="column col-fe">
+          <div class="column-header">
+            <div class="column-icon">💻</div>
+            <div class="column-title">
+              <h2>Lớp Client (Frontend)</h2>
+              <p>React.js & Tailwind CSS</p>
+            </div>
+          </div>
+          <div id="fe-group"></div>
+        </div>
+
+        <!-- Column 2: APIs -->
+        <div class="column col-api">
+          <div class="column-header">
+            <div class="column-icon">⚙️</div>
+            <div class="column-title">
+              <h2>Lớp Router (API Server)</h2>
+              <p>Express API Routing</p>
+            </div>
+          </div>
+          <div id="api-group"></div>
+        </div>
+
+        <!-- Column 3: Database -->
+        <div class="column col-db">
+          <div class="column-header">
+            <div class="column-icon">📂</div>
+            <div class="column-title">
+              <h2>Mô hình Dữ liệu (Prisma)</h2>
+              <p>PostgreSQL Models</p>
+            </div>
+          </div>
+          <div id="db-group"></div>
+        </div>
+
+        <!-- Column 4: Sync Engine -->
+        <div class="column col-sync">
+          <div class="column-header">
+            <div class="column-icon">🔄</div>
+            <div class="column-title">
+              <h2>Cơ chế Đồng bộ (Sync)</h2>
+              <p>Cache & Dual-Write Engine</p>
+            </div>
+          </div>
+          <div id="sync-group"></div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BOTTOM LEGEND -->
+  <div class="legend-panel">
+    <div class="legend-title">ℹ️ Chú thích thành phần</div>
+    <div class="legend-items">
+      <div class="legend-item">
+        <span class="legend-color lg-fe"></span>
+        <span>Frontend View</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color lg-api"></span>
+        <span>Express Route</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color lg-db"></span>
+        <span>Database Table</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color lg-sync"></span>
+        <span>Sync Process</span>
+      </div>
+    </div>
+    <div class="legend-help">
+      💡 <b>Kéo thả chuột</b> ở khoảng trống để dịch chuyển bản đồ.<br>
+      💡 <b>Cuộn chuột</b> để phóng to/thu nhỏ.<br>
+      💡 <b>Nhấp chuột</b> vào thẻ bất kỳ để xem chi tiết code & cấu trúc.
+    </div>
+  </div>
+
+  <!-- SIDEBAR DETAIL -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <div class="side-title-group">
+        <div id="side-icon-box" class="side-icon-box">❓</div>
+        <div class="side-title-info">
+          <h2 id="side-title">Chi tiết Node</h2>
+          <span id="side-badge" class="side-badge">Category</span>
+        </div>
+      </div>
+      <button id="close-sidebar" class="close-side-btn">✕</button>
+    </div>
+
+    <div class="sidebar-content">
+      <div>
+        <div class="side-section-title">Mô tả hoạt động</div>
+        <div id="side-desc" class="side-desc-text">Chọn một thành phần trên sơ đồ để xem thông tin chi tiết.</div>
+      </div>
+
+      <div id="side-meta-section">
+        <div class="side-section-title">Đường dẫn tệp tin / Định nghĩa</div>
+        <div id="side-meta-content" class="side-meta-box">-</div>
+      </div>
+
+      <div id="side-details-section">
+        <div id="side-details-title" class="side-section-title">Cấu trúc dữ liệu / Endpoints</div>
+        <div id="side-details-content" class="side-details-box">-</div>
+      </div>
+
+      <div>
+        <div class="side-section-title">Liên kết quan hệ</div>
+        <div class="side-connections">
+          <div class="side-conn-card">
+            <span style="font-size:10px; color:var(--text-muted)">ĐẦU VÀO LIÊN KẾT:</span>
+            <ul id="side-conn-from" class="side-conn-list"></ul>
+          </div>
+          <div class="side-conn-card">
+            <span style="font-size:10px; color:var(--text-muted)">ĐẦU RA LIÊN KẾT:</span>
+            <ul id="side-conn-to" class="side-conn-list"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <span>🛠️ Sơ đồ thiết kế hệ thống cưới <b>Aura Bridal Studio</b>.</span>
+    </div>
+  </aside>
+
+  <!-- FLOW STEPS PANEL -->
+  <div id="flow-steps-panel" class="flow-panel">
+    <div class="flow-panel-header">
+      <div id="flow-title" class="flow-panel-title">Tiêu đề Luồng Hoạt Động</div>
+      <button id="close-flow" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">✕</button>
+    </div>
+    <div id="flow-steps-list" class="flow-steps-scroll"></div>
+  </div>
+
+  <!-- JAVASCRIPT SYSTEM -->
+  <script>
+    // --- MINDMAP DATA ARCHITECTURE ---
+    const nodesData = {
+      frontend: [
+        { id: "fe-dashboard", title: "Dashboard", emoji: "📊", desc: "Màn hình tổng quan của Studio: thống kê doanh số, tiến độ OKRs, số hợp đồng mới, lịch chụp sắp diễn ra và danh sách đầu việc quá hạn.", meta: "src/components/Dashboard.tsx", details: "Lấy dữ liệu kết hợp từ: <code>/api/dashboard/summary</code>, <code>/api/dashboard/upcoming-shoots</code>, và <code>/api/dashboard/overdue-tasks</code>.<br>Hiển thị thẻ thống kê số liệu (card-based layout) với biểu tượng Lucide icons." },
+        { id: "fe-leads", title: "CRM Leads (Tư Vấn)", emoji: "🎯", desc: "Quản lý phễu sales gồm 6 bước tiếp cận khách hàng tiềm năng. Theo dõi nguồn lead, tỷ lệ chốt đơn, tương tác ghi nhận phản hồi từ ban quản lý.", meta: "src/components/Leads.tsx", details: "Liên kết với API nhóm <code>/api/leads</code>.<br>Khi sale chuyển đổi trạng thái Lead thành công (Lead Status ➜ 'Won'), server Express sẽ tự động tạo khách hàng bên bảng <b>Customer</b> và hợp đồng chụp bên bảng <b>Order</b>." },
+        { id: "fe-orders", title: "Orders (Hợp Đồng)", emoji: "📜", desc: "Quản lý toàn bộ hợp đồng dịch vụ cưới, chụp ngoại cảnh, studio... Quản lý thông tin ngày chụp, số tiền đặt cọc, tổng tiền và tiến độ bàn giao sản phẩm.", meta: "src/components/Orders.tsx", details: "Liên kết với API nhóm <code>/api/orders</code>.<br>Có lịch chụp tự động hiển thị gắn liền với Order. Trạng thái gồm có: new ➜ confirmed ➜ shooting ➜ editing ➜ ready ➜ delivered ➜ cancelled." },
+        { id: "fe-customers", title: "Customers (Khách Hàng)", emoji: "👥", desc: "Quản lý thông tin liên hệ của khách hàng thực tế (đã ký kết hợp đồng). Cho phép xem lịch sử sử dụng gói dịch vụ của từng người.", meta: "src/components/Customers.tsx", details: "Liên kết với API nhóm <code>/api/customers</code>.<br>Lưu vết ghi chú chi tiết về số đo váy cưới đã thử, sở thích trang điểm, hoặc lưu ý ảnh cần chỉnh sửa." },
+        { id: "fe-tasks", title: "Tasks (Công Việc)", emoji: "📋", desc: "Phân công công việc (quay phim, chụp ảnh, makeup, hậu kỳ). Nhân viên cập nhật trạng thái làm việc (pending, in_progress, done) và viết bình luận trao đổi.", meta: "src/components/Tasks.tsx", details: "Gọi API nhóm <code>/api/tasks</code>.<br>Mỗi Task có thể liên kết trực tiếp với ID hợp đồng chụp (Order ID) để kiểm soát chất lượng bàn giao theo từng đơn đặt hàng." },
+        { id: "fe-okrs", title: "Objectives & OKRs", emoji: "🏆", desc: "Thiết lập mục tiêu chiến lược cho studio theo phòng ban (Chụp ảnh, CSKH, Marketing). Tự động tổng hợp % hoàn thành từ các chỉ số then chốt (Key Results).", meta: "src/components/Objectives.tsx", details: "Gọi API nhóm <code>/api/objectives</code>.<br>Lưu lại lịch sử thay đổi chỉ số % kèm bình luận giải trình lý do từ nhân viên được phân công chịu trách nhiệm." },
+        { id: "fe-chat", title: "Chat Nội Bộ", emoji: "💬", desc: "Kênh chat nội bộ cho nhân viên studio trao đổi nghiệp vụ. Có phòng chat chung cho toàn bộ studio và các cuộc hội thoại 1-1 riêng tư.", meta: "src/components/Chat.tsx", details: "Lấy lịch sử và gửi tin qua nhóm API <code>/api/chat/messages</code>.<br>Tin nhắn được lưu trữ tập trung để đảm bảo không bị thất thoát thông tin." },
+        { id: "fe-notifications", title: "Notifications", emoji: "🔔", desc: "Trung tâm thông báo hệ thống: hiển thị danh sách thông báo đẩy, đánh dấu đã đọc và xem nhanh tin nhắn chat Dashboard.", meta: "src/components/Notifications.tsx", details: "Gọi API <code>/api/notifications</code>, <code>/api/notifications/:id/read</code>, <code>/api/notifications/read-all</code>.<br>Tích hợp <code>/api/chat/dashboard-messages</code> để hiển thị quick-chat ngay trên Dashboard." },
+        { id: "fe-staff", title: "Staff (Nhân Sự)", emoji: "👤", desc: "Quản lý tài khoản nhân viên, phân vai trò quyền hạn (RBAC). Tạo, sửa, vô hiệu hóa tài khoản nhân sự và vai trò tùy chỉnh.", meta: "src/components/Staff.tsx", details: "Gọi API nhóm <code>/api/users</code> và <code>/api/roles</code>.<br>Cho phép Admin tạo vai trò tùy chỉnh với bộ quyền linh hoạt (orders.view, leads.manage, ...)" },
+        { id: "fe-settings", title: "Settings (Cấu Hình)", emoji: "⚙️", desc: "Cấu hình địa chỉ hotline, giờ mở cửa của studio. Quản trị hệ thống sao lưu dự phòng (Database Backup & Restore).", meta: "src/components/Settings.tsx", details: "Kết nối API <code>/api/studio/settings</code>, <code>/api/system/status</code> và các API bảo trì <code>/api/database/*</code>.<br>Lưu ý: Chỉ tài khoản Admin mới được quyền khôi phục (Restore) hoặc nhập dữ liệu mới từ file JSON." },
+        { id: "fe-ai", title: "AI Assistant", emoji: "🤖", desc: "Bong bóng trợ lý AI tương tác hỗ trợ nhân viên tra cứu thông tin nhanh, phân tích dữ liệu và trả lời câu hỏi nghiệp vụ.", meta: "src/components/AiAssistantBubble.tsx", details: "Gọi API <code>POST /api/ai/assistant</code> và <code>POST /api/ai/assistant/stream</code> (streaming response).<br>Tích hợp Mimo / Gemini AI tuỳ cấu hình trong Studio Settings." },
+        { id: "fe-demo", title: "Product Demo", emoji: "🎬", desc: "Trình chiếu demo sản phẩm và hướng dẫn sử dụng tương tác cho người dùng mới.", meta: "src/components/ProductDemoPlayer.tsx", details: "Gọi API <code>POST /api/demo/cleanup</code> để dọn dẹp dữ liệu demo sau khi hoàn thành.<br>Hiển thị walkthrough từng bước các tính năng chính của hệ thống." },
+        { id: "fe-mobile", title: "Mobile App (Staff)", emoji: "📱", desc: "Giao diện responsive toàn diện cho thợ ảnh, thợ trang điểm khi làm việc tại phim trường/ngoại cảnh. Bao gồm 10 màn hình phủ đầy đủ các module hệ thống.", meta: "src/components/mobile/MobileApp.tsx", details: "10 màn hình mobile: Dashboard, Leads, Orders, Customers, Tasks, Objectives, Chat, Notifications, Staff, Settings.<br>Sử dụng chung tập API bảo mật như phiên bản Web chính thức, thiết kế tối ưu cho màn hình di động." }
+      ],
+      api: [
+        { id: "api-auth", title: "Authentication APIs", method: "POST/GET", path: "/api/auth/*", desc: "Xử lý đăng nhập, cấp token bảo mật Bearer JWT có thời hạn 24h và trả về thông tin quyền hạn của tài khoản.", meta: "server.ts : L1241-L1296", details: "• <code>POST /api/auth/login</code> (Tích hợp rate limit chặn brute-force)<br>• <code>POST /api/auth/logout</code><br>• <code>GET /api/auth/me</code> (Xác minh token lấy phiên đăng nhập)" },
+        { id: "api-ai", title: "AI Assistant APIs", method: "POST", path: "/api/ai/*", desc: "Tích hợp trợ lý AI (Mimo/Gemini) để hỗ trợ nhân viên tra cứu thông tin, phân tích dữ liệu và trả lời câu hỏi nghiệp vụ.", meta: "server.ts : L1165-L1238", details: "• <code>POST /api/ai/assistant</code> (Gửi câu hỏi và nhận phản hồi AI)<br>• <code>POST /api/ai/assistant/stream</code> (Streaming response cho trải nghiệm real-time)" },
+        { id: "api-system", title: "System Status API", method: "GET", path: "/api/system/*", desc: "Trả về trạng thái hoạt động của hệ thống, phiên bản ứng dụng và thông tin kết nối database.", meta: "server.ts : L1298-L1325", details: "• <code>GET /api/system/status</code> (Kiểm tra trạng thái server và kết nối PostgreSQL)" },
+        { id: "api-users", title: "Users Management APIs", method: "GET/POST/PUT/DELETE", path: "/api/users/*", desc: "Quản lý tài khoản nhân sự: tạo, sửa, vô hiệu hóa (soft delete) tài khoản nhân viên. Băm mật khẩu Bcrypt.", meta: "server.ts : L1326-L1427", details: "• <code>GET /api/users</code> (Danh sách nhân sự)<br>• <code>POST /api/users</code> (Tạo tài khoản mới - băm mật khẩu Bcrypt)<br>• <code>PUT /api/users/:id</code> (Cập nhật thông tin)<br>• <code>DELETE /api/users/:id</code> (Vô hiệu hóa tài khoản)" },
+        { id: "api-roles", title: "Roles Management APIs", method: "GET/POST/PUT/DELETE", path: "/api/roles/*", desc: "Quản lý vai trò phân quyền RBAC: tạo, sửa, xóa vai trò tùy chỉnh với bộ quyền linh hoạt.", meta: "server.ts : L1429-L1499", details: "• <code>GET /api/roles</code> (Danh sách vai trò)<br>• <code>POST /api/roles</code> (Tạo vai trò mới)<br>• <code>PUT /api/roles/:id</code> (Cập nhật quyền hạn)<br>• <code>DELETE /api/roles/:id</code> (Xóa vai trò)" },
+        { id: "api-customers", title: "Customers APIs", method: "GET/POST/PUT", path: "/api/customers/*", desc: "Truy xuất danh sách khách hàng, cập nhật thông liên hệ và truy vấn hợp đồng cũ.", meta: "server.ts : L1504-L1590", details: "• <code>GET /api/customers</code> (Lấy danh sách)<br>• <code>POST /api/customers</code> (Thêm khách hàng thủ công)<br>• <code>GET /api/customers/:id/orders</code> (Lịch sử đặt chụp của khách hàng này)" },
+        { id: "api-orders", title: "Orders APIs", method: "GET/POST/PUT", path: "/api/orders/*", desc: "Xử lý hợp đồng, cập nhật trạng thái đơn chụp và tạo lịch sử chuyển đổi trạng thái.", meta: "server.ts : L1593-L1805", details: "• <code>GET /api/orders</code> (Danh sách hợp đồng)<br>• <code>POST /api/orders</code> (Tạo hợp đồng mới)<br>• <code>POST /api/orders/:id/status</code> (Cập nhật trạng thái hợp đồng & ghi log)" },
+        { id: "api-tasks", title: "Tasks APIs", method: "GET/POST/PUT", path: "/api/tasks/*", desc: "Tạo và giao việc cho nhân viên, tiếp nhận lịch sử phản hồi tiến độ công việc.", meta: "server.ts : L1810-L2098", details: "• <code>GET /api/tasks</code> (Danh sách việc - Staff chỉ nhìn thấy việc của mình)<br>• <code>POST /api/tasks</code> (Giao việc mới)<br>• <code>POST /api/tasks/:id/updates</code> (Thêm bình luận/đổi tiến độ việc)" },
+        { id: "api-dashboard", title: "Dashboard APIs", method: "GET", path: "/api/dashboard/*", desc: "Cung cấp dữ liệu tổng hợp cho màn hình tổng quan: thống kê doanh số, lịch chụp sắp tới và công việc quá hạn.", meta: "server.ts : L2104-L2195", details: "• <code>GET /api/dashboard/summary</code> (Tổng hợp số liệu thống kê)<br>• <code>GET /api/dashboard/upcoming-shoots</code> (Lịch chụp sắp diễn ra)<br>• <code>GET /api/dashboard/overdue-tasks</code> (Danh sách công việc quá hạn)" },
+        { id: "api-okrs", title: "OKR & Objective APIs", method: "GET/POST/PUT", path: "/api/objectives/*", desc: "Tạo mục tiêu chiến lược và kết quả then chốt, tiếp nhận cập nhật tiến độ phần trăm hoàn thành OKRs.", meta: "server.ts : L2199-L2522", details: "• <code>GET /api/objectives</code> (Danh sách OKRs)<br>• <code>POST /api/objectives/:id/key-results</code> (Tạo KPIs cụ thể)<br>• <code>POST /api/key-results/:id/progress</code> (Cập nhật % hoàn thành)" },
+        { id: "api-notifications", title: "Notifications APIs", method: "GET/POST", path: "/api/notifications/*", desc: "Quản lý thông báo hệ thống đẩy đến nhân viên: đọc danh sách, tạo thông báo mới, đánh dấu đã đọc.", meta: "server.ts : L2524-L2612", details: "• <code>GET /api/notifications</code> (Danh sách thông báo)<br>• <code>POST /api/notifications</code> (Tạo thông báo mới)<br>• <code>POST /api/notifications/read-all</code> (Đánh dấu tất cả đã đọc)<br>• <code>POST /api/notifications/:id/read</code> (Đánh dấu 1 thông báo đã đọc)" },
+        { id: "api-chat", title: "Chat Messaging APIs", method: "GET/POST", path: "/api/chat/*", desc: "Xử lý gửi và nhận tin nhắn, hỗ trợ phân chia tin nhắn chat room chung hoặc chat riêng tư giữa các tài khoản nhân viên.", meta: "server.ts : L2614-L2701", details: "• <code>GET /api/chat/dashboard-messages</code> (Tin nhắn Dashboard quick-chat)<br>• <code>GET /api/chat/messages</code> (Đọc lịch sử tin nhắn lọc theo phòng/người nhận)<br>• <code>POST /api/chat/messages</code> (Lưu tin nhắn mới)" },
+        { id: "api-settings", title: "Settings APIs", method: "GET/PUT", path: "/api/studio/settings", desc: "Lấy ra cấu hình hotline, email và địa chỉ hiển thị của studio. Chỉ cho phép Admin cập nhật thay đổi cấu hình này.", meta: "server.ts : L2703-L2741", details: "• <code>GET /api/studio/settings</code> (Xem công khai)<br>• <code>PUT /api/studio/settings</code> (Cập nhật thông số - Cần quyền admin)" },
+        { id: "api-admin", title: "Admin Sync APIs", method: "GET/POST", path: "/api/admin/*", desc: "Quản trị hệ thống đồng bộ dữ liệu: kiểm tra trạng thái Dead Letter Queue (DLQ), nhật ký xung đột và kích hoạt đồng bộ lại thủ công.", meta: "server.ts : L2744-L2768", details: "• <code>GET /api/admin/sync-status</code> (Trạng thái DLQ và danh sách xung đột)<br>• <code>POST /api/admin/sync-retry/:id</code> (Kích hoạt đồng bộ lại bản ghi lỗi)" },
+        { id: "api-backup", title: "Backup APIs", method: "GET/POST/DELETE", path: "/api/database/*", desc: "Xuất dữ liệu hệ thống ra tệp tin JSON, tải lịch sử backup, khôi phục dữ liệu từ tệp sao lưu hoặc xóa tệp tin backup.", meta: "server.ts : L2770-L2913", details: "• <code>GET /api/database/export</code> (Tải file backup database dạng JSON)<br>• <code>POST /api/database/backups/create</code> (Tạo file sao lưu vật lý cục bộ)<br>• <code>POST /api/database/backups/restore/:id</code> (Nạp đè dữ liệu cũ từ file sao lưu)" },
+        { id: "api-leads", title: "CRM Leads APIs", method: "GET/POST/PUT", path: "/api/leads/*", desc: "Xử lý dữ liệu CRM tư vấn khách hàng, phản hồi của Admin và trả về biểu đồ phân tích hiệu quả chốt hợp đồng của nhân viên sales.", meta: "server.ts : L2915-L3212", details: "• <code>GET /api/leads</code> (Phân trang và phân quyền lọc dữ liệu)<br>• <code>POST /api/leads</code> (Tạo lead tư vấn)<br>• <code>PUT /api/leads/:id</code> (Cập nhật trạng thái phễu hoặc đổi sang 'won' để tạo đơn)<br>• <code>GET /api/leads/analytics</code> (Phân tích báo cáo phễu CRM)" },
+        { id: "api-demo", title: "Demo APIs", method: "POST", path: "/api/demo/*", desc: "Dọn dẹp dữ liệu demo sau khi hoàn thành trình chiếu sản phẩm hướng dẫn.", meta: "server.ts : L3214-L3231", details: "• <code>POST /api/demo/cleanup</code> (Xóa dữ liệu demo khỏi hệ thống)" }
+      ],
+      database: [
+        { id: "db-user", title: "Model: User", emoji: "👤", desc: "Lưu thông tin nhân sự trong hệ thống bao gồm thông tin đăng nhập, phân loại vai trò và trạng thái kích hoạt tài khoản.", meta: "prisma/schema.prisma : L10-L18", details: "• <code>id</code> String (Khóa chính)<br>• <code>full_name</code> String (Tên nhân viên)<br>• <code>email</code> String (Tài khoản đăng nhập - Unique)<br>• <code>password_hash</code> String (Mật khẩu băm Bcrypt)<br>• <code>role_id</code> String (Liên kết quyền)<br>• <code>is_active</code> Boolean" },
+        { id: "db-role", title: "Model: Role", emoji: "🛡️", desc: "Phân quyền người dùng. Lưu trữ mảng quyền hạn cho phép thực thi trên các tài nguyên trong hệ thống.", meta: "prisma/schema.prisma : L20-L25", details: "• <code>id</code> String (Khóa chính - ví dụ: role-admin, role-sales)<br>• <code>name</code> String (Tên quyền)<br>• <code>display_name</code> String<br>• <code>permissions</code> String[] (Mảng quyền: ['orders.view', 'leads.manage'])" },
+        { id: "db-lead", title: "Model: Lead", emoji: "🎯", desc: "Lưu cơ hội bán hàng CRM: họ tên, sđt khách quan tâm, bước sales (1-6), doanh thu dự kiến, đánh giá từ ban quản lý.", meta: "prisma/schema.prisma : L194-L213", details: "• <code>id</code> String (Khóa chính)<br>• <code>customer_name</code> String<br>• <code>phone</code> String?<br>• <code>source</code> String<br>• <code>interested_packages</code> Json (Lưu các gói quan tâm)<br>• <code>sales_step</code> Int<br>• <code>status</code> String ('consulting' | 'won' | 'lost')" },
+        { id: "db-customer", title: "Model: Customer", emoji: "👥", desc: "Bảng lưu thông tin khách hàng chính thức của studio. Dùng để làm thông tin người thụ hưởng trên hợp đồng chụp ảnh.", meta: "prisma/schema.prisma : L27-L36", details: "• <code>id</code> String (Khóa chính)<br>• <code>full_name</code> String<br>• <code>phone</code> String (Số điện thoại khách hàng)<br>• <code>email</code> String?<br>• <code>address</code> String?<br>• <code>notes</code> String?" },
+        { id: "db-order", title: "Model: Order", emoji: "📜", desc: "Bảng lưu thông tin các đơn đặt lịch chụp ảnh/quay phim của khách hàng. Lưu thông tin lịch làm việc, gói chụp và doanh số đặt cọc.", meta: "prisma/schema.prisma : L38-L53", details: "• <code>id</code> String (Khóa chính)<br>• <code>order_code</code> String (Mã hợp đồng HD-XXXX - Unique)<br>• <code>customer_id</code> String (Khóa ngoại kết nối Customer)<br>• <code>status</code> String<br>• <code>shoot_date</code> String (Ngày chụp ảnh)<br>• <code>package_name</code> String<br>• <code>package_price</code> Float<br>• <code>deposit_amount</code> Float" },
+        { id: "db-order-history", title: "Model: OrderStatusHistory", emoji: "⏳", desc: "Nhật ký chuyển đổi trạng thái của đơn hàng giúp quản lý theo dõi thời gian giao dịch thực tế.", meta: "prisma/schema.prisma : L55-L63", details: "• <code>id</code> String (Khóa chính)<br>• <code>order_id</code> String<br>• <code>from_status</code> String<br>• <code>to_status</code> String<br>• <code>changed_by</code> String (Nhân viên cập nhật)<br>• <code>changed_at</code> String" },
+        { id: "db-dress-inv", title: "Model: DressInventory", emoji: "👗", desc: "Quản lý kho váy cưới của studio, số lượng, size, và trạng thái hiện tại (có sẵn, đang cho thuê, hỏng hóc).", meta: "prisma/schema.prisma : L65-L76", details: "• <code>id</code> String (Khóa chính)<br>• <code>code</code> String (Mã váy)<br>• <code>name</code> String<br>• <code>status</code> String<br>• <code>size</code> String" },
+        { id: "db-dress-rental", title: "Model: DressRental", emoji: "🛍️", desc: "Lưu trữ thông tin thuê váy cưới, gắn liền với hợp đồng chụp (Order).", meta: "prisma/schema.prisma : L78-L88", details: "• <code>id</code> String (Khóa chính)<br>• <code>dress_id</code> String<br>• <code>order_id</code> String<br>• <code>rented_date</code> String<br>• <code>status</code> String" },
+        { id: "db-task", title: "Model: Task", emoji: "📋", desc: "Lưu công việc nội bộ được phân công cho nhân viên. Có thể tham chiếu đến một Order cụ thể.", meta: "prisma/schema.prisma : L90-L102", details: "• <code>id</code> String (Khóa chính)<br>• <code>title</code> String (Tiêu đề việc)<br>• <code>order_id</code> String? (Khóa ngoại tham chiếu Order)<br>• <code>assigned_to</code> String (ID nhân viên làm)<br>• <code>assigned_by</code> String (ID quản lý giao)<br>• <code>status</code> String ('pending' | 'in_progress' | 'done')<br>• <code>priority</code> String" },
+        { id: "db-task-update", title: "Model: TaskUpdate", emoji: "💬", desc: "Lưu trữ bình luận nghiệp vụ và lịch sử cập nhật công việc từ nhân sự được giao.", meta: "prisma/schema.prisma : L104-L111", details: "• <code>id</code> String (Khóa chính)<br>• <code>task_id</code> String<br>• <code>updated_by</code> String (Người cập nhật)<br>• <code>status_changed_to</code> String? (Trạng thái chuyển tiếp)<br>• <code>comment</code> String" },
+        { id: "db-okr", title: "Model: Objective & KeyResult", emoji: "🏆", desc: "Lưu trữ mục tiêu OKR và KPIs chỉ số tiến độ theo phần trăm hoàn thành chỉ tiêu doanh số/nhiệm vụ.", meta: "prisma/schema.prisma : L113-L144", details: "• <code>Objective</code> (Mục tiêu chung - Khóa chính)<br>• <code>ObjectiveKeyResult</code> (Tiến độ %, department phụ trách)<br>• <code>ObjectiveProgressUpdate</code> (Lịch sử % tiến độ thay đổi)" },
+        { id: "db-chat", title: "Model: ChatMessage", emoji: "💬", desc: "Bảng lưu lịch sử nội dung tin nhắn chat nội bộ giữa các tài khoản nhân sự.", meta: "prisma/schema.prisma : L158-L164", details: "• <code>id</code> String (Khóa chính)<br>• <code>sender_id</code> String (Người gửi)<br>• <code>receiver_id</code> String? (Null nếu chat nhóm chung)<br>• <code>content</code> String" },
+        { id: "db-notif", title: "Model: Notification", emoji: "🔔", desc: "Thông báo hệ thống đẩy đến tài khoản nhân sự khi có công việc mới hoặc cập nhật lịch trình.", meta: "prisma/schema.prisma : L146-L156", details: "• <code>id</code> String (Khóa chính)<br>• <code>sender_id</code> String<br>• <code>receiver_id</code> String?<br>• <code>title</code> String<br>• <code>content</code> String<br>• <code>is_read_by</code> String[] (Mảng ID tài khoản đã xem)" },
+        { id: "db-settings", title: "Model: StudioSettings", emoji: "⚙️", desc: "Thông số cấu hình chung duy nhất (Singleton) của studio như tên, hotline, địa chỉ, lịch backup.", meta: "prisma/schema.prisma : L166-L183", details: "• <code>id</code> String (Mặc định = 'singleton')<br>• <code>name</code> String (Tên Studio)<br>• <code>phone</code> String<br>• <code>email</code> String<br>• <code>mimo_api_key</code> String<br>• <code>gemini_api_key</code> String" },
+        { id: "db-backup", title: "Model: DatabaseBackup", emoji: "💾", desc: "Bảng nhật ký lưu trữ thông tin file backup vật lý của database được tạo trên ổ đĩa.", meta: "prisma/schema.prisma : L185-L192", details: "• <code>id</code> String (Khóa chính)<br>• <code>filename</code> String (Tên file backup trên máy chủ)<br>• <code>size_bytes</code> Float (Dung lượng file)<br>• <code>trigger_type</code> String ('manual' | 'scheduled')<br>• <code>status</code> String ('success' | 'failed')" }
+      ],
+      sync: [
+        { id: "sync-mem", title: "1. RAM Memory Cache", emoji: "⚡", desc: "Express server nạp dữ liệu từ Database lên bộ nhớ đệm RAM khi khởi động. Các API đọc dữ liệu (GET) truy vấn tức thời từ RAM cache, tối ưu tốc độ phản hồi tối đa (< 1ms).", meta: "src/db_service.ts (LocalDatabase.get)", details: "Khi ứng dụng khởi tạo, phương thức <code>LocalDatabase.initialize()</code> sẽ gọi Prisma để nạp dữ liệu từ PostgreSQL lên biến tĩnh <code>LocalDatabase.data</code> trên bộ nhớ RAM." },
+        { id: "sync-json", title: "2. Ghi Backup File db.json", emoji: "📄", desc: "Mỗi khi có thao tác chỉnh sửa dữ liệu (POST/PUT/DELETE), server Express sẽ ghi đè đồng bộ (Synchronous) xuống tệp tin cục bộ 'db.json' như một phương án dự phòng khẩn cấp.", meta: "src/db_service.ts (LocalDatabase.save)", details: "Sử dụng câu lệnh <code>fs.writeFileSync</code> đồng bộ của Node.js để lưu giữ dữ liệu dự phòng tức thời ngay trên ổ đĩa của máy chủ." },
+        { id: "sync-postgres", title: "3. PostgreSQL Transaction Sync", emoji: "🔄", desc: "Song song với ghi file db.json, Express sẽ đưa thao tác lưu trữ vào hàng đợi (writeQueue) bất đồng bộ xuống PostgreSQL bằng thuật toán đối sánh gia tăng (Reconciliation/Diff-and-Sync) qua giao dịch Prisma, tự động thử lại 3 lần và ghi nhận vào Dead Letter Queue (DLQ) nếu thất bại hoàn toàn. Khởi động hệ thống sẽ chạy đối sánh hai chiều sử dụng quy tắc Last-Write-Wins (LWW) để xử lý xung đột.", meta: "src/db_service.ts (LocalDatabase.syncToPostgres)", details: "Giao dịch <code>prisma.$transaction</code> gọi hàm đối sánh generic <code>reconcileTable()</code> cho từng bảng. Startup chạy <code>reconcileStartup()</code> đối chiếu trường <code>updated_at</code> để thực hiện Last-Write-Wins. Ghi nhận nhật ký xung đột vào <code>db.conflicts.json</code>, ghi lỗi đồng bộ vào <code>db.deadletter.json</code> và cảnh báo thời gian ghi file (nếu > 50ms) hoặc số lượng cache (nếu > 5000 bản ghi)." }
+      ]
+    };
+
+    // --- CONNECTION MAP (Edges) ---
+    const connections = [
+      // Frontend to API
+      { from: "fe-dashboard", to: "api-dashboard" },
+      { from: "fe-leads", to: "api-leads" },
+      { from: "fe-orders", to: "api-orders" },
+      { from: "fe-customers", to: "api-customers" },
+      { from: "fe-tasks", to: "api-tasks" },
+      { from: "fe-okrs", to: "api-okrs" },
+      { from: "fe-chat", to: "api-chat" },
+      { from: "fe-notifications", to: "api-notifications" },
+      { from: "fe-notifications", to: "api-chat" },
+      { from: "fe-staff", to: "api-users" },
+      { from: "fe-staff", to: "api-roles" },
+      { from: "fe-settings", to: "api-settings" },
+      { from: "fe-settings", to: "api-backup" },
+      { from: "fe-settings", to: "api-system" },
+      { from: "fe-ai", to: "api-ai" },
+      { from: "fe-demo", to: "api-demo" },
+      
+      { from: "fe-mobile", to: "api-auth" },
+      { from: "fe-mobile", to: "api-tasks" },
+      { from: "fe-mobile", to: "api-chat" },
+      { from: "fe-mobile", to: "api-notifications" },
+      { from: "fe-mobile", to: "api-dashboard" },
+      { from: "fe-mobile", to: "api-leads" },
+      { from: "fe-mobile", to: "api-orders" },
+      { from: "fe-mobile", to: "api-customers" },
+
+      // API to Database
+      { from: "api-auth", to: "db-user" },
+      { from: "api-auth", to: "db-role" },
+      { from: "api-users", to: "db-user" },
+      { from: "api-roles", to: "db-role" },
+      { from: "api-leads", to: "db-lead" },
+      { from: "api-leads", to: "db-customer" },
+      { from: "api-leads", to: "db-order" },
+      { from: "api-orders", to: "db-order" },
+      { from: "api-orders", to: "db-order-history" },
+      { from: "api-customers", to: "db-customer" },
+      { from: "api-tasks", to: "db-task" },
+      { from: "api-tasks", to: "db-task-update" },
+      { from: "api-okrs", to: "db-okr" },
+      { from: "api-chat", to: "db-chat" },
+      { from: "api-notifications", to: "db-notif" },
+      { from: "api-settings", to: "db-settings" },
+      { from: "api-backup", to: "db-backup" },
+
+      // Database to Sync
+      { from: "db-user", to: "sync-mem" },
+      { from: "db-role", to: "sync-mem" },
+      { from: "db-lead", to: "sync-mem" },
+      { from: "db-customer", to: "sync-mem" },
+      { from: "db-order", to: "sync-mem" },
+      { from: "db-dress-inv", to: "sync-mem" },
+      { from: "db-dress-rental", to: "sync-mem" },
+      { from: "db-task", to: "sync-mem" },
+      { from: "db-okr", to: "sync-mem" },
+      { from: "db-chat", to: "sync-mem" },
+      { from: "db-notif", to: "sync-mem" },
+      { from: "db-settings", to: "sync-mem" },
+      { from: "db-backup", to: "sync-mem" },
+
+      // Sync inner flow
+      { from: "sync-mem", to: "sync-json" },
+      { from: "sync-mem", to: "sync-postgres" }
+    ];
+
+    // --- INTEGRATED BUSINESS FLOWS ---
+    const flowsData = {
+      "crm-won": {
+        title: "Quy trình chốt sale CRM ➜ Tự động tạo Hợp Đồng & Khách Hàng",
+        color: "#ec4899", // pink
+        steps: [
+          { node: "fe-leads", text: "1. Nhân viên sales chốt Lead thành công chuyển sang trạng thái 'Won'" },
+          { node: "api-leads", text: "2. Client gọi API Express PUT /api/leads/:id gửi dữ liệu chốt" },
+          { node: "db-lead", text: "3. CSDL cập nhật trạng thái cơ hội Lead thành 'Won'" },
+          { node: "db-customer", text: "4. Hệ thống kiểm tra số điện thoại, tự động tạo tài khoản Customer mới" },
+          { node: "db-order", text: "5. Tự động khởi tạo hợp đồng Order mới điền sẵn thông tin gói chụp đã chốt" },
+          { node: "db-order-history", text: "6. Tạo lịch sử trạng thái ban đầu là 'new' cho hợp đồng vừa tạo" },
+          { node: "db-notif", text: "7. Đẩy thông báo hệ thống thông tin đơn hàng mới đến toàn studio" },
+          { node: "sync-mem", text: "8. Đồng bộ thay đổi tức thời vào bộ nhớ đệm RAM cache" },
+          { node: "sync-json", text: "9. Ghi đè đồng bộ backup tệp db.json tại máy chủ" },
+          { node: "sync-postgres", text: "10. Xếp hàng đẩy giao dịch cập nhật xuống cơ sở dữ liệu PostgreSQL" }
+        ]
+      },
+      "task-assign": {
+        title: "Quy trình phân công công việc ➜ Cập nhật tiến trình & Bình luận",
+        color: "#06b6d4", // cyan
+        steps: [
+          { node: "fe-tasks", text: "1. Quản lý khởi tạo và giao nhiệm vụ mới trên giao diện Tasks" },
+          { node: "api-tasks", text: "2. Gửi request POST /api/tasks truyền thông tin nhiệm vụ" },
+          { node: "db-task", text: "3. Lưu thông tin Task vào bảng, liên kết với hợp đồng Order chụp cụ thể" },
+          { node: "db-notif", text: "4. Gửi thông báo đến tài khoản nhân sự được phân công phụ trách" },
+          { node: "fe-mobile", text: "5. Nhân viên nhận việc, kiểm tra lịch chụp trên Mobile App di động" },
+          { node: "api-tasks", text: "6. Nhân viên gửi phản hồi tiến độ qua API POST /api/tasks/:id/updates" },
+          { node: "db-task-update", text: "7. Ghi nhận log bình luận công việc và trạng thái tiến độ mới" },
+          { node: "sync-mem", text: "8. Cập nhật dữ liệu tức thời trên bộ nhớ đệm RAM của Express" },
+          { node: "sync-postgres", text: "9. Đồng bộ giao dịch an toàn xuống database PostgreSQL đám mây" }
+        ]
+      },
+      "okr-progress": {
+        title: "Thiết lập mục tiêu OKRs ➜ Đánh giá và cập nhật tiến độ KPIs",
+        color: "#10b981", // emerald
+        steps: [
+          { node: "fe-okrs", text: "1. Quản lý cấu hình mục tiêu quý của phòng ban trên giao diện OKRs" },
+          { node: "api-okrs", text: "2. Gọi API Express tạo mới Objective mục tiêu kinh doanh" },
+          { node: "db-okr", text: "3. CSDL lưu trữ mục tiêu Objective và chỉ số Key Result tương ứng" },
+          { node: "api-okrs", text: "4. Cập nhật % tiến độ Key Result qua API POST /key-results/:id/progress" },
+          { node: "sync-mem", text: "5. RAM nạp dữ liệu mới, tính toán lại tỷ lệ hoàn thành trung bình" },
+          { node: "fe-dashboard", text: "6. Màn hình Dashboard tổng quan cập nhật biểu đồ tiến độ OKR tức thời" }
+        ]
+      },
+      "db-backup": {
+        title: "Quy trình sao lưu dữ liệu tự động/thủ công ➜ Khôi phục dữ liệu",
+        color: "#f59e0b", // amber
+        steps: [
+          { node: "fe-settings", text: "1. Quản trị viên kích hoạt chức năng 'Tạo bản sao lưu' trong cấu hình" },
+          { node: "api-backup", text: "2. Server tiếp nhận lệnh, gọi API POST /api/database/backups/create" },
+          { node: "sync-json", text: "3. Express đọc tệp db.json hiện tại, tạo bản sao lưu trong thư mục backups/" },
+          { node: "db-backup", text: "4. Ghi nhận tệp tin sao lưu (tên file, dung lượng) vào bảng DatabaseBackup" },
+          { node: "api-backup", text: "5. Khi khôi phục: Gọi API POST /api/database/backups/restore/:id" },
+          { node: "sync-postgres", text: "6. Server đọc file backup ghi đè db.json và thực hiện đối sánh đồng bộ gia tăng (Reconciliation) để cập nhật an toàn xuống PostgreSQL" }
+        ]
+      }
+    };
+
+    // --- DOM STUFFS & INTERACTIVITY ---
+    let scale = 1.0;
+    let translateX = 40;
+    let translateY = 40;
+    let isDragging = false;
+    let startX, startY;
+    let currentFlow = null;
+    let currentActiveStep = 0;
+    let searchTerm = "";
+    let activeHoverNode = null;
+
+    const viewport = document.getElementById('viewport');
+    const content = document.getElementById('content');
+    const sidebar = document.getElementById('sidebar');
+    const searchInput = document.getElementById('search-input');
+    const clearSearchBtn = document.getElementById('clear-search');
+    const flowSelect = document.getElementById('flow-select');
+    const flowPanel = document.getElementById('flow-steps-panel');
+    const flowTitle = document.getElementById('flow-title');
+    const flowStepsList = document.getElementById('flow-steps-list');
+
+    // Render Nodes in UI Columns
+    function renderMindmap() {
+      // 1. Render Frontend Group
+      const feContainer = document.getElementById('fe-group');
+      feContainer.innerHTML = nodesData.frontend.map(node => `
+        <div id="${node.id}" class="node-card glow-fe" onclick="showNodeDetails('${node.id}', 'frontend')">
+          <div class="card-header">
+            <span class="card-title-group">
+              <span class="node-emoji">${node.emoji}</span>
+              <span class="node-icon-placeholder" data-lucide="${node.icon || 'monitor'}"></span>
+              ${node.title}
+            </span>
+            <span class="card-badge">VIEW</span>
+          </div>
+          <p>${node.desc}</p>
+          <div class="card-meta">${node.meta}</div>
+        </div>
+      `).join('');
+
+      // 2. Render API Group
+      const apiContainer = document.getElementById('api-group');
+      apiContainer.innerHTML = nodesData.api.map(node => `
+        <div id="${node.id}" class="node-card glow-api" onclick="showNodeDetails('${node.id}', 'api')">
+          <div class="card-header">
+            <span class="card-title-group">
+              <span class="node-emoji">🔌</span>
+              <span class="node-icon-placeholder" data-lucide="route"></span>
+              ${node.title}
+            </span>
+            <span class="card-badge">${node.method}</span>
+          </div>
+          <p>${node.desc}</p>
+          <div class="card-meta">${node.path}</div>
+        </div>
+      `).join('');
+
+      // 3. Render Database Group
+      const dbContainer = document.getElementById('db-group');
+      dbContainer.innerHTML = nodesData.database.map(node => `
+        <div id="${node.id}" class="node-card glow-db" onclick="showNodeDetails('${node.id}', 'database')">
+          <div class="card-header">
+            <span class="card-title-group">
+              <span class="node-emoji">${node.emoji}</span>
+              <span class="node-icon-placeholder" data-lucide="${node.icon || 'database'}"></span>
+              ${node.title}
+            </span>
+            <span class="card-badge">MODEL</span>
+          </div>
+          <p>${node.desc}</p>
+          <div class="card-meta">${node.meta}</div>
+        </div>
+      `).join('');
+
+      // 4. Render Sync Group
+      const syncContainer = document.getElementById('sync-group');
+      syncContainer.innerHTML = nodesData.sync.map(node => `
+        <div id="${node.id}" class="node-card glow-sync" onclick="showNodeDetails('${node.id}', 'sync')">
+          <div class="card-header">
+            <span class="card-title-group">
+              <span class="node-emoji">${node.emoji}</span>
+              <span class="node-icon-placeholder" data-lucide="${node.icon || 'refresh-cw'}"></span>
+              ${node.title}
+            </span>
+            <span class="card-badge">SYNC</span>
+          </div>
+          <p>${node.desc}</p>
+          <div class="card-meta">${node.meta}</div>
+        </div>
+      `).join('');
+
+      // Optional: Initialize Lucide icons if loaded from CDN
+      if (typeof lucide !== 'undefined') {
+        try {
+          lucide.createIcons();
+          // Hide emoji icons if Lucide is loaded to prevent duplicates
+          document.querySelectorAll('.node-emoji').forEach(el => el.style.display = 'none');
+        } catch (err) {
+          console.warn("Failed to render Lucide icons, falling back to offline emojis.", err);
+          document.querySelectorAll('.node-icon-placeholder').forEach(el => el.style.display = 'none');
+        }
+      } else {
+        document.querySelectorAll('.node-icon-placeholder').forEach(el => el.style.display = 'none');
+      }
+
+      setTimeout(drawConnections, 150);
+    }
+
+    // Draw SVG Connector Lines
+    function drawConnections() {
+      const svg = document.getElementById('connector-svg');
+      svg.innerHTML = '';
+      const contentRect = content.getBoundingClientRect();
+
+      connections.forEach(conn => {
+        const fromEl = document.getElementById(conn.from);
+        const toEl = document.getElementById(conn.to);
+        if (!fromEl || !toEl) return;
+
+        // Skip if either card is hidden
+        if (fromEl.offsetParent === null || toEl.offsetParent === null) return;
+
+        const fromRect = fromEl.getBoundingClientRect();
+        const toRect = toEl.getBoundingClientRect();
+
+        // Coordinates calculations relative to zoom container
+        const x1 = (fromRect.right - contentRect.left) / scale;
+        const y1 = (fromRect.top + fromRect.height / 2 - contentRect.top) / scale;
+
+        const x2 = (toRect.left - contentRect.left) / scale;
+        const y2 = (toRect.top + toRect.height / 2 - contentRect.top) / scale;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const gap = Math.abs(x2 - x1) * 0.45;
+        const ctrlX1 = x1 + gap;
+        const ctrlY1 = y1;
+        const ctrlX2 = x2 - gap;
+        const ctrlY2 = y2;
+
+        path.setAttribute('d', `M ${x1} ${y1} C ${ctrlX1} ${ctrlY1}, ${ctrlX2} ${ctrlY2}, ${x2} ${y2}`);
+
+        // State filter for styling path
+        let isFlowActive = false;
+        if (currentFlow !== null) {
+          const flowSteps = flowsData[currentFlow].steps;
+          for (let i = 0; i < flowSteps.length - 1; i++) {
+            if (flowSteps[i].node === conn.from && flowSteps[i+1].node === conn.to) {
+              isFlowActive = true;
+              break;
+            }
+          }
+        }
+
+        const isHovered = activeHoverNode !== null && (conn.from === activeHoverNode || conn.to === activeHoverNode);
+        const isSearchHighlight = searchTerm !== '' && 
+          (isNodeMatched(conn.from, searchTerm) && isNodeMatched(conn.to, searchTerm));
+
+        let strokeColor = 'rgba(255, 255, 255, 0.08)';
+        let strokeWidth = '1.5';
+        let flowClass = '';
+
+        if (currentFlow !== null) {
+          if (isFlowActive) {
+            strokeColor = flowsData[currentFlow].color;
+            strokeWidth = '3.5';
+            flowClass = 'flowing-line';
+          } else {
+            strokeColor = 'rgba(255, 255, 255, 0.015)';
+          }
+        } else if (activeHoverNode !== null) {
+          if (isHovered) {
+            strokeColor = getNodeCategoryColor(activeHoverNode);
+            strokeWidth = '2.5';
+            flowClass = 'flowing-line';
+          } else {
+            strokeColor = 'rgba(255, 255, 255, 0.02)';
+          }
+        } else if (searchTerm !== '') {
+          if (isSearchHighlight) {
+            strokeColor = '#06b6d4';
+            strokeWidth = '2';
+          } else {
+            strokeColor = 'rgba(255, 255, 255, 0.02)';
+          }
+        }
+
+        path.setAttribute('stroke', strokeColor);
+        path.setAttribute('stroke-width', strokeWidth);
+        path.setAttribute('fill', 'none');
+        
+        if (flowClass) {
+          path.setAttribute('class', flowClass);
+          path.style.setProperty('--flow-color', strokeColor);
+        }
+
+        svg.appendChild(path);
+      });
+    }
+
+    function getNodeCategoryColor(nodeId) {
+      if (nodeId.startsWith('fe-')) return '#ec4899';
+      if (nodeId.startsWith('api-')) return '#06b6d4';
+      if (nodeId.startsWith('db-')) return '#10b981';
+      if (nodeId.startsWith('sync-')) return '#f59e0b';
+      return '#3b82f6';
+    }
+
+    function isNodeMatched(nodeId, term) {
+      const node = findNodeById(nodeId);
+      if (!node) return false;
+      const lowerTerm = term.toLowerCase();
+      return (
+        node.title.toLowerCase().includes(lowerTerm) ||
+        (node.desc && node.desc.toLowerCase().includes(lowerTerm)) ||
+        (node.meta && node.meta.toLowerCase().includes(lowerTerm)) ||
+        (node.path && node.path.toLowerCase().includes(lowerTerm))
+      );
+    }
+
+    function findNodeById(nodeId) {
+      return [...nodesData.frontend, ...nodesData.api, ...nodesData.database, ...nodesData.sync]
+        .find(n => n.id === nodeId);
+    }
+
+    // ZOOM AND PAN IMPLEMENTATION
+    viewport.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.node-card') || e.target.closest('button') || e.target.closest('aside') || e.target.closest('select') || e.target.closest('input')) return;
+      isDragging = true;
+      startX = e.clientX - translateX;
+      startY = e.clientY - translateY;
+      viewport.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      translateX = e.clientX - startX;
+      translateY = e.clientY - startY;
+      applyTransformations();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      viewport.style.cursor = 'grab';
+    });
+
+    viewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = 0.08;
+      const oldScale = scale;
+      if (e.deltaY < 0) {
+        scale = Math.min(scale + zoomFactor, 2.0);
+      } else {
+        scale = Math.max(scale - zoomFactor, 0.45);
+      }
+
+      const rect = viewport.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      translateX = mouseX - (mouseX - translateX) * (scale / oldScale);
+      translateY = mouseY - (mouseY - translateY) * (scale / oldScale);
+
+      applyTransformations();
+    });
+
+    function applyTransformations() {
+      content.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+      drawConnections();
+    }
+
+    // Zoom Buttons click listeners
+    document.getElementById('btn-zoom-in').addEventListener('click', () => {
+      scale = Math.min(scale + 0.15, 2.0);
+      applyTransformations();
+    });
+    document.getElementById('btn-zoom-out').addEventListener('click', () => {
+      scale = Math.max(scale - 0.15, 0.45);
+      applyTransformations();
+    });
+    document.getElementById('btn-zoom-reset').addEventListener('click', () => {
+      scale = 1.0;
+      translateX = 40;
+      translateY = 40;
+      applyTransformations();
+    });
+
+    // SEARCH FILTER
+    searchInput.addEventListener('input', (e) => {
+      searchTerm = e.target.value.trim();
+      if (searchTerm !== '') {
+        clearSearchBtn.style.display = 'block';
+        highlightSearchMatches();
+      } else {
+        clearSearchBtn.style.display = 'none';
+        resetSearchHighlights();
+      }
+    });
+
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = "";
+      searchTerm = "";
+      clearSearchBtn.style.display = 'none';
+      resetSearchHighlights();
+    });
+
+    function highlightSearchMatches() {
+      document.querySelectorAll('.node-card').forEach(card => {
+        card.style.opacity = '0.12';
+        card.classList.remove('pulse-node');
+      });
+
+      const allNodes = [...nodesData.frontend, ...nodesData.api, ...nodesData.database, ...nodesData.sync];
+      allNodes.forEach(node => {
+        if (isNodeMatched(node.id, searchTerm)) {
+          const card = document.getElementById(node.id);
+          if (card) {
+            card.style.opacity = '1';
+            card.style.setProperty('--pulse-color', '#06b6d4');
+            card.classList.add('pulse-node');
+          }
+        }
+      });
+      drawConnections();
+    }
+
+    function resetSearchHighlights() {
+      document.querySelectorAll('.node-card').forEach(card => {
+        card.style.opacity = '1';
+        card.classList.remove('pulse-node');
+      });
+      drawConnections();
+    }
+
+    // SIDEBAR CONFIGURATION
+    function showNodeDetails(nodeId, category) {
+      const node = findNodeById(nodeId);
+      if (!node) return;
+
+      // Card highlight ring
+      document.querySelectorAll('.node-card').forEach(card => {
+        card.classList.remove('selected-card');
+      });
+      const cardEl = document.getElementById(nodeId);
+      if (cardEl) {
+        cardEl.classList.add('selected-card');
+      }
+
+      // Sidebar elements
+      const sideIconBox = document.getElementById('side-icon-box');
+      const sideTitle = document.getElementById('side-title');
+      const sideBadge = document.getElementById('side-badge');
+      const sideDesc = document.getElementById('side-desc');
+      const sideMetaSection = document.getElementById('side-meta-section');
+      const sideMetaContent = document.getElementById('side-meta-content');
+      const sideDetailsSection = document.getElementById('side-details-section');
+      const sideDetailsTitle = document.getElementById('side-details-title');
+      const sideDetailsContent = document.getElementById('side-details-content');
+
+      let catText = "";
+      let catBg = "";
+      let catColor = "";
+      let sideEmoji = "❓";
+
+      if (category === 'frontend') {
+        catText = "Client View Component";
+        catBg = "rgba(236, 72, 153, 0.15)";
+        catColor = "var(--color-fe)";
+        sideEmoji = node.emoji || "💻";
+        sideIconBox.style.background = "rgba(236, 72, 153, 0.15)";
+        sideIconBox.style.color = "var(--color-fe)";
+        
+        sideMetaSection.querySelector('.side-section-title').textContent = "ĐƯỜNG DẪN TỆP TIN (FILE PATH)";
+        sideMetaContent.innerHTML = `<code>src/components/${node.meta}</code>`;
+        
+        sideDetailsSection.style.display = 'block';
+        sideDetailsTitle.textContent = "CÁC CHỨC NĂNG CHÍNH";
+        sideDetailsContent.innerHTML = node.details;
+      } 
+      else if (category === 'api') {
+        catText = `Express API Router [${node.method}]`;
+        catBg = "rgba(6, 182, 212, 0.15)";
+        catColor = "var(--color-api)";
+        sideEmoji = "🔌";
+        sideIconBox.style.background = "rgba(6, 182, 212, 0.15)";
+        sideIconBox.style.color = "var(--color-api)";
+
+        sideMetaSection.querySelector('.side-section-title').textContent = "ĐỊNH NGHĨA ROUTER (EXPRESS)";
+        sideMetaContent.innerHTML = `<code>server.ts</code> (Dòng định nghĩa: <code>${node.meta.split(':')[1]?.trim() || ''}</code>)`;
+        
+        sideDetailsSection.style.display = 'block';
+        sideDetailsTitle.textContent = "DANH SÁCH ENDPOINTS CHI TIẾT";
+        sideDetailsContent.innerHTML = node.details;
+      } 
+      else if (category === 'database') {
+        catText = "Database Model (Prisma)";
+        catBg = "rgba(16, 185, 129, 0.15)";
+        catColor = "var(--color-db)";
+        sideEmoji = node.emoji || "📂";
+        sideIconBox.style.background = "rgba(16, 185, 129, 0.15)";
+        sideIconBox.style.color = "var(--color-db)";
+
+        sideMetaSection.querySelector('.side-section-title').textContent = "SCHEMA PRISMA DEFINITION";
+        sideMetaContent.innerHTML = `<code>prisma/schema.prisma</code> (Dòng: <code>${node.meta.split(':')[1]?.trim() || ''}</code>)`;
+        
+        sideDetailsSection.style.display = 'block';
+        sideDetailsTitle.textContent = "CẤU TRÚC TRƯỜNG DỮ LIỆU CỐT LÕI";
+        sideDetailsContent.innerHTML = node.details;
+      } 
+      else if (category === 'sync') {
+        catText = "Sync Cache Architecture";
+        catBg = "rgba(245, 158, 11, 0.15)";
+        catColor = "var(--color-sync)";
+        sideEmoji = node.emoji || "🔄";
+        sideIconBox.style.background = "rgba(245, 158, 11, 0.15)";
+        sideIconBox.style.color = "var(--color-sync)";
+
+        sideMetaSection.querySelector('.side-section-title').textContent = "VỊ TRÍ MÃ NGUỒN XỬ LÝ (METHOD)";
+        sideMetaContent.innerHTML = `<code>${node.meta}</code>`;
+        
+        sideDetailsSection.style.display = 'block';
+        sideDetailsTitle.textContent = "Ý NGHĨA KỸ THUẬT";
+        sideDetailsContent.innerHTML = node.details;
+      }
+
+      sideIconBox.textContent = sideEmoji;
+      sideTitle.textContent = node.title;
+      sideBadge.textContent = catText;
+      sideBadge.style.backgroundColor = catBg;
+      sideBadge.style.color = catColor;
+      sideBadge.style.border = `1px solid ${catColor}30`;
+      sideDesc.innerHTML = node.desc;
+
+      // Render relationships links
+      const fromList = document.getElementById('side-conn-from');
+      const toList = document.getElementById('side-conn-to');
+
+      const incoming = connections.filter(c => c.to === nodeId).map(c => findNodeById(c.from)).filter(Boolean);
+      const outgoing = connections.filter(c => c.from === nodeId).map(c => findNodeById(c.to)).filter(Boolean);
+
+      fromList.innerHTML = incoming.length > 0 
+        ? incoming.map(n => `<li class="side-conn-item" onclick="showNodeDetails('${n.id}', '${getNodeCategory(n.id)}')">⬅️ ${n.title}</li>`).join('')
+        : '<li style="font-style:italic; color:var(--text-muted)">Không có</li>';
+
+      toList.innerHTML = outgoing.length > 0 
+        ? outgoing.map(n => `<li class="side-conn-item" onclick="showNodeDetails('${n.id}', '${getNodeCategory(n.id)}')">➡️ ${n.title}</li>`).join('')
+        : '<li style="font-style:italic; color:var(--text-muted)">Không có</li>';
+
+      sidebar.classList.add('open');
+      
+      activeHoverNode = nodeId;
+      drawConnections();
+    }
+
+    function getNodeCategory(nodeId) {
+      if (nodeId.startsWith('fe-')) return 'frontend';
+      if (nodeId.startsWith('api-')) return 'api';
+      if (nodeId.startsWith('db-')) return 'database';
+      if (nodeId.startsWith('sync-')) return 'sync';
+      return '';
+    }
+
+    // Close Sidebar
+    document.getElementById('close-sidebar').addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      document.querySelectorAll('.node-card').forEach(card => {
+        card.classList.remove('selected-card');
+      });
+      activeHoverNode = null;
+      drawConnections();
+    });
+
+    // FLOW SELECTION SYSTEM
+    flowSelect.addEventListener('change', (e) => {
+      const selected = e.target.value;
+      if (selected !== 'none') {
+        currentFlow = selected;
+        currentActiveStep = 0;
+        activateFlow(selected);
+      } else {
+        currentFlow = null;
+        deactivateFlow();
+      }
+    });
+
+    document.getElementById('close-flow').addEventListener('click', () => {
+      flowSelect.value = "none";
+      currentFlow = null;
+      deactivateFlow();
+    });
+
+    function activateFlow(flowId) {
+      const flow = flowsData[flowId];
+      if (!flow) return;
+
+      // Close search
+      searchInput.value = "";
+      searchTerm = "";
+      clearSearchBtn.style.display = 'none';
+
+      // Show bottom steps bar
+      flowPanel.classList.add('open');
+      flowTitle.textContent = flow.title;
+      flowTitle.style.color = flow.color;
+
+      // Populate steps list
+      flowStepsList.innerHTML = flow.steps.map((step, idx) => `
+        <div id="step-card-${idx}" class="flow-step-card" onclick="focusFlowStep(${idx})">
+          <div class="flow-step-meta">
+            <span>BƯỚC ${idx + 1}</span>
+            <span class="badge" style="background-color:${flow.color}20; color:${flow.color}; border:1px solid ${flow.color}35">
+              ${getNodeLabel(step.node)}
+            </span>
+          </div>
+          <div class="flow-step-text">${step.text}</div>
+        </div>
+      `).join('');
+
+      focusFlowStep(0);
+    }
+
+    function getNodeLabel(nodeId) {
+      if (nodeId.startsWith('fe-')) return 'UI View';
+      if (nodeId.startsWith('api-')) return 'Express API';
+      if (nodeId.startsWith('db-')) return 'Database';
+      if (nodeId.startsWith('sync-')) return 'Sync DB';
+      return '';
+    }
+
+    function focusFlowStep(stepIndex) {
+      currentActiveStep = stepIndex;
+      const flow = flowsData[currentFlow];
+      const step = flow.steps[stepIndex];
+
+      // Highlight step card
+      document.querySelectorAll('.flow-step-card').forEach((card, idx) => {
+        if (idx === stepIndex) {
+          card.style.borderColor = flow.color;
+          card.style.backgroundColor = 'rgba(30, 41, 59, 0.9)';
+          card.style.boxShadow = `0 0 10px ${flow.color}25`;
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        } else {
+          card.style.borderColor = 'var(--border-color)';
+          card.style.backgroundColor = 'rgba(15, 23, 42, 0.8)';
+          card.style.boxShadow = 'none';
+        }
+      });
+
+      // Highlight node card & dim others
+      const activeFlowNodes = flow.steps.map(s => s.node);
+      document.querySelectorAll('.node-card').forEach(card => {
+        if (activeFlowNodes.includes(card.id)) {
+          card.style.opacity = '0.9';
+          card.classList.remove('pulse-node');
+          
+          if (card.id === step.node) {
+            card.style.opacity = '1';
+            card.style.setProperty('--pulse-color', flow.color);
+            card.classList.add('pulse-node');
+            
+            // Auto focus and slide details
+            centerViewportOnNode(card.id);
+            showNodeDetails(card.id, getNodeCategory(card.id));
+          }
+        } else {
+          card.style.opacity = '0.05';
+          card.classList.remove('pulse-node');
+        }
+      });
+
+      drawConnections();
+    }
+
+    function centerViewportOnNode(nodeId) {
+      const nodeEl = document.getElementById(nodeId);
+      if (!nodeEl) return;
+      const nodeRect = nodeEl.getBoundingClientRect();
+      const viewportRect = viewport.getBoundingClientRect();
+
+      const scaleCorrection = scale;
+      const contentRect = content.getBoundingClientRect();
+      
+      const relativeNodeX = (nodeRect.left + nodeRect.width/2 - contentRect.left) / scaleCorrection;
+      const relativeNodeY = (nodeRect.top + nodeRect.height/2 - contentRect.top) / scaleCorrection;
+
+      const viewportCenterX = viewportRect.width / 2;
+      const viewportCenterY = viewportRect.height / 2;
+
+      // Center adjustments
+      translateX = viewportCenterX - relativeNodeX * scaleCorrection;
+      translateY = viewportCenterY - relativeNodeY * scaleCorrection;
+
+      applyTransformations();
+    }
+
+    function deactivateFlow() {
+      flowPanel.classList.remove('open');
+      sidebar.classList.remove('open');
+      activeHoverNode = null;
+      resetSearchHighlights();
+    }
+
+    // Resize redraw
+    window.addEventListener('resize', drawConnections);
+
+    // Initial render
+    window.onload = () => {
+      renderMindmap();
+      // Center column layout nicely in screen viewport
+      translateX = (window.innerWidth - 2100 * scale) / 2 + 100;
+      translateY = 120;
+      applyTransformations();
+    };
+  </script>
+</body>
+</html>

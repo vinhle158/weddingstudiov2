@@ -465,6 +465,7 @@ export default function Leads({ userRole }: LeadsProps) {
           {/* Add lead (Only Sales/Admin) */}
           <button 
             onClick={() => setIsCreateModalOpen(true)}
+            data-demo-btn="add-lead"
             className="flex items-center gap-1 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs hover:shadow-md cursor-pointer ml-auto md:ml-0"
           >
             <Plus className="w-4 h-4" />

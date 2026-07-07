@@ -1,6 +1,49 @@
 # 📝 NHẬT KÝ ĐIỀU CHỈNH & CẢI TIẾN DỰ ÁN (STUDIO V2)
-**Ngày thực hiện:** 06/07/2026  
+
+## 📅 Ngày thực hiện: 07/07/2026  
+**Người thực hiện:** Lập trình viên AI (Antigravity)
+
+Hôm nay, hệ thống đã hoàn tất đợt nâng cấp kỹ thuật vô cùng quan trọng bao gồm: xây dựng hệ thống chatbot tra cứu CRM tự động (không dùng LLM bên ngoài để đảm bảo bảo mật và tốc độ cao), gia cố toàn diện cơ chế đồng bộ dữ liệu giữa bộ nhớ đệm JSON và PostgreSQL để chống mất mát dữ liệu, và thiết lập cấu hình container Docker hóa giúp tối ưu triển khai sản phẩm.
+
+Dưới đây là chi tiết các thay đổi bằng ngôn ngữ dễ hiểu:
+
+---
+
+### 💬 1. Hệ thống Chatbot CRM Tra cứu Thông tin Tự động (Không sử dụng LLM bên ngoài)
+Đã thiết kế và xây dựng thành công một trợ lý ảo chatbot chạy trực tiếp trên máy chủ của Studio (Local/Non-LLM), giúp nhân viên trò chuyện bằng tiếng Việt tự nhiên để truy xuất nhanh cơ sở dữ liệu:
+* **Hỗ trợ 13+ ý định tra cứu (Intents):** Tra cứu thông tin chi tiết khách hàng, thống kê doanh số tổng quan, liệt kê lịch chụp ảnh, kiểm tra tiến độ các công việc trong ngày, danh sách mục tiêu OKR, kiểm tra khối lượng công việc của từng nhân viên, và liệt kê các lý do chốt đơn thành công/thất bại.
+* **Cơ chế hoạt động an toàn & tin cậy:**
+  * **Chuẩn hóa & Tách từ tiếng Việt:** Tự động loại bỏ dấu, viết thường, sửa viết tắt, và nhận diện chính xác các từ khóa dài nhất trước (longest-match).
+  * **Trích xuất tham số thông minh:** Tự động phát hiện số điện thoại, mã hợp đồng (ví dụ: `OD1001`), ngày tháng cụ thể (`DD/MM/YYYY`) hoặc khoảng thời gian tương đối ("hôm nay", "ngày mai", "tuần này", "tuần sau").
+  * **Cấu hình động (Config-driven):** Từ điển cụm từ, ý niệm nghiệp vụ (Business Concepts), và cấu trúc ánh xạ SQL được lưu trữ trong file cấu hình `config/business_nlp_config.json`, giúp mở rộng tính năng dễ dàng bằng cách thêm cấu hình mà không cần sửa mã nguồn gốc.
+  * **Tìm kiếm thông tin chính xác:** Chuyển đổi trực tiếp các câu hỏi tự nhiên thành câu lệnh truy vấn cơ sở dữ liệu Prisma an toàn (chống tấn công SQL Injection).
+  * **Giao diện Trò chuyện Đẹp mắt:** Nhúng bong bóng Chat Widget (`src/components/ChatWidget.tsx`) mượt mà ở góc dưới cùng bên phải màn hình quản trị, hỗ trợ tự cuộn, hiển thị trạng thái đang xử lý, và tự động phản hồi lại người dùng kèm mã định danh truy vết (`Trace ID`) để dễ dàng gỡ lỗi khi có vấn đề.
+
+---
+
+### 🛡️ 2. Gia cố Toàn diện Cơ chế Đồng bộ Dữ liệu (RAM Cache ⇄ JSON File ⇄ PostgreSQL)
+Để triệt tiêu hoàn toàn nguy cơ mất mát hoặc sai lệch số liệu khi lưu trữ song song giữa file JSON và cơ sở dữ liệu Postgres:
+* **Hộp thư lỗi Dead Letter Queue:** Thiết lập file `db.deadletter.json` tự động lưu lại các tác vụ ghi dữ liệu bị lỗi sau khi đã tự động thử lại 3 lần thất bại (Exponential Backoff). Hệ thống sẽ phát cảnh báo cấp độ cao `ERROR` lên log máy chủ, giúp quản trị viên dễ dàng phát hiện và xử lý thủ công, tránh mất mát dữ liệu mà không rõ nguyên nhân.
+* **Đối chiếu nội dung sâu (Reconciliation):** Nâng cấp cơ chế đồng bộ lúc khởi động máy chủ. Không chỉ so sánh số lượng bản ghi đơn giản, hệ thống giờ đây so sánh cột thời gian cập nhật (`updatedAt`) của từng bản ghi để phát hiện lệch nội dung (ví dụ: đơn hàng bị sửa trực tiếp trên database).
+* **Nguyên tắc giải quyết xung đột Last-Write-Wins:** Khi có xung đột dữ liệu giữa file JSON và Postgres, hệ thống sẽ ưu tiên giữ lại bản ghi có thời gian `updatedAt` mới nhất, ghi đè dữ liệu cũ hơn và lưu lịch sử xung đột để kiểm tra lại khi cần.
+* **Đo lường hiệu năng ghi ghi (Performance Monitoring):** Tự động đo đếm thời gian thực thi của tác vụ đồng bộ liên tục (`Atomic Tick`). Nếu quá trình ghi đè file JSON kéo dài trên 50ms, hệ thống sẽ log cảnh báo để admin cân nhắc nâng cấp phần cứng hoặc lược bỏ lớp JSON trung gian.
+
+---
+
+### 🐳 3. Đóng gói Ứng dụng với Docker hóa (Containerization)
+Để đảm bảo ứng dụng chạy đồng bộ trên mọi môi trường và cài đặt lên máy chủ khách hàng chỉ với 1 cú click:
+* **Dockerfile & docker-compose:** Viết các file cấu hình Docker giúp tự động cài đặt môi trường chạy NodeJS, Prisma Client, và xây dựng bản build tối ưu cho môi trường sản xuất (Production).
+* **Cấu hình mạng an toàn:** Ánh xạ cổng ứng dụng `3005` (đồng bộ với file cấu hình `.env`) và cổng cơ sở dữ liệu PostgreSQL `5433` (máy chủ ngoài) sang `5432` (bên trong container).
+* **Kịch bản chạy tự động cực nhanh:**
+  * `docker_run_local.bat`: Khởi động nhanh dự án ở môi trường cục bộ để lập trình viên kiểm thử nóng.
+  * `docker_push_hub.bat`: Tự động đóng gói bản build, đặt tag phiên bản (`vinhle158/studiov2-app:latest`) và đẩy lên kho lưu trữ trực tuyến Docker Hub.
+  * `docker_update_server.sh`: Script chạy trên VPS Linux của khách hàng để tự động tải bản build mới từ Docker Hub về và cập nhật hệ thống trong vòng 2 giây mà không cần biên dịch lại mã nguồn tại máy chủ.
+
+---
+
+## 📅 Ngày thực hiện: 06/07/2026  
 **Người thực hiện:** Lập trình viên AI (Antigravity & MiMo)
+
 
 Hôm nay là một ngày làm việc với khối lượng cải tiến rất lớn (hơn 9.000 dòng code được thêm mới). Dự án đã được nâng cấp từ một bản thử nghiệm cơ bản thành một ứng dụng quản lý studio cưới hoàn chỉnh, chạy được trên cả máy tính lẫn điện thoại di động và sẵn sàng để mang đi triển khai cho khách hàng.
 

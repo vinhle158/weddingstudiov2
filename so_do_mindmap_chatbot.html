@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Bridal - Sơ Đồ & Luồng Hoạt Động Chatbot AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* --- DESIGN SYSTEM --- */
+    :root {
+      --bg-dark: #090d16;
+      --bg-panel: rgba(17, 24, 39, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.2);
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      
+      /* Colors */
+      --cyan: #06b6d4;
+      --pink: #ec4899;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --violet: #8b5cf6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 0),
+        radial-gradient(rgba(99, 102, 241, 0.05) 2px, transparent 0);
+      background-size: 32px 32px, 160px 160px;
+      background-position: 0 0, 10px 10px;
+      color: var(--text-main);
+      font-family: 'Outfit', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      height: 75px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(9, 13, 22, 0.95);
+      backdrop-filter: blur(8px);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-logo {
+      height: 44px;
+      width: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4);
+    }
+
+    .brand-title h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: linear-gradient(to right, #22d3ee, #a78bfa, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-title p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .tab-nav {
+      display: flex;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      padding: 4px;
+      border-radius: 10px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--cyan);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    /* MAIN CONTAINER */
+    .main-container {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* VISUALIZATION PANEL (LEFT 2/3) */
+    .visual-panel {
+      flex: 2;
+      position: relative;
+      overflow: hidden;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tab-content {
+      flex: 1;
+      position: relative;
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* PIPELINE VIEW CSS */
+    .pipeline-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 40px;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    .pipeline-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .pipeline-step {
+      width: 155px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+      z-index: 10;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .pipeline-step::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+
+    .pipeline-step.active {
+      transform: translateY(-8px) scale(1.05);
+      border-color: var(--cyan);
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.35);
+    }
+
+    .pipeline-step.active::after {
+      border-color: rgba(6, 182, 212, 0.4);
+      box-shadow: inset 0 0 12px rgba(6, 182, 212, 0.2);
+    }
+
+    .step-icon {
+      height: 42px;
+      width: 42px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: var(--text-muted);
+      transition: all 0.3s;
+    }
+
+    .pipeline-step.active .step-icon {
+      background: rgba(6, 182, 212, 0.15);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .step-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .step-desc {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* KNOWLEDGE MAP VIEW CSS */
+    .knowledge-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 30px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .knowledge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .concept-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .concept-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+    }
+
+    .concept-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .concept-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--cyan);
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .concept-badge {
+      font-size: 9px;
+      font-weight: 700;
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--cyan);
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .concept-card p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .concept-synonyms {
+      font-size: 10px;
+      font-family: monospace;
+      color: var(--pink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 8px;
+      margin-top: 4px;
+    }
+
+    /* SIMULATOR PANEL (RIGHT 1/3) */
+    .simulator-panel {
+      flex: 1;
+      max-width: 480px;
+      background: rgba(9, 13, 22, 0.85);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .sim-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sim-header h2 {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: 'Space Grotesk', sans-serif;
+      color: var(--cyan);
+    }
+
+    .sim-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .sim-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sim-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Preset Buttons Grid */
+    .presets-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .preset-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12.5px;
+      color: var(--text-main);
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .preset-btn:hover {
+      background: rgba(6, 182, 212, 0.06);
+      border-color: var(--cyan);
+    }
+
+    .preset-btn span.intent-tag {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    .preset-btn:hover span.intent-tag {
+      color: var(--cyan);
+      background: rgba(6, 182, 212, 0.15);
+    }
+
+    /* Trace Details Box */
+    .trace-box {
+      background: #05070c;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .trace-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .trace-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .trace-value {
+      font-size: 12.5px;
+      color: var(--text-main);
+    }
+
+    .trace-value.code-block {
+      font-family: monospace;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: #38bdf8;
+      overflow-x: auto;
+      font-size: 11px;
+      white-space: pre-wrap;
+    }
+
+    .chat-bubble-out {
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+    }
+
+    /* ANIMATING FLOW PACKETS */
+    .flowing-path {
+      stroke-dasharray: 6, 6;
+      animation: svgFlow 1s linear infinite;
+    }
+
+    @keyframes svgFlow {
+      to {
+        stroke-dashoffset: -12;
+      }
+    }
+
+    /* CONCEPT DETAIL SIDEBAR */
+    .sidebar {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 460px;
+      background: rgba(7, 10, 19, 0.98);
+      border-left: 1px solid var(--border-color);
+      z-index: 60;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -15px 0 35px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(16px);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .sidebar-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sidebar-title-group h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--cyan);
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .sidebar-title-group span.badge {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--pink);
+      background: rgba(236, 72, 153, 0.15);
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      display: inline-block;
+      margin-top: 4px;
+    }
+
+    .close-side-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .side-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .side-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .side-value {
+      font-size: 13px;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    .side-value.code-box {
+      font-family: monospace;
+      font-size: 11px;
+      background: #05070c;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      color: #34d399;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    .side-value.phrase-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .phrase-tag {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11.5px;
+      color: #cbd5e1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">🤖</div>
+      <div class="brand-title">
+        <h1>CHATBOT AI PIPELINE & KNOWLEDGE MAP</h1>
+        <p>Kiến trúc Luồng Xử Lý Ngôn Ngữ Tự Nhiên & Bản Đồ Tri Thức 14 Intent (Studio V2)</p>
+      </div>
+    </div>
+
+    <div class="tab-nav">
+      <button id="tab-pipeline" class="tab-btn active">
+        <span>🔄</span> Luồng Xử Lý (Pipeline)
+      </button>
+      <button id="tab-knowledge" class="tab-btn">
+        <span>📂</span> Bản Đồ Tri Thức (14 Intent)
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <div class="main-container">
+    
+    <!-- LEFT PANEL: VISUALIZATION -->
+    <div class="visual-panel">
+      
+      <!-- TAB 1: PIPELINE FLOW -->
+      <div id="content-pipeline" class="tab-content active">
+        <div class="pipeline-container">
+          
+          <!-- SVG Paths with animating flow dots -->
+          <svg class="pipeline-svg">
+            <defs>
+              <linearGradient id="cyan-pink" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#06b6d4" />
+                <stop offset="100%" stop-color="#ec4899" />
+              </linearGradient>
+            </defs>
+            <!-- Connecting lines -->
+            <path id="path1" d="M 120, 200 L 220, 200" stroke="rgba(255,255,255,0.08)" stroke-width="2" fill="none"/>
+            <path id="path2" d="M 320, 200 L 420, 200" stroke="rgba(255,255,255,0.08)" stroke-width="2" fill="none"/>
+            <path id="path3" d="M 520, 200 L 620, 200" stroke="rgba(255,255,255,0.08)" stroke-width="2" fill="none"/>
+            <path id="path4" d="M 720, 200 L 820, 200" stroke="rgba(255,255,255,0.08)" stroke-width="2" fill="none"/>
+            <path id="path5" d="M 920, 200 L 1020, 200" stroke="rgba(255,255,255,0.08)" stroke-width="2" fill="none"/>
+            <path id="path6" d="M 1120, 200 L 1220, 200" stroke="rgba(255,255,255,0.08)" stroke-width="2" fill="none"/>
+
+            <!-- Glowing flowing dashes (drawn dynamically on selection) -->
+            <path id="flow-dash1" d="M 120, 200 L 220, 200" stroke="url(#cyan-pink)" stroke-width="3" fill="none" class="flowing-path" style="display:none;"/>
+            <path id="flow-dash2" d="M 320, 200 L 420, 200" stroke="url(#cyan-pink)" stroke-width="3" fill="none" class="flowing-path" style="display:none;"/>
+            <path id="flow-dash3" d="M 520, 200 L 620, 200" stroke="url(#cyan-pink)" stroke-width="3" fill="none" class="flowing-path" style="display:none;"/>
+            <path id="flow-dash4" d="M 720, 200 L 820, 200" stroke="url(#cyan-pink)" stroke-width="3" fill="none" class="flowing-path" style="display:none;"/>
+            <path id="flow-dash5" d="M 920, 200 L 1020, 200" stroke="url(#cyan-pink)" stroke-width="3" fill="none" class="flowing-path" style="display:none;"/>
+            <path id="flow-dash6" d="M 1120, 200 L 1220, 200" stroke="url(#cyan-pink)" stroke-width="3" fill="none" class="flowing-path" style="display:none;"/>
+          </svg>
+
+          <!-- Step 1: Input -->
+          <div id="step-input" class="pipeline-step">
+            <div class="step-icon">💬</div>
+            <div class="step-title">User Question</div>
+            <div class="step-desc">Câu hỏi tự nhiên của người dùng CRM</div>
+          </div>
+
+          <!-- Step 2: Normalizer -->
+          <div id="step-norm" class="pipeline-step">
+            <div class="step-icon">🔤</div>
+            <div class="step-title">Normalizer</div>
+            <div class="step-desc">Chuẩn hóa chữ thường, xóa dấu, viết tắt</div>
+          </div>
+
+          <!-- Step 3: Classifier -->
+          <div id="step-class" class="pipeline-step">
+            <div class="step-icon">🧠</div>
+            <div class="step-title">NLP Classifier</div>
+            <div class="step-desc">Nhận diện Intent + Chống nhận diện sai tên</div>
+          </div>
+
+          <!-- Step 4: Extractor -->
+          <div id="step-extract" class="pipeline-step">
+            <div class="step-icon">🔍</div>
+            <div class="step-title">Entity Extractor</div>
+            <div class="step-desc">Bóc tách Tên, Ngày, Số lượng, Độ ưu tiên</div>
+          </div>
+
+          <!-- Step 5: Query Builder -->
+          <div id="step-query" class="pipeline-step">
+            <div class="step-icon">🛠️</div>
+            <div class="step-title">Prisma Builder</div>
+            <div class="step-desc">Xây dựng truy vấn an toàn chống SQL injection</div>
+          </div>
+
+          <!-- Step 6: Database -->
+          <div id="step-db" class="pipeline-step">
+            <div class="step-icon">💾</div>
+            <div class="step-title">PostgreSQL</div>
+            <div class="step-desc">Truy xuất dữ liệu nghiệp vụ của Studio</div>
+          </div>
+
+          <!-- Step 7: Templates -->
+          <div id="step-template" class="pipeline-step">
+            <div class="step-icon">📄</div>
+            <div class="step-title">Templates</div>
+            <div class="step-desc">Ghép dữ liệu vào mẫu phản hồi tiếng Việt</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TAB 2: KNOWLEDGE MAP -->
+      <div id="content-knowledge" class="tab-content">
+        <div class="knowledge-container">
+          <div class="sim-label">Hệ thống Tri Thức 14 Intent Nghiệp Vụ Của Studio cưới</div>
+          <div id="knowledge-grid" class="knowledge-grid">
+            <!-- Rendered dynamically in JS -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT PANEL: INTERACTIVE SIMULATOR -->
+    <div class="simulator-panel">
+      <div class="sim-header">
+        <h2>Trình Mô Phỏng (Simulator)</h2>
+        <span style="font-size:16px;">⚡</span>
+      </div>
+
+      <div class="sim-content">
+        
+        <!-- Preset Questions Selection -->
+        <div class="sim-section">
+          <div class="sim-label">Chọn câu hỏi chạy thử nghiệm</div>
+          <div class="presets-grid">
+            <button class="preset-btn" onclick="simulate('công việc nào đang khẩn cấp')">
+              <span>"công việc nào đang khẩn cấp"</span>
+              <span class="intent-tag">TASK_LIST</span>
+            </button>
+            <button class="preset-btn" onclick="simulate('lê thu hà')">
+              <span>"lê thu hà"</span>
+              <span class="intent-tag">CUSTOMER_LIST (Override)</span>
+            </button>
+            <button class="preset-btn" onclick="simulate('lịch chụp ngày mai')">
+              <span>"lịch chụp ngày mai"</span>
+              <span class="intent-tag">SCHEDULE_RANGE</span>
+            </button>
+            <button class="preset-btn" onclick="simulate('tổng quan hoạt động')">
+              <span>"tổng quan hoạt động"</span>
+              <span class="intent-tag">BUSINESS_OVERVIEW</span>
+            </button>
+            <button class="preset-btn" onclick="simulate('tiến độ okr')">
+              <span>"tiến độ okr"</span>
+              <span class="intent-tag">OKR_LIST</span>
+            </button>
+            <button class="preset-btn" onclick="simulate('ai bận nhất')">
+              <span>"ai bận nhất"</span>
+              <span class="intent-tag">STAFF_WORKLOAD</span>
+            </button>
+            <button class="preset-btn" onclick="simulate('cảnh báo vận hành')">
+              <span>"cảnh báo vận hành"</span>
+              <span class="intent-tag">OPERATIONAL_ALERTS</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Simulation Output (Trace Details) -->
+        <div class="sim-section">
+          <div class="sim-label">Nhật ký xử lý chi tiết (Trace Log)</div>
+          <div class="trace-box">
+            
+            <div class="trace-row">
+              <span class="trace-label">Câu hỏi đầu vào</span>
+              <span id="trace-input" class="trace-value">-</span>
+            </div>
+
+            <div class="trace-row">
+              <span class="trace-label">Chuẩn hóa chuỗi (Normalizer)</span>
+              <span id="trace-normalized" class="trace-value code-block">-</span>
+            </div>
+
+            <div class="trace-row">
+              <span class="trace-label">Phân loại Intent (NLU + Override logic)</span>
+              <span id="trace-intent" class="trace-value">-</span>
+            </div>
+
+            <div class="trace-row">
+              <span class="trace-label">Thực thể trích xuất (Entities)</span>
+              <span id="trace-entities" class="trace-value code-block">-</span>
+            </div>
+
+            <div class="trace-row">
+              <span class="trace-label">Truy vấn cơ sở dữ liệu (Prisma Code)</span>
+              <span id="trace-prisma" class="trace-value code-block">-</span>
+            </div>
+
+            <div class="trace-row">
+              <span class="trace-label">Chatbot trả lời (Final Response)</span>
+              <div id="trace-reply" class="chat-bubble-out">-</div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CONCEPTS SIDEBAR DETAILS -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title-group">
+        <h2 id="side-concept-id">CONCEPT_ID</h2>
+        <span id="side-concept-cat" class="badge">category</span>
+      </div>
+      <button onclick="closeSidebar()" class="close-side-btn">✕</button>
+    </div>
+
+    <div class="sidebar-content">
+      
+      <div class="side-section">
+        <span class="side-label">Mô tả Concept</span>
+        <span id="side-concept-desc" class="side-value">-</span>
+      </div>
+
+      <div class="side-section">
+        <span class="side-label">Cụm từ huấn luyện mẫu (Synonyms)</span>
+        <div id="side-concept-synonyms" class="side-value phrase-list">
+          <!-- Phrases tags -->
+        </div>
+      </div>
+
+      <div class="side-section">
+        <span class="side-label">Mô tả logic truy vấn (Prisma Client)</span>
+        <div id="side-concept-prisma" class="side-value code-box">-</div>
+      </div>
+
+      <div class="side-section">
+        <span class="side-label">Mẫu định dạng phản hồi (Response Templates)</span>
+        <div id="side-concept-template" class="side-value code-box">-</div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- JAVASCRIPT SYSTEM -->
+  <script>
+    // --- DATABASE MOCK / SIMULATOR DATA ---
+    const conceptsData = {
+      "BUSINESS_OVERVIEW": {
+        id: "BUSINESS_OVERVIEW",
+        category: "overview",
+        desc: "Thống kê tổng quan hoạt động toàn studio (doanh số, đơn hàng, khách hàng, OKRs, và công việc trễ hạn).",
+        synonyms: ["tong quan", "doanh thu", "tinh hinh", "báo cáo", "tổng quan hoạt động", "tình hình hôm nay"],
+        prisma: `const customers = await prisma.customer.count();
+const orders = await prisma.order.count();
+const activeOrders = await prisma.order.count({ where: { status: { notIn: ['cancelled', 'delivered'] } } });
+const totalSales = await prisma.order.aggregate({ _sum: { total_amount: true } });
+const pendingTasks = await prisma.task.count({ where: { status: { notIn: ['done', 'cancelled'] } } });
+const overdueTasks = await prisma.task.count({ where: { status: { notIn: ['done', 'cancelled'] }, due_date: { lt: today } } });
+const activeLeads = await prisma.lead.count({ where: { status: 'consulting' } });`,
+        template: `Chào bạn! Dưới đây là thông tin hoạt động tổng quan của studio:
+• Khách hàng: \${customers} khách hàng
+• Đơn hàng đang xử lý: \${activeOrders}/\${orders} đơn
+• Doanh thu: \${totalSales.toLocaleString('vi-VN')} đ
+• Công việc: \${pendingTasks} việc chưa xong (\${overdueTasks} trễ hạn)
+• Lead tư vấn: \${activeLeads} lead đang chăm sóc.`
+      },
+      "CUSTOMER_LIST": {
+        id: "CUSTOMER_LIST",
+        category: "customers",
+        desc: "Danh sách khách hàng hoặc tra cứu chi tiết hồ sơ (số điện thoại, hợp đồng cũ, phễu CRM, các công việc liên quan).",
+        synonyms: ["khach hang", "danh sach khach hang", "tim khach hang %customerName%", "hồ sơ %customerName%"],
+        prisma: `// Tra cứu chi tiết nếu có tên
+const customer = await prisma.customer.findFirst({ where: { full_name: { contains: name } } });
+const orders = await prisma.order.findMany({ where: { customer_id: customer.id } });
+const leads = await prisma.lead.findMany({ where: { customer_name: customer.full_name } });
+const tasks = await prisma.task.findMany({ where: { order_id: { in: orders.map(o => o.id) } } });`,
+        template: `Dưới đây là thông tin chi tiết về khách hàng \${customer.full_name}:
+• Số điện thoại: \${customer.phone}
+• Lịch sử Hợp đồng cưới (\${orders.length}):
+  - HĐ \${o.order_code}: Gói \${o.package_name} - \${o.status}
+• Lịch sử tư vấn CRM (\${leads.length}):
+  - Bước sales: \${l.sales_step}/6 - Trạng thái: \${l.status}`
+      },
+      "LEAD_LIST": {
+        id: "LEAD_LIST",
+        category: "leads",
+        desc: "Danh sách các cơ hội bán hàng / lead tiềm năng đang được tư vấn trong CRM phễu sales 6 bước.",
+        synonyms: ["lead", "crm", "tu van", "cham soc", "khách hàng tiềm năng", "lead cần chăm sóc"],
+        prisma: `const leads = await prisma.lead.findMany({
+  where: { status: 'consulting' },
+  orderBy: { created_at: 'desc' }
+});`,
+        template: `Dưới đây là danh sách khách hàng tiềm năng (Lead) đang tư vấn:
+• KH: \${l.customer_name} - SĐT: \${l.phone} - Nguồn: \${l.source}
+  - Bước bán hàng: \${l.sales_step}/6 - Phụ trách: \${l.assigned_sale_name}`
+      },
+      "ORDER_LIST": {
+        id: "ORDER_LIST",
+        category: "orders",
+        desc: "Danh sách hợp đồng dịch vụ / đơn đặt lịch chụp ảnh đang có hiệu lực.",
+        synonyms: ["don hang", "hop dong", "danh sách hợp đồng", "đơn hàng cưới"],
+        prisma: `const orders = await prisma.order.findMany({
+  where: { status: { notIn: ['cancelled', 'delivered'] } }
+});`,
+        template: `Tìm thấy các đơn hàng/hợp đồng cưới phù hợp:
+• Hợp đồng [\${o.order_code}] - KH: \${o.customer_name} - Gói: "\${o.package_name}" (Ngày chụp: \${o.shoot_date})`
+      },
+      "SCHEDULE_RANGE": {
+        id: "SCHEDULE_RANGE",
+        category: "orders",
+        desc: "Lịch chụp ảnh cưới của studio lọc theo ngày cụ thể hoặc các mốc thời gian tương đối.",
+        synonyms: ["lich", "lich chup", "chup", "lịch chụp hôm nay", "lịch chụp ngày mai", "lịch chụp tuần này"],
+        prisma: `const orders = await prisma.order.findMany({
+  where: { shoot_date: { gte: dateFrom, lte: dateTo } },
+  orderBy: { shoot_date: 'asc' }
+});`,
+        template: `Dưới đây là danh sách lịch chụp từ ngày \${dateFrom} đến \${dateTo}:
+• [\${s.order_code}] KH: \${s.customer_name} - Gói: "\${s.package_name}" lúc \${s.shoot_time} ngày \${s.shoot_date}`
+      },
+      "TASK_LIST": {
+        id: "TASK_LIST",
+        category: "tasks",
+        desc: "Danh sách công việc đang thực hiện, hỗ trợ lọc theo độ ưu tiên (ví dụ: công việc khẩn cấp).",
+        synonyms: ["cong viec", "task", "việc cần làm", "công việc nào khẩn cấp", "nhiệm vụ khẩn cấp"],
+        prisma: `const whereClause = { status: { notIn: ['done', 'cancelled'] } };
+if (entities.priority) {
+  whereClause.priority = entities.priority; // VD: 'high' cho khẩn cấp
+}
+const tasks = await prisma.task.findMany({
+  where: whereClause,
+  orderBy: { due_date: 'asc' }
+});`,
+        template: `Tôi tìm thấy các công việc KHẨN CẤP chưa hoàn thành:
+• [\${t.status}] "\${t.title}" (Độ ưu tiên: KHẨN CẤP, Hạn: \${t.due_date}, Giao cho: \${t.assigned_to_name})`
+      },
+      "OPERATIONAL_ALERTS": {
+        id: "OPERATIONAL_ALERTS",
+        category: "alerts",
+        desc: "Cảnh báo vận hành tự động (công việc trễ hạn, đơn sắp chụp chưa chia ekip, hợp đồng chưa đặt cọc).",
+        synonyms: ["canh bao", "canh bao van hanh", "bat thuong", "cảnh báo hệ thống"],
+        prisma: `// 1. Quá hạn
+const overdueTasks = await prisma.task.findMany({ where: { status: { notIn: ['done','cancelled'] }, due_date: { lt: today } } });
+// 2. Thiếu ekip
+const activeOrders = await prisma.order.findMany({ where: { status: { notIn: ['cancelled','delivered'] } } });
+const missingEkip = activeOrders.filter(o => !tasks.some(t => t.order_id === o.id));
+// 3. Chưa đặt cọc
+const missingDeposit = await prisma.order.findMany({ where: { status: { notIn: ['cancelled','delivered'] }, deposit_amount: 0 } });`,
+        template: `Dưới đây là một số điểm cần lưu ý về vận hành:
+⚠️ Công việc quá hạn chưa hoàn thành (\${overdue.length}):
+  - "\${t.title}" (Hạn: \${t.due_date}, Người làm: \${t.assigned_to_name})
+⚠️ Đơn hàng sắp chụp chưa phân công việc (\${missingEkip.length}):
+  - Đơn [\${o.order_code}] KH: \dots`
+      },
+      "STAFF_WORKLOAD": {
+        id: "STAFF_WORKLOAD",
+        category: "staff",
+        desc: "Thống kê so sánh khối lượng công việc, xếp hạng độ bận rộn giữa các nhân viên trong studio.",
+        synonyms: ["nhan vien", "khoi luong cong viec", "ai ban", "ai ranh", "ai bận nhất"],
+        prisma: `const users = await prisma.user.findMany({ where: { is_active: true } });
+const tasks = await prisma.task.findMany({ where: { status: { notIn: ['done', 'cancelled'] } } });
+// Ánh xạ tính toán số lượng việc chưa xong của từng người`,
+        template: `Dưới đây là thống kê khối lượng công việc hiện tại của nhân viên:
+• Nguyễn Thị Sales: Đang phụ trách 3 việc chưa hoàn thành (0 quá hạn)
+• Viet Hoang: Đang phụ trách 2 việc chưa hoàn thành (1 quá hạn)`
+      },
+      "OKR_LIST": {
+        id: "OKR_LIST",
+        category: "overview",
+        desc: "Danh sách mục tiêu OKR và tiến trình phần trăm hoàn thành KPIs.",
+        synonyms: ["okr", "muc tieu", "ket qua then chot", "tiến độ okr", "tiến độ mục tiêu"],
+        prisma: `const objectives = await prisma.objective.findMany({ orderBy: { created_at: 'desc' } });
+const keyResults = await prisma.objectiveKeyResult.findMany();`,
+        template: `🎯 Mục tiêu: "Tăng trưởng Doanh số Quý 3/2026" (Tiến độ: 52%, Hoạt động)
+   - KR: "Ký mới 40 hợp đồng" (Đạt: 45%)
+   - KR: "Doanh số thêm 300M" (Đạt: 60%)`
+      },
+      "LEAD_SUCCESS_REASONS": {
+        id: "LEAD_SUCCESS_REASONS",
+        category: "leads",
+        desc: "Thống kê lý do chốt lead tư vấn thành công tạo hợp đồng (Won).",
+        synonyms: ["ly do thanh cong", "chot thanh cong", "lý do chốt đơn thành công"],
+        prisma: `const leads = await prisma.lead.findMany({
+  where: { status: 'won', success_reason: { not: null } }
+});`,
+        template: `Thống kê các lý do chốt đơn thành công (Won):
+• Mã K1 (Nhu cầu rõ ràng / Hợp gu): 5 khách hàng
+• Mã K3 (Tin tưởng thương hiệu lớn): 3 khách hàng
+• Mã S1 (Sales chăm sóc tốt & chốt đúng lúc): 4 khách hàng`
+      },
+      "LEAD_FAILURE_REASONS": {
+        id: "LEAD_FAILURE_REASONS",
+        category: "leads",
+        desc: "Thống kê lý do lead tư vấn thất bại không ký hợp đồng (Lost).",
+        synonyms: ["ly do that bai", "tai sao that bai", "tại sao khách hàng từ chối"],
+        prisma: `const leads = await prisma.lead.findMany({
+  where: { status: 'lost', failure_reason: { not: null } }
+});`,
+        template: `Thống kê các nguyên nhân chốt đơn thất bại (Lost):
+• Mã K02 (Khách so sánh giá / Studio rẻ hơn): 4 khách hàng
+• Mã P01 (Mức giá gói chưa phù hợp): 2 khách hàng`
+      },
+      "LEAD_SUPPORT_REQUESTS": {
+        id: "LEAD_SUPPORT_REQUESTS",
+        category: "leads",
+        desc: "Các lead khó cần sự trợ giúp điều hướng/chỉ đạo trực tiếp của Admin/Manager.",
+        synonyms: ["lead can ho tro", "yeu cau tro giup", "khách hàng nào cần hỗ trợ"],
+        prisma: `const leads = await prisma.lead.findMany({
+  where: { support_needed: { not: '' } }
+});`,
+        template: `Danh sách khách hàng (Lead) đang cần Admin hỗ trợ:
+• KH: Trần Anh Đức - SĐT: 0912345xxx
+  - Yêu cầu hỗ trợ: "Khách muốn xem mẫu váy cưới đuôi cá thiết kế cao cấp."
+  - Chỉ đạo từ Admin: > Admin: "Gửi ảnh mẫu BST mới nhất cho khách."`
+      },
+      "STAFF_LIST": {
+        id: "STAFF_LIST",
+        category: "staff",
+        desc: "Danh sách nhân viên, thông tin liên hệ và trạng thái tài khoản.",
+        synonyms: ["danh sach nhan vien", "danh sach nhan su", "tài khoản nhân sự"],
+        prisma: `const users = await prisma.user.findMany({
+  orderBy: { full_name: 'asc' }
+});`,
+        template: `Dưới đây là danh sách nhân sự hoạt động trong studio:
+• Nguyễn Thị Sales - Email: sale@aurabridal.com (Hoạt động)
+• Viet Hoang - Email: designer@aurabridal.com (Hoạt động)`
+      },
+      "CONTRACT_STATUS": {
+        id: "CONTRACT_STATUS",
+        category: "orders",
+        desc: "Tra cứu trạng thái hợp đồng đám cưới chi tiết của một cặp đôi cụ thể.",
+        synonyms: ["hop dong %customerName% trang thai the nao", "kiểm tra trạng thái hợp đồng %customerName%"],
+        prisma: `const customer = await resolveCustomer(name);
+if (!customer) throw new Error("Khách hàng không tồn tại");
+const orders = await prisma.order.findMany({
+  where: { customer_id: customer.id }
+});`,
+        template: `Tìm thấy 1 hợp đồng của khách hàng Hoàng Anh Tuấn & Lê Thu Hà:
+1. HĐ HD-2026-0001:
+   • Gói dịch vụ: Gói Album Phim Trường Premium (18.000.000 đ)
+   • Trạng thái: Đã hoàn thành / Bàn giao
+   • Lịch chụp: 2026-06-28`
+      }
+    };
+
+    const tabPipeline = document.getElementById('tab-pipeline');
+    const tabKnowledge = document.getElementById('tab-knowledge');
+    const contentPipeline = document.getElementById('content-pipeline');
+    const contentKnowledge = document.getElementById('content-knowledge');
+
+    // TAB MANAGEMENT
+    tabPipeline.addEventListener('click', () => {
+      tabPipeline.classList.add('active');
+      tabKnowledge.classList.remove('active');
+      contentPipeline.classList.add('active');
+      contentKnowledge.classList.remove('active');
+      closeSidebar();
+    });
+
+    tabKnowledge.addEventListener('click', () => {
+      tabKnowledge.classList.add('active');
+      tabPipeline.classList.remove('active');
+      contentKnowledge.classList.add('active');
+      contentPipeline.classList.remove('active');
+      closeSidebar();
+    });
+
+    // RENDER KNOWLEDGE GRID
+    const knowledgeGrid = document.getElementById('knowledge-grid');
+    Object.values(conceptsData).forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'concept-card';
+      card.setAttribute('onclick', `openConcept('${c.id}')`);
+      card.innerHTML = `
+        <div class="concept-header">
+          <span class="concept-title">${c.id}</span>
+          <span class="concept-badge">${c.category}</span>
+        </div>
+        <p>${c.desc}</p>
+        <div class="concept-synonyms">Synonyms: ${c.synonyms.slice(0, 3).join(', ')}...</div>
+      `;
+      knowledgeGrid.appendChild(card);
+    });
+
+    // SIDEBAR MANAGEMENT
+    const sidebar = document.getElementById('sidebar');
+    const sideId = document.getElementById('side-concept-id');
+    const sideCat = document.getElementById('side-concept-cat');
+    const sideDesc = document.getElementById('side-concept-desc');
+    const sideSynonyms = document.getElementById('side-concept-synonyms');
+    const sidePrisma = document.getElementById('side-concept-prisma');
+    const sideTemplate = document.getElementById('side-concept-template');
+
+    function openConcept(id) {
+      const c = conceptsData[id];
+      if (!c) return;
+
+      sideId.textContent = c.id;
+      sideCat.textContent = c.category;
+      sideDesc.textContent = c.desc;
+      
+      // Synonyms tags
+      sideSynonyms.innerHTML = '';
+      c.synonyms.forEach(phrase => {
+        const span = document.createElement('span');
+        span.className = 'phrase-tag';
+        span.textContent = `"${phrase}"`;
+        sideSynonyms.appendChild(span);
+      });
+
+      sidePrisma.textContent = c.prisma;
+      sideTemplate.textContent = c.template;
+
+      sidebar.classList.add('open');
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+    }
+
+    // SIMULATOR PIPELINE STEPS FLOW ANIMATION
+    const steps = ['input', 'norm', 'class', 'extract', 'query', 'db', 'template'];
+    
+    function resetPipelineHighlight() {
+      steps.forEach(s => {
+        document.getElementById(`step-${s}`).classList.remove('active');
+      });
+      for (let i = 1; i <= 6; i++) {
+        document.getElementById(`flow-dash${i}`).style.display = 'none';
+      }
+    }
+
+    function highlightStep(stepIndex) {
+      if (stepIndex >= steps.length) return;
+      
+      // Highlight card
+      const stepId = `step-${steps[stepIndex]}`;
+      document.getElementById(stepId).classList.add('active');
+      
+      // Animate line connection to next step
+      if (stepIndex > 0) {
+        document.getElementById(`flow-dash${stepIndex}`).style.display = 'block';
+      }
+      
+      // Schedule next step
+      setTimeout(() => {
+        highlightStep(stepIndex + 1);
+      }, 700);
+    }
+
+    function simulate(query) {
+      resetPipelineHighlight();
+      tabPipeline.click(); // switch to pipeline view automatically
+      
+      // Start flow animation
+      setTimeout(() => {
+        highlightStep(0);
+      }, 100);
+
+      // Populate trace details based on query
+      const traceInput = document.getElementById('trace-input');
+      const traceNormalized = document.getElementById('trace-normalized');
+      const traceIntent = document.getElementById('trace-intent');
+      const traceEntities = document.getElementById('trace-entities');
+      const tracePrisma = document.getElementById('trace-prisma');
+      const traceReply = document.getElementById('trace-reply');
+
+      traceInput.textContent = `"${query}"`;
+
+      if (query === 'công việc nào đang khẩn cấp') {
+        traceNormalized.textContent = `"cong viec nao dang khan cap"`;
+        traceIntent.innerHTML = `<b style="color:var(--cyan)">TASK_LIST</b> (Score: 1.0)`;
+        traceEntities.textContent = JSON.stringify({ priority: "high", limit: 5 }, null, 2);
+        tracePrisma.textContent = `await prisma.task.findMany({
+  where: {
+    status: { notIn: ['done', 'cancelled'] },
+    priority: 'high'
+  },
+  take: 5,
+  orderBy: { due_date: 'asc' }
+});`;
+        traceReply.innerHTML = `<b>Tôi tìm thấy các công việc KHẨN CẤP chưa hoàn thành:</b><br><br>
+• [Đang làm] <b>"Chuẩn bị trang phục đi Đà Lạt - Vy"</b><br>
+  - Người phụ trách: Nguyễn Thị Sales<br>
+  - Trạng thái: Đang thực hiện<br>
+  - Hạn hoàn thành: 2026-07-13<br><br>
+• [Đang làm] <b>"Giao váy thiết kế tiệc cưới - Yến"</b><br>
+  - Người phụ trách: Nguyễn Thị Sales<br>
+  - Trạng thái: Đang thực hiện<br>
+  - Hạn hoàn thành: 2026-08-01`;
+      } 
+      else if (query === 'lê thu hà') {
+        traceNormalized.textContent = `"le thu ha"`;
+        traceIntent.innerHTML = `<b style="color:var(--cyan)">CUSTOMER_LIST</b> (Overridden from thong_ke_doanh_so)`;
+        traceEntities.textContent = JSON.stringify({ customerName: "lê thu hà" }, null, 2);
+        tracePrisma.textContent = `// resolveCustomer("lê thu hà") ➜ Hoàng Anh Tuấn & Lê Thu Hà
+const customer = await prisma.customer.findUnique({ where: { id: "cust-1" } });
+const orders = await prisma.order.findMany({ where: { customer_id: "cust-1" } });
+const leads = await prisma.lead.findMany({ where: { customer_name: { contains: "Hoàng Anh Tuấn & Lê Thu Hà" } } });`;
+        traceReply.innerHTML = `<b>Dưới đây là thông tin chi tiết về khách hàng Hoàng Anh Tuấn & Lê Thu Hà:</b><br>
+• Số điện thoại: 0987654321<br>
+• Email: tuanha@gmail.com<br><br>
+<b>Lịch sử Hợp đồng cưới (1):</b><br>
+- HĐ HD-2026-0001: Gói "Gói Album Phim Trường Premium" (18.000.000 đ) - Đã hoàn thành / Bàn giao (Chụp ngày: 2026-06-28)`;
+      } 
+      else if (query === 'lịch chụp ngày mai') {
+        traceNormalized.textContent = `"lich chup ngay mai"`;
+        traceIntent.innerHTML = `<b style="color:var(--cyan)">SCHEDULE_RANGE</b> (Score: 0.98)`;
+        traceEntities.textContent = JSON.stringify({ dateFrom: "2026-07-08T00:00:00.000Z", dateTo: "2026-07-08T23:59:59.999Z" }, null, 2);
+        tracePrisma.textContent = `await prisma.order.findMany({
+  where: { shoot_date: "2026-07-08" },
+  orderBy: { shoot_date: 'asc' }
+});`;
+        traceReply.innerHTML = `<b>Dưới đây là lịch chụp cưới ngày 2026-07-08:</b><br><br>
+• [HD-2026-0002] KH: Phạm Quốc Bảo & Nguyễn Thu Trang - Gói: "Gói Studio Basic" lúc 09:00 ngày 2026-07-08 (Trạng thái: Đang chụp)`;
+      }
+      else if (query === 'tổng quan hoạt động') {
+        traceNormalized.textContent = `"tong quan hoat dong"`;
+        traceIntent.innerHTML = `<b style="color:var(--cyan)">BUSINESS_OVERVIEW</b> (Score: 1.00)`;
+        traceEntities.textContent = JSON.stringify({}, null, 2);
+        tracePrisma.textContent = `const customers = await prisma.customer.count();
+const orders = await prisma.order.count();
+const activeOrders = await prisma.order.count({ where: { status: { notIn: ['cancelled', 'delivered'] } } });`;
+        traceReply.innerHTML = `<b>Chào bạn! Dưới đây là thông tin hoạt động tổng quan của studio:</b><br><br>
+• <b>Khách hàng:</b> Tổng số <b>25</b> khách hàng đã đăng ký.<br>
+• <b>Đơn hàng:</b> Có <b>18</b> đơn hàng (trong đó đang xử lý <b>6</b> đơn).<br>
+• <b>Doanh thu:</b> Tổng doanh thu đạt <b>185.000.000 đ</b>.`;
+      }
+      else if (query === 'tiến độ okr') {
+        traceNormalized.textContent = `"tien do okr"`;
+        traceIntent.innerHTML = `<b style="color:var(--cyan)">OKR_LIST</b> (Score: 1.00)`;
+        traceEntities.textContent = JSON.stringify({}, null, 2);
+        tracePrisma.textContent = `const objectives = await prisma.objective.findMany({ orderBy: { created_at: 'desc' } });
+const keyResults = await prisma.objectiveKeyResult.findMany();`;
+        traceReply.innerHTML = `<b>Dưới đây là danh sách mục tiêu OKR hiện tại của studio:</b><br><br>
+🎯 <b>Mục tiêu:</b> "Tăng trưởng Doanh số Quý 3/2026" (Tiến độ: 52%, Hoạt động)<br>
+   - KR: "Ký mới 40 hợp đồng" (Hoàn thành: 45%)<br>
+   - KR: "Doanh số thêm 300M" (Hoàn thành: 60%)`;
+      }
+      else if (query === 'ai bận nhất') {
+        traceNormalized.textContent = `"ai ban nhat"`;
+        traceIntent.innerHTML = `<b style="color:var(--cyan)">STAFF_WORKLOAD</b> (Score: 0.95)`;
+        traceEntities.textContent = JSON.stringify({}, null, 2);
+        tracePrisma.textContent = `const users = await prisma.user.findMany({ where: { is_active: true } });
+const tasks = await prisma.task.findMany({ where: { status: { notIn: ['done', 'cancelled'] } } });`;
+        traceReply.innerHTML = `<b>Dưới đây là thống kê khối lượng công việc hiện tại của đội ngũ nhân sự:</b><br><br>
+• <b>Nguyễn Thị Sales:</b> Đang phụ trách <b>3</b> việc chưa hoàn thành (0 quá hạn)<br>
+• <b>Viet Hoang:</b> Đang phụ trách <b>2</b> việc chưa hoàn thành (1 quá hạn)`;
+      }
+      else if (query === 'cảnh báo vận hành') {
+        traceNormalized.textContent = `"canh bao van hanh"`;
+        traceIntent.innerHTML = `<b style="color:var(--cyan)">OPERATIONAL_ALERTS</b> (Score: 1.00)`;
+        traceEntities.textContent = JSON.stringify({}, null, 2);
+        tracePrisma.textContent = `const overdue = await prisma.task.findMany({ where: { due_date: { lt: today } } });
+// check missing assignments and missing deposits`;
+        traceReply.innerHTML = `<b>Dưới đây là một số điểm cần lưu ý về mặt vận hành:</b><br><br>
+⚠️ <b>Công việc quá hạn chưa hoàn thành (1):</b><br>
+  - "Chuẩn bị hoa tươi và lịch xe cưới" (Hạn: 2026-07-05)<br>
+⚠️ <b>Hợp đồng đang hoạt động chưa cọc (1):</b><br>
+  - HĐ HD-2026-0003: Nguyễn Minh Trí (Trị giá: 12.000.000 đ)`;
+      }
+    }
+  </script>
+</body>
+</html>

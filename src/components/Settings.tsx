@@ -35,6 +35,12 @@ interface StudioSettings {
   notes: string;
   backup_schedule: 'daily' | 'weekly' | 'monthly' | 'none';
   last_backup_time: string;
+  mimo_api_key?: string;
+  mimo_api_base_url?: string;
+  mimo_model?: string;
+  gemini_api_key?: string;
+  gemini_api_base_url?: string;
+  gemini_model?: string;
 }
 
 interface BackupItem {
@@ -63,7 +69,13 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
     opening_hours: '',
     notes: '',
     backup_schedule: 'weekly',
-    last_backup_time: ''
+    last_backup_time: '',
+    mimo_api_key: '',
+    mimo_api_base_url: 'https://api.xiaomimimo.com/v1',
+    mimo_model: 'mimo-v2.5-pro',
+    gemini_api_key: '',
+    gemini_api_base_url: 'https://generativelanguage.googleapis.com/v1beta',
+    gemini_model: 'gemini-2.5-flash'
   });
   
   const [loadingSettings, setLoadingSettings] = useState(true);
@@ -376,7 +388,7 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
 
 
       {/* Sub tabs navigation */}
-      <div className="flex space-x-1 bg-slate-100 p-1 rounded-xl max-w-sm" id="settings-sub-tabs">
+      <div className="flex space-x-1 bg-slate-100 p-1 rounded-xl max-w-md" id="settings-sub-tabs">
         <button
           onClick={() => setActiveSubTab('info')}
           className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
@@ -401,9 +413,10 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
           <Database className="w-3.5 h-3.5 inline mr-1.5" />
           Quản lý Database
         </button>
+
       </div>
 
-      {activeSubTab === 'info' ? (
+      {activeSubTab === 'info' && (
         /* STUDIO INFO SETTINGS PANEL */
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -557,7 +570,9 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
             </form>
           )}
         </motion.div>
-      ) : (
+      )}
+
+      {activeSubTab === 'database' && (
         /* DATABASE MANAGEMENT & BACKUPS PANEL */
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -780,6 +795,8 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
           </div>
         </motion.div>
       )}
+
+
 
       {/* Restore Confirmation Modal */}
       {showRestoreConfirm && (

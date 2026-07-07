@@ -10,9 +10,10 @@ import Notifications from './components/Notifications';
 import Staff from './components/Staff';
 import Settings from './components/Settings';
 import Leads from './components/Leads';
-import AiAssistantBubble from './components/AiAssistantBubble';
+import ChatWidget from './components/ChatWidget';
 import MobileApp from './components/mobile/MobileApp';
 import { useIsMobile } from './hooks/useIsMobile';
+import { ProductDemoPlayer } from './components/ProductDemoPlayer';
 import { 
   Briefcase, 
   Users, 
@@ -58,6 +59,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [studioSettings, setStudioSettings] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'pc' | 'mobile'>('pc');
+  const [isDemoActive, setIsDemoActive] = useState(() => window.location.search.includes('demo=true') || (window as any).isDemoMode === true);
 
   const fetchStudioSettings = async () => {
     try {
@@ -201,83 +203,101 @@ export default function App() {
   // LOGIN SCREEN
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#faf9f6] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col">
-          
-          {/* Header Banner */}
-          <div className="bg-gradient-to-br from-gold-50 to-gold-100/50 p-8 text-center text-slate-800 relative border-b border-gold-200/40">
-            <div className="absolute top-4 right-4 bg-gold-200/30 text-gold-800 border border-gold-300/40 px-2.5 py-0.5 rounded-full text-[9px] font-bold flex items-center tracking-wider">
-              <Sparkles className="w-2.5 h-2.5 mr-1 text-gold-600 animate-pulse" /> CLOUD LOCAL
+      <div className="min-h-screen bg-[#faf9f6] flex items-center justify-center p-4 overflow-hidden">
+        <div id="demo-camera-viewport" className="w-full flex items-center justify-center origin-center">
+          <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col">
+            
+            {/* Header Banner */}
+            <div className="bg-gradient-to-br from-gold-50 to-gold-100/50 p-8 text-center text-slate-800 relative border-b border-gold-200/40">
+              <div className="absolute top-4 right-4 bg-gold-200/30 text-gold-800 border border-gold-300/40 px-2.5 py-0.5 rounded-full text-[9px] font-bold flex items-center tracking-wider">
+                <Sparkles className="w-2.5 h-2.5 mr-1 text-gold-600 animate-pulse" /> CLOUD LOCAL
+              </div>
+              <h1 className="text-3xl font-semibold tracking-widest font-display text-gold-900 italic">The Will</h1>
+              <p className="text-gold-700/80 mt-1.5 text-[10px] uppercase tracking-widest font-medium">Hệ thống quản lý Studio cao cấp</p>
             </div>
-            <h1 className="text-3xl font-semibold tracking-widest font-display text-gold-900 italic">The Will</h1>
-            <p className="text-gold-700/80 mt-1.5 text-[10px] uppercase tracking-widest font-medium">Hệ thống quản lý Studio cao cấp</p>
-          </div>
 
-          <div className="p-6 space-y-5">
-            {/* Normal login Form */}
-            <form onSubmit={handleLogin} className="space-y-4">
-              {loginError && (
-                <div className="bg-rose-50 border border-rose-100 text-rose-600 p-2.5 rounded-xl text-xs flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-1.5 shrink-0" />
-                  {loginError}
+            <div className="p-6 space-y-5">
+              {/* Normal login Form */}
+              <form onSubmit={handleLogin} className="space-y-4">
+                {loginError && (
+                  <div className="bg-rose-50 border border-rose-100 text-rose-600 p-2.5 rounded-xl text-xs flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1.5 shrink-0" />
+                    {loginError}
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email đăng nhập</label>
+                  <input 
+                    type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@studio.com"
+                    className="w-full bg-slate-50/50 border border-slate-200 rounded-xl py-2 px-3.5 text-xs focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400/20 transition-all"
+                    required
+                  />
                 </div>
-              )}
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email đăng nhập</label>
-                <input 
-                  type="email" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@studio.com"
-                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl py-2 px-3.5 text-xs focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400/20 transition-all"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mật khẩu</label>
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mật khẩu</label>
+                  </div>
+                  <input 
+                    type="password" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-slate-50/50 border border-slate-200 rounded-xl py-2 px-3.5 text-xs focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400/20 transition-all"
+                    required
+                  />
                 </div>
-                <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl py-2 px-3.5 text-xs focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400/20 transition-all"
-                  required
-                />
-              </div>
 
-              <div className="flex items-center space-x-2 py-0.5">
-                <input 
-                  type="checkbox" 
-                  id="remember_chk"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded border-slate-300 text-gold-600 focus:ring-gold-400/30"
-                />
-                <label htmlFor="remember_chk" className="text-[11px] font-semibold text-slate-500 select-none cursor-pointer">
-                  Lưu mật khẩu cho lần sau
-                </label>
-              </div>
+                <div className="flex items-center space-x-2 py-0.5">
+                  <input 
+                    type="checkbox" 
+                    id="remember_chk"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="rounded border-slate-300 text-gold-600 focus:ring-gold-400/30"
+                  />
+                  <label htmlFor="remember_chk" className="text-[11px] font-semibold text-slate-500 select-none cursor-pointer">
+                    Lưu mật khẩu cho lần sau
+                  </label>
+                </div>
 
-              <button 
-                type="submit"
-                disabled={loginLoading}
-                className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-white py-2.5 rounded-xl text-xs font-bold shadow-xs hover:shadow-md transition-all duration-150 disabled:opacity-50 mt-1 cursor-pointer"
-              >
-                {loginLoading ? 'Đang xác thực...' : 'Đăng nhập hệ thống'}
-              </button>
-            </form>
+                <button 
+                  type="submit"
+                  disabled={loginLoading}
+                  className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-white py-2.5 rounded-xl text-xs font-bold shadow-xs hover:shadow-md transition-all duration-150 disabled:opacity-50 mt-1 cursor-pointer"
+                >
+                  {loginLoading ? 'Đang xác thực...' : 'Đăng nhập hệ thống'}
+                </button>
+              </form>
+            </div>
+
           </div>
-
         </div>
+        {isDemoActive && (
+          <ProductDemoPlayer
+            onClose={() => {
+              setIsDemoActive(false);
+              const url = new URL(window.location.href);
+              url.searchParams.delete('demo');
+              window.history.replaceState(null, '', url.toString());
+            }}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            isAuthenticated={isAuthenticated}
+            handleQuickLogin={handleQuickLogin}
+            handleLogout={handleLogout}
+            setViewMode={setViewMode}
+          />
+        )}
       </div>
     );
   }
 
-  if (isMobile) {
+  if (isMobile && !isDemoActive) {
     return (
       <MobileApp
         user={user}
@@ -611,7 +631,7 @@ export default function App() {
               </div>
 
               {role?.id === 'role-admin' && (
-                <AiAssistantBubble userName={user?.full_name} placement="mobile" />
+                <ChatWidget userName={user?.full_name} placement="mobile" />
               )}
 
             </div>
@@ -628,10 +648,8 @@ export default function App() {
 
   // 2. PC VIEWPORT RENDER
   return (
-    <div className="min-h-screen bg-[#faf9f6] flex flex-col font-sans">
-
-
-      <div className="flex-1 flex flex-col md:flex-row min-h-0">
+    <div className="min-h-screen bg-[#faf9f6] flex flex-col font-sans overflow-hidden">
+      <div id="demo-camera-viewport" className="flex-1 flex flex-col md:flex-row min-h-0 w-full h-full origin-center">
         {/* Mobile Header (When browser actually resized small) */}
         <header className="md:hidden bg-white text-slate-800 px-4 py-3 flex justify-between items-center z-20 shadow-xs border-b border-slate-200/60 shrink-0">
           <h1 className="text-base font-semibold tracking-widest font-display text-gold-900 italic uppercase truncate max-w-[200px]">
@@ -682,6 +700,7 @@ export default function App() {
                   <button
                     key={item.id}
                     onClick={() => handleNavigate(item.id)}
+                    data-demo-tab={item.id}
                     className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all ${
                       isActive 
                         ? 'bg-gold-100/80 text-gold-900 font-bold border border-gold-200/40 shadow-2xs' 
@@ -719,7 +738,23 @@ export default function App() {
           {renderMainContent()}
         </main>
       </div>
-      {role?.id === 'role-admin' && <AiAssistantBubble userName={user?.full_name} />}
+      {role?.id === 'role-admin' && <ChatWidget userName={user?.full_name} />}
+      {isDemoActive && (
+        <ProductDemoPlayer
+          onClose={() => {
+            setIsDemoActive(false);
+            const url = new URL(window.location.href);
+            url.searchParams.delete('demo');
+            window.history.replaceState(null, '', url.toString());
+          }}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          isAuthenticated={isAuthenticated}
+          handleQuickLogin={handleQuickLogin}
+          handleLogout={handleLogout}
+          setViewMode={setViewMode}
+        />
+      )}
     </div>
   );
 }

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Will Studio - Product Demo</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // Flag to signal React app to activate the Product Demo overlay
+      window.isDemoMode = true;
+      
+      // Auto-append the ?demo=true search parameter to the URL for routing safety
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('demo') !== 'true') {
+        url.searchParams.set('demo', 'true');
+        window.history.replaceState(null, '', url.toString());
+      }
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

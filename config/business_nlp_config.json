@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "dictionary": [
+    { "id": "dict_overview", "phrase": "tong quan", "concept_id": "BUSINESS_OVERVIEW", "priority": 1, "is_negation": false },
+    { "id": "dict_revenue", "phrase": "doanh thu", "concept_id": "BUSINESS_OVERVIEW", "priority": 1, "is_negation": false },
+    { "id": "dict_status", "phrase": "tinh hinh", "concept_id": "BUSINESS_OVERVIEW", "priority": 1, "is_negation": false },
+    { "id": "dict_overview_studio", "phrase": "tong quan studio", "concept_id": "BUSINESS_OVERVIEW", "priority": 2, "is_negation": false },
+    
+    { "id": "dict_customer", "phrase": "khach hang", "concept_id": "CUSTOMER_LIST", "priority": 1, "is_negation": false },
+    { "id": "dict_customer_tiem_nang", "phrase": "khach hang tiem nang", "concept_id": "LEAD_LIST", "priority": 2, "is_negation": false },
+    { "id": "dict_customer_ds", "phrase": "ds khach hang", "concept_id": "CUSTOMER_LIST", "priority": 2, "is_negation": false },
+    { "id": "dict_customer_ds_alt", "phrase": "d sach khach hang", "concept_id": "CUSTOMER_LIST", "priority": 2, "is_negation": false },
+    
+    { "id": "dict_lead", "phrase": "lead", "concept_id": "LEAD_LIST", "priority": 1, "is_negation": false },
+    { "id": "dict_crm", "phrase": "crm", "concept_id": "LEAD_LIST", "priority": 1, "is_negation": false },
+    { "id": "dict_consult", "phrase": "tu van", "concept_id": "LEAD_LIST", "priority": 1, "is_negation": false },
+    { "id": "dict_followup", "phrase": "cham soc", "concept_id": "LEAD_LIST", "priority": 1, "is_negation": false },
+    { "id": "dict_lead_ds", "phrase": "ds lead", "concept_id": "LEAD_LIST", "priority": 2, "is_negation": false },
+    
+    { "id": "dict_order", "phrase": "don hang", "concept_id": "ORDER_LIST", "priority": 1, "is_negation": false },
+    { "id": "dict_contract", "phrase": "hop dong", "concept_id": "ORDER_LIST", "priority": 1, "is_negation": false },
+    { "id": "dict_order_ds", "phrase": "ds hop dong", "concept_id": "ORDER_LIST", "priority": 2, "is_negation": false },
+    
+    { "id": "dict_schedule", "phrase": "lich", "concept_id": "SCHEDULE_RANGE", "priority": 1, "is_negation": false },
+    { "id": "dict_schedule_shoot", "phrase": "lich chup", "concept_id": "SCHEDULE_RANGE", "priority": 2, "is_negation": false },
+    { "id": "dict_shoot", "phrase": "chup", "concept_id": "SCHEDULE_RANGE", "priority": 1, "is_negation": false },
+    
+    { "id": "dict_task", "phrase": "cong viec", "concept_id": "TASK_LIST", "priority": 1, "is_negation": false },
+    { "id": "dict_task_en", "phrase": "task", "concept_id": "TASK_LIST", "priority": 1, "is_negation": false },
+    
+    { "id": "dict_staff", "phrase": "nhan vien", "concept_id": "STAFF_WORKLOAD", "priority": 1, "is_negation": false },
+    { "id": "dict_staff_workload", "phrase": "khoi luong cong viec", "concept_id": "STAFF_WORKLOAD", "priority": 2, "is_negation": false },
+    { "id": "dict_staff_busy", "phrase": "ai ban", "concept_id": "STAFF_WORKLOAD", "priority": 2, "is_negation": false },
+    { "id": "dict_staff_free", "phrase": "ai ranh", "concept_id": "STAFF_WORKLOAD", "priority": 2, "is_negation": false },
+    { "id": "dict_staff_busy_alt", "phrase": "ai ban nhat", "concept_id": "STAFF_WORKLOAD", "priority": 3, "is_negation": false },
+    
+    { "id": "dict_alert", "phrase": "canh bao", "concept_id": "OPERATIONAL_ALERTS", "priority": 1, "is_negation": false },
+    { "id": "dict_alert_op", "phrase": "canh bao van hanh", "concept_id": "OPERATIONAL_ALERTS", "priority": 2, "is_negation": false },
+    { "id": "dict_alert_abnormal", "phrase": "bat thuong", "concept_id": "OPERATIONAL_ALERTS", "priority": 1, "is_negation": false },
+    { "id": "dict_alert_op_abbr", "phrase": "canh bao o p", "concept_id": "OPERATIONAL_ALERTS", "priority": 2, "is_negation": false },
+    
+    { "id": "dict_overdue", "phrase": "tre han", "concept_id": "OVERDUE_TASKS", "priority": 2, "is_negation": false },
+    { "id": "dict_overdue_short", "phrase": "tre", "concept_id": "OVERDUE_TASKS", "priority": 1, "is_negation": false },
+    { "id": "dict_overdue_long", "phrase": "qua han", "concept_id": "OVERDUE_TASKS", "priority": 2, "is_negation": false },
+    
+    { "id": "dict_no_deposit", "phrase": "chua coc", "concept_id": "MISSING_DEPOSITS", "priority": 2, "is_negation": false },
+    { "id": "dict_no_assignment", "phrase": "chua phan cong", "concept_id": "MISSING_ASSIGNMENTS", "priority": 2, "is_negation": false },
+    
+    { "id": "dict_okr", "phrase": "okr", "concept_id": "OKR_LIST", "priority": 2, "is_negation": false },
+    { "id": "dict_okr_objective", "phrase": "muc tieu", "concept_id": "OKR_LIST", "priority": 1, "is_negation": false },
+    { "id": "dict_okr_kr", "phrase": "ket qua then chot", "concept_id": "OKR_LIST", "priority": 2, "is_negation": false },
+    { "id": "dict_okr_progress", "phrase": "tien do okr", "concept_id": "OKR_LIST", "priority": 2, "is_negation": false },
+    { "id": "dict_okr_percent", "phrase": "ti le hoan thanh", "concept_id": "OKR_LIST", "priority": 1, "is_negation": false },
+    { "id": "dict_okr_progress_alt", "phrase": "tien do muc tieu", "concept_id": "OKR_LIST", "priority": 2, "is_negation": false },
+    
+    { "id": "dict_lead_won_reasons", "phrase": "ly do thanh cong", "concept_id": "LEAD_SUCCESS_REASONS", "priority": 2, "is_negation": false },
+    { "id": "dict_lead_won_reasons_alt", "phrase": "chot thanh cong", "concept_id": "LEAD_SUCCESS_REASONS", "priority": 2, "is_negation": false },
+    { "id": "dict_lead_won_reason_code", "phrase": "ma ly do thanh cong", "concept_id": "LEAD_SUCCESS_REASONS", "priority": 3, "is_negation": false },
+    { "id": "dict_lead_won_reason_full", "phrase": "ly do chot don thanh cong", "concept_id": "LEAD_SUCCESS_REASONS", "priority": 3, "is_negation": false },
+    
+    { "id": "dict_lead_lost_reasons", "phrase": "ly do that bai", "concept_id": "LEAD_FAILURE_REASONS", "priority": 2, "is_negation": false },
+    { "id": "dict_lead_lost_reasons_alt", "phrase": "tai sao that bai", "concept_id": "LEAD_FAILURE_REASONS", "priority": 2, "is_negation": false },
+    { "id": "dict_lead_lost_reasons_cust", "phrase": "ly do khach tu choi", "concept_id": "LEAD_FAILURE_REASONS", "priority": 3, "is_negation": false },
+    { "id": "dict_lead_lost_reasons_cust_alt", "phrase": "tai sao khach hang tu choi", "concept_id": "LEAD_FAILURE_REASONS", "priority": 4, "is_negation": false },
+    { "id": "dict_lead_lost_reasons_cust_short", "phrase": "khach tu choi", "concept_id": "LEAD_FAILURE_REASONS", "priority": 2, "is_negation": false },
+    { "id": "dict_lead_lost_reasons_cust_medium", "phrase": "khach hang tu choi", "concept_id": "LEAD_FAILURE_REASONS", "priority": 3, "is_negation": false },
+    
+    { "id": "dict_lead_support", "phrase": "lead can ho tro", "concept_id": "LEAD_SUPPORT_REQUESTS", "priority": 3, "is_negation": false },
+    { "id": "dict_lead_support_alt", "phrase": "yeu cau tro giup", "concept_id": "LEAD_SUPPORT_REQUESTS", "priority": 2, "is_negation": false },
+    { "id": "dict_lead_support_sale", "phrase": "sales can ho tro", "concept_id": "LEAD_SUPPORT_REQUESTS", "priority": 2, "is_negation": false },
+    { "id": "dict_lead_support_cust", "phrase": "khach hang nao can ho tro", "concept_id": "LEAD_SUPPORT_REQUESTS", "priority": 4, "is_negation": false },
+    { "id": "dict_lead_support_cust_alt", "phrase": "khach hang nao can ho tro tu van", "concept_id": "LEAD_SUPPORT_REQUESTS", "priority": 5, "is_negation": false },
+    { "id": "dict_lead_support_short", "phrase": "can ho tro tu van", "concept_id": "LEAD_SUPPORT_REQUESTS", "priority": 3, "is_negation": false },
+    { "id": "dict_lead_support_very_short", "phrase": "can ho tro", "concept_id": "LEAD_SUPPORT_REQUESTS", "priority": 2, "is_negation": false },
+    
+    { "id": "dict_staff_list", "phrase": "danh sach nhan vien", "concept_id": "STAFF_LIST", "priority": 3, "is_negation": false },
+    { "id": "dict_staff_list_alt", "phrase": "danh sach nhan su", "concept_id": "STAFF_LIST", "priority": 3, "is_negation": false },
+    { "id": "dict_staff_role", "phrase": "vai tro nhan su", "concept_id": "STAFF_LIST", "priority": 1, "is_negation": false }
+  ],
+  "concepts": [
+    { "id": "BUSINESS_OVERVIEW", "description": "Tổng quan hoạt động của studio", "category": "overview", "requires_entity": false },
+    { "id": "CUSTOMER_LIST", "description": "Danh sách khách hàng", "category": "customers", "requires_entity": false },
+    { "id": "ORDER_LIST", "description": "Danh sách đơn hàng / hợp đồng", "category": "orders", "requires_entity": false },
+    { "id": "TASK_LIST", "description": "Danh sách công việc / task", "category": "tasks", "requires_entity": false },
+    { "id": "LEAD_LIST", "description": "Danh sách lead đang tư vấn trong CRM", "category": "leads", "requires_entity": false },
+    { "id": "SCHEDULE_RANGE", "description": "Lịch chụp ảnh của studio", "category": "orders", "requires_entity": false },
+    { "id": "OPERATIONAL_ALERTS", "description": "Các cảnh báo vận hành hệ thống", "category": "alerts", "requires_entity": false },
+    { "id": "STAFF_WORKLOAD", "description": "Khối lượng công việc nhân sự", "category": "staff", "requires_entity": false },
+    { "id": "OVERDUE_TASKS", "description": "Công việc đã trễ hạn hoàn thành", "category": "tasks", "requires_entity": false },
+    { "id": "MISSING_DEPOSITS", "description": "Hợp đồng chưa được đặt cọc", "category": "orders", "requires_entity": false },
+    { "id": "MISSING_ASSIGNMENTS", "description": "Lịch chụp sắp tới nhưng chưa phân công nhân viên", "category": "orders", "requires_entity": false },
+    
+    { "id": "OKR_LIST", "description": "Danh sách mục tiêu OKR và tiến trình", "category": "overview", "requires_entity": false },
+    { "id": "LEAD_SUCCESS_REASONS", "description": "Thống kê lý do chốt lead thành công", "category": "leads", "requires_entity": false },
+    { "id": "LEAD_FAILURE_REASONS", "description": "Thống kê lý do chốt lead thất bại", "category": "leads", "requires_entity": false },
+    { "id": "LEAD_SUPPORT_REQUESTS", "description": "Danh sách lead cần Admin/Manager hỗ trợ", "category": "leads", "requires_entity": false },
+    { "id": "STAFF_LIST", "description": "Danh sách nhân sự và tài khoản trong studio", "category": "staff", "requires_entity": false }
+  ],
+  "rules": [
+    { "concept_id": "CUSTOMER_LIST", "sql_fragment": "1=1", "default_params": {} },
+    { "concept_id": "LEAD_LIST", "sql_fragment": "status = :status", "default_params": { "status": "consulting" } },
+    { "concept_id": "ORDER_LIST", "sql_fragment": "status != :cancelled_status AND status != :delivered_status", "default_params": { "cancelled_status": "cancelled", "delivered_status": "delivered" } },
+    { "concept_id": "TASK_LIST", "sql_fragment": "status != :done_status AND status != :cancelled_status", "default_params": { "done_status": "done", "cancelled_status": "cancelled" } },
+    { "concept_id": "OVERDUE_TASKS", "sql_fragment": "status != :done_status AND status != :cancelled_status AND due_date < :today", "default_params": { "done_status": "done", "cancelled_status": "cancelled" } },
+    { "concept_id": "MISSING_DEPOSITS", "sql_fragment": "status != :cancelled_status AND status != :delivered_status AND deposit_amount <= 0 AND total_amount > 0", "default_params": { "cancelled_status": "cancelled", "delivered_status": "delivered" } },
+    { "concept_id": "MISSING_ASSIGNMENTS", "sql_fragment": "status != :cancelled_status AND status != :delivered_status AND NOT EXISTS (SELECT 1 FROM \"Task\" t WHERE t.order_id = \"Order\".id)", "default_params": { "cancelled_status": "cancelled", "delivered_status": "delivered" } },
+    { "concept_id": "SCHEDULE_RANGE", "sql_fragment": "shoot_date BETWEEN :start_date AND :end_date", "default_params": { "start_date": "", "end_date": "" } },
+    { "concept_id": "STAFF_LIST", "sql_fragment": "is_active = true", "default_params": {} }
+  ],
+  "intent_patterns": [
+    { "pattern_keywords": ["bao nhieu", "co may", "tong so", "dem", "so luong"], "intent_type": "COUNT" },
+    { "pattern_keywords": ["liet ke", "danh sach", "nhung", "ai", "hien thi", "show", "tim", "tra cuu"], "intent_type": "LIST" }
+  ]
+}

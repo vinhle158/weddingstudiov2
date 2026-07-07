@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: studiov2_app
+    restart: always
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=production
+      - PORT=3005
+      - DATABASE_URL=postgresql://studio_user:production_password@postgres:5432/studio_db?schema=public
+      - APP_URL=http://localhost:3005
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_API_BASE_URL=${GEMINI_API_BASE_URL}
+      - GEMINI_MODEL=${GEMINI_MODEL}
+      - MIMO_API_KEY=${MIMO_API_KEY}
+      - MIMO_API_BASE_URL=${MIMO_API_BASE_URL}
+      - MIMO_MODEL=${MIMO_MODEL}
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: studiov2_postgres_prod
+    restart: always
+    environment:
+      POSTGRES_USER: studio_user
+      POSTGRES_PASSWORD: production_password
+      POSTGRES_DB: studio_db
+    ports:
+      - "5433:5432" # Use 5433 host port to avoid conflicting with local Postgres container on 5432 if running
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+
+volumes:
+  postgres_data_prod:
