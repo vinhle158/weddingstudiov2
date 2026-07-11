@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../lib/api';
+import { MONEY_INPUT_HINT, formatVndFromThousands } from '../lib/money';
 import { 
   Plus, 
   Calendar, 
@@ -17,7 +18,8 @@ import {
   RefreshCw,
   Phone,
   Briefcase,
-  Search
+  Search,
+  Edit
 } from 'lucide-react';
 
 interface OrdersProps {
@@ -25,6 +27,17 @@ interface OrdersProps {
   onNavigate: (tab: string, arg?: any) => void;
   initialSelectedOrderId?: string;
   initialOpenCreateForCustomerId?: string;
+  initialCreateCustomerDraft?: {
+    full_name?: string;
+    phone?: string | null;
+    notes?: string | null;
+  };
+  initialCreatePrefill?: {
+    package_name?: string;
+    package_price?: number;
+    total_amount?: number;
+    notes?: string | null;
+  };
   isMobile?: boolean;
 }
 
@@ -33,6 +46,8 @@ export default function Orders({
   onNavigate, 
   initialSelectedOrderId,
   initialOpenCreateForCustomerId,
+  initialCreateCustomerDraft,
+  initialCreatePrefill,
   isMobile
 }: OrdersProps) {
   const [orders, setOrders] = useState<any[]>([]);
@@ -51,6 +66,7 @@ export default function Orders({
 
   // Dropdowns for form
   const [customers, setCustomers] = useState<any[]>([]);
+  const [customersLoaded, setCustomersLoaded] = useState(false);
   const [staffUsers, setStaffUsers] = useState<any[]>([]);
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -69,6 +85,12 @@ export default function Orders({
   const [custPhone, setCustPhone] = useState('');
   const [custEmail, setCustEmail] = useState('');
   const [custAddress, setCustAddress] = useState('');
+  const [custBirthday, setCustBirthday] = useState('');
+  const [custWeddingDate, setCustWeddingDate] = useState('');
+  const [custFacebookUrl, setCustFacebookUrl] = useState('');
+  const [pendingCreateCustomerId, setPendingCreateCustomerId] = useState<string | null>(null);
+  const [pendingCreateCustomerDraft, setPendingCreateCustomerDraft] = useState<OrdersProps['initialCreateCustomerDraft'] | null>(null);
+  const [pendingCreatePrefill, setPendingCreatePrefill] = useState<OrdersProps['initialCreatePrefill'] | null>(null);
   const [shootDate, setShootDate] = useState('');
   const [shootTime, setShootTime] = useState('');
   const [packageName, setPackageName] = useState('');
@@ -89,6 +111,17 @@ export default function Orders({
   const [taskDueDate, setTaskDueDate] = useState('');
   const [taskError, setTaskError] = useState<string | null>(null);
 
+  // Edit Order modal states
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editOrderId, setEditOrderId] = useState('');
+  const [editShootDate, setEditShootDate] = useState('');
+  const [editShootTime, setEditShootTime] = useState('');
+  const [editPackageName, setEditPackageName] = useState('');
+  const [editPackagePrice, setEditPackagePrice] = useState(0);
+  const [editDepositAmount, setEditDepositAmount] = useState(0);
+  const [editOrderNotes, setEditOrderNotes] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
+
   const fetchOrders = async () => {
     try {
       setLoading(true);
@@ -107,6 +140,7 @@ export default function Orders({
         const found = data.find((o: any) => o.id === initialSelectedOrderId);
         if (found) {
           fetchOrderDetail(found.id);
+          handleOpenEditModal(found);
         }
       }
     } catch (err: any) {
@@ -116,16 +150,49 @@ export default function Orders({
     }
   };
 
+  const normalizeFacebookUrl = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+    return `https://${trimmed}`;
+  };
+
+  const applyCustomerToForm = (cust: any) => {
+    setCustName(cust?.full_name || '');
+    setCustPhone(cust?.phone || '');
+    setCustEmail(cust?.email || '');
+    setCustAddress(cust?.address || '');
+    setCustBirthday(cust?.birthday || '');
+    setCustWeddingDate(cust?.wedding_date || '');
+    setCustFacebookUrl(cust?.facebook_url || '');
+  };
+
+  const applyOrderPrefill = (prefill?: OrdersProps['initialCreatePrefill'] | null) => {
+    if (!prefill) return;
+    if (prefill.package_name) setPackageName(prefill.package_name);
+    if (prefill.package_price !== undefined) {
+      setPackagePrice(prefill.package_price || 0);
+      setDepositAmount(0);
+    }
+    if (prefill.notes !== undefined) setOrderNotes(prefill.notes || '');
+  };
+
   const fetchDropdowns = async () => {
     try {
-      const [custs, users] = await Promise.all([
-        apiRequest('/api/customers'),
-        apiRequest('/api/users')
-      ]);
+      setCustomersLoaded(false);
+      const custs = await apiRequest('/api/customers');
       setCustomers(custs);
+    } catch (e) {
+      console.error('Error fetching customers:', e);
+    } finally {
+      setCustomersLoaded(true);
+    }
+
+    try {
+      const users = await apiRequest('/api/users');
       setStaffUsers(users.filter((u: any) => u.is_active));
     } catch (e) {
-      console.error('Error fetching dropdowns:', e);
+      setStaffUsers([]);
     }
   };
 
@@ -135,16 +202,65 @@ export default function Orders({
   }, [filterStatus, filterDate, filterStaff]);
 
   useEffect(() => {
-    if (initialOpenCreateForCustomerId && customers.length > 0) {
+    if (initialOpenCreateForCustomerId) {
+      setPendingCreateCustomerId(initialOpenCreateForCustomerId);
+      setPendingCreatePrefill(initialCreatePrefill || null);
+    } else if (initialCreateCustomerDraft) {
+      setPendingCreateCustomerDraft(initialCreateCustomerDraft);
+      setPendingCreatePrefill(initialCreatePrefill || null);
+    }
+  }, [initialOpenCreateForCustomerId, initialCreateCustomerDraft, initialCreatePrefill]);
+
+  useEffect(() => {
+    if (pendingCreateCustomerId && customers.length > 0) {
       setIsNewCustomer(false);
-      setFormCustomerId(initialOpenCreateForCustomerId);
-      const matched = customers.find(c => c.id === initialOpenCreateForCustomerId);
+      setFormCustomerId(pendingCreateCustomerId);
+      const matched = customers.find(c => c.id === pendingCreateCustomerId);
       if (matched) {
         setCustomerSearch(`${matched.full_name} (${matched.phone})`);
+        applyCustomerToForm(matched);
       }
+      applyOrderPrefill(pendingCreatePrefill);
       setIsCreateModalOpen(true);
+      setPendingCreateCustomerId(null);
+      setPendingCreatePrefill(null);
     }
-  }, [initialOpenCreateForCustomerId, customers]);
+  }, [pendingCreateCustomerId, pendingCreatePrefill, customers]);
+
+  useEffect(() => {
+    if (pendingCreateCustomerDraft) {
+      if (!customersLoaded) return;
+      const draftPhone = pendingCreateCustomerDraft.phone || '';
+      const matchedCustomer = draftPhone
+        ? customers.find(c => (c.phone || '') === draftPhone)
+        : null;
+
+      setCreateError(null);
+      if (matchedCustomer) {
+        setIsNewCustomer(false);
+        setFormCustomerId(matchedCustomer.id);
+        setCustomerSearch(`${matchedCustomer.full_name} (${matchedCustomer.phone})`);
+        applyCustomerToForm(matchedCustomer);
+        setOrderNotes(pendingCreateCustomerDraft.notes || '');
+      } else {
+        setIsNewCustomer(true);
+        setFormCustomerId('');
+        setCustomerSearch('');
+        setCustName(pendingCreateCustomerDraft.full_name || '');
+        setCustPhone(pendingCreateCustomerDraft.phone || '');
+        setCustEmail('');
+        setCustAddress('');
+        setCustBirthday('');
+        setCustWeddingDate('');
+        setCustFacebookUrl('');
+        setOrderNotes(pendingCreateCustomerDraft.notes || '');
+      }
+      applyOrderPrefill(pendingCreatePrefill);
+      setIsCreateModalOpen(true);
+      setPendingCreateCustomerDraft(null);
+      setPendingCreatePrefill(null);
+    }
+  }, [pendingCreateCustomerDraft, pendingCreatePrefill, customers, customersLoaded]);
 
   const fetchOrderDetail = async (orderId: string) => {
     try {
@@ -166,6 +282,9 @@ export default function Orders({
     setCustPhone('');
     setCustEmail('');
     setCustAddress('');
+    setCustBirthday('');
+    setCustWeddingDate('');
+    setCustFacebookUrl('');
     setShootDate('');
     setShootTime('');
     setPackageName('');
@@ -183,6 +302,7 @@ export default function Orders({
 
     try {
       let finalCustomerId = formCustomerId;
+      const formattedFacebookUrl = normalizeFacebookUrl(custFacebookUrl);
 
       // Create inline customer if requested
       if (isNewCustomer) {
@@ -194,7 +314,10 @@ export default function Orders({
           full_name: custName,
           phone: custPhone,
           email: custEmail || null,
-          address: custAddress || null
+          address: custAddress || null,
+          birthday: custBirthday || null,
+          wedding_date: custWeddingDate || null,
+          facebook_url: formattedFacebookUrl
         });
         finalCustomerId = newCust.id;
       }
@@ -209,11 +332,27 @@ export default function Orders({
         return;
       }
 
+      if (!isNewCustomer) {
+        const selectedCustomer = customers.find(c => c.id === finalCustomerId);
+        await apiRequest(`/api/customers/${finalCustomerId}`, 'PUT', {
+          full_name: selectedCustomer?.full_name || custName,
+          phone: selectedCustomer?.phone || custPhone,
+          email: custEmail || null,
+          address: custAddress || null,
+          birthday: custBirthday || null,
+          wedding_date: custWeddingDate || null,
+          facebook_url: formattedFacebookUrl
+        });
+      }
+
       const createdOrder = await apiRequest('/api/orders', 'POST', {
         customer_id: finalCustomerId,
         shoot_date: shootDate,
         shoot_time: shootTime || null,
         package_name: packageName,
+        package_price: packagePrice || 0,
+        deposit_amount: depositAmount || 0,
+        total_amount: packagePrice || 0,
         notes: orderNotes || null
       });
 
@@ -222,6 +361,46 @@ export default function Orders({
       fetchOrderDetail(createdOrder.id);
     } catch (err: any) {
       setCreateError(err.message || 'Lỗi khi lưu đơn hàng mới');
+    }
+  };
+
+  const handleOpenEditModal = (order: any) => {
+    if (!order) return;
+    setEditOrderId(order.id);
+    setEditShootDate(order.shoot_date);
+    setEditShootTime(order.shoot_time || '');
+    setEditPackageName(order.package_name || '');
+    setEditPackagePrice(order.package_price || 0);
+    setEditDepositAmount(order.deposit_amount || 0);
+    setEditOrderNotes(order.notes || '');
+    setEditError(null);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editShootDate || !editPackageName) {
+      setEditError('Ngày chụp và tên gói dịch vụ là bắt buộc');
+      return;
+    }
+
+    try {
+      setEditError(null);
+      const updated = await apiRequest(`/api/orders/${editOrderId}`, 'PUT', {
+        shoot_date: editShootDate,
+        shoot_time: editShootTime || null,
+        package_name: editPackageName,
+        package_price: editPackagePrice || 0,
+        deposit_amount: editDepositAmount || 0,
+        total_amount: editPackagePrice || 0,
+        notes: editOrderNotes || null
+      });
+
+      setIsEditModalOpen(false);
+      fetchOrders();
+      fetchOrderDetail(updated.id);
+    } catch (err: any) {
+      setEditError(err.message || 'Lỗi khi cập nhật đơn hàng');
     }
   };
 
@@ -305,7 +484,8 @@ export default function Orders({
     cancelled: { label: 'Đã hủy', color: 'bg-rose-50 text-rose-700 border-rose-100' },
   };
 
-  const canEdit = userRole === 'admin' || userRole === 'manager';
+  const canEdit = userRole === 'admin' || userRole === 'manager' || userRole === 'sales';
+  const canAssignTasks = userRole === 'admin' || userRole === 'manager';
 
   const filteredOrders = orders.filter(order => {
     if (!searchQuery.trim()) return true;
@@ -631,7 +811,13 @@ export default function Orders({
 
                 {/* Status action */}
                 {canEdit && (
-                  <div className="shrink-0">
+                  <div className="shrink-0 flex items-center gap-2">
+                    <button 
+                      onClick={() => handleOpenEditModal(selectedOrder)}
+                      className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center transition-all cursor-pointer shadow-2xs border border-slate-200"
+                    >
+                      <Edit className="w-3.5 h-3.5 mr-1 text-slate-500" /> Sửa
+                    </button>
                     <button 
                       onClick={handleOpenStatusModal}
                       className="bg-gold-600 hover:bg-gold-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center transition-all cursor-pointer shadow-2xs"
@@ -701,7 +887,7 @@ export default function Orders({
                   <h4 className="font-bold text-gray-900 text-xs uppercase tracking-wide flex items-center">
                     <CheckSquare className="w-4 h-4 text-gold-600 mr-2" /> Việc nội bộ liên quan hợp đồng
                   </h4>
-                  {canEdit && (
+                  {canAssignTasks && (
                     <button 
                       onClick={handleOpenTaskModal}
                       className="text-gold-600 hover:text-gold-700 font-bold text-xs flex items-center gap-1 cursor-pointer"
@@ -784,11 +970,11 @@ export default function Orders({
 
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-400 shadow-xs flex flex-col items-center justify-center h-48">
-            <Briefcase className="w-10 h-10 opacity-30 mb-2" />
-            <h4 className="text-xs font-semibold text-gray-600">Chọn một dòng trên danh sách hợp đồng để xem hồ sơ & theo dõi tiến độ công việc</h4>
-            <p className="text-[11px] text-gray-400 mt-0.5 font-normal">Hợp đồng cưới đồng bộ hóa trực tiếp với thợ ảnh, hậu kỳ chỉnh sửa và trang phục cô dâu chú rể.</p>
-          </div>
+	          <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-400 shadow-xs flex flex-col items-center justify-center h-48">
+	            <Briefcase className="w-10 h-10 opacity-30 mb-2" />
+	            <h4 className="text-xs font-semibold text-gray-600">Chọn một dòng trên danh sách hợp đồng để xem hồ sơ & theo dõi tiến độ công việc</h4>
+	            <p className="text-[11px] text-gray-400 mt-0.5 font-normal">Xem lịch chụp, công nợ, ghi chú và đầu việc liên quan đến hợp đồng.</p>
+	          </div>
         )}
       </div>
 
@@ -866,13 +1052,14 @@ export default function Orders({
                             (c.full_name || '').toLowerCase().includes(customerSearch.toLowerCase()) ||
                             (c.phone || '').includes(customerSearch)
                           ).map(c => (
-                            <div 
-                              key={c.id}
-                              onMouseDown={() => {
-                                setFormCustomerId(c.id);
-                                setCustomerSearch(`${c.full_name} (${c.phone})`);
-                                setIsCustDropdownOpen(false);
-                              }}
+	                            <div 
+	                              key={c.id}
+	                              onMouseDown={() => {
+	                                setFormCustomerId(c.id);
+	                                setCustomerSearch(`${c.full_name} (${c.phone})`);
+                                  applyCustomerToForm(c);
+	                                setIsCustDropdownOpen(false);
+	                              }}
                               className={`p-2.5 text-xs cursor-pointer hover:bg-gold-50 transition-colors flex justify-between items-center ${
                                 formCustomerId === c.id ? 'bg-gold-50/50 font-bold text-gold-900' : 'text-gray-700'
                               }`}
@@ -908,16 +1095,47 @@ export default function Orders({
                       onChange={(e) => setCustEmail(e.target.value)}
                       className="bg-white border border-gray-200 rounded-lg p-2 text-xs focus:outline-none col-span-2"
                     />
-                    <input 
-                      type="text" 
-                      placeholder="Địa chỉ (tùy chọn)" 
-                      value={custAddress}
-                      onChange={(e) => setCustAddress(e.target.value)}
-                      className="bg-white border border-gray-200 rounded-lg p-2 text-xs focus:outline-none col-span-2"
-                    />
+	                    <input 
+	                      type="text" 
+	                      placeholder="Địa chỉ (tùy chọn)" 
+	                      value={custAddress}
+	                      onChange={(e) => setCustAddress(e.target.value)}
+	                      className="bg-white border border-gray-200 rounded-lg p-2 text-xs focus:outline-none col-span-2"
+	                    />
+	                  </div>
+	                )}
+
+                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+                    <div className="space-y-1 col-span-2">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Link Facebook cá nhân (nếu có)</label>
+                      <input
+                        type="text"
+                        placeholder="Có thể để trống nếu khách đến trực tiếp, gọi điện hoặc được giới thiệu"
+                        value={custFacebookUrl}
+                        onChange={(e) => setCustFacebookUrl(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-lg p-2 text-xs focus:outline-none focus:border-gold-500"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Sinh nhật / thôi nôi</label>
+                      <input
+                        type="date"
+                        value={custBirthday}
+                        onChange={(e) => setCustBirthday(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-lg p-2 text-xs focus:outline-none focus:border-gold-500"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Kỷ niệm ngày cưới</label>
+                      <input
+                        type="date"
+                        value={custWeddingDate}
+                        onChange={(e) => setCustWeddingDate(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-lg p-2 text-xs focus:outline-none focus:border-gold-500"
+                      />
+                    </div>
                   </div>
-                )}
-              </div>
+	              </div>
 
               {/* Service details */}
               <div className="grid grid-cols-2 gap-3">
@@ -942,8 +1160,8 @@ export default function Orders({
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Tên gói dịch vụ *</label>
+	              <div className="space-y-1">
+	                <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Tên gói dịch vụ *</label>
                 <input 
                   type="text"
                   placeholder="Ví dụ: Gói Album Studio Cao Cấp"
@@ -951,12 +1169,37 @@ export default function Orders({
                   onChange={(e) => setPackageName(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
                   required
-                />
-              </div>
+	                />
+	              </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Doanh thu / Giá gói</label>
+                    <input
+                      type="number"
+                      placeholder="Ví dụ: 1200"
+                      value={packagePrice}
+                      onChange={(e) => setPackagePrice(parseFloat(e.target.value) || 0)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
+                    />
+                    <p className="text-[10px] font-semibold text-slate-400">{MONEY_INPUT_HINT}</p>
+                    <p className="text-[10px] font-bold text-emerald-700">= {formatVndFromThousands(packagePrice)}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Tiền cọc đã trả</label>
+                    <input
+                      type="number"
+                      placeholder="Ví dụ: 500"
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(parseFloat(e.target.value) || 0)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
+                    />
+                    <p className="text-[10px] font-semibold text-slate-400">Nhập theo nghìn đồng.</p>
+                    <p className="text-[10px] font-bold text-emerald-700">= {formatVndFromThousands(depositAmount)}</p>
+                  </div>
+                </div>
 
-
-              <div className="space-y-1">
+	              <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Ghi chú, yêu cầu thêm</label>
                 <textarea 
                   rows={2}
@@ -1144,6 +1387,124 @@ export default function Orders({
                   className="w-1/2 bg-gold-500 hover:bg-gold-600 text-white py-2 rounded-xl text-xs font-semibold shadow-xs"
                 >
                   Xác nhận giao việc
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Order Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-xl overflow-hidden border border-gray-100 animate-scale-in my-8">
+            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="font-bold text-gray-900 text-base">Cập nhật chi tiết Hợp đồng / Đơn hàng</h3>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateOrder} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              {editError && (
+                <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-xs flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1.5 shrink-0" />
+                  {editError}
+                </div>
+              )}
+
+              {/* Service details */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Ngày chụp *</label>
+                  <input 
+                    type="date"
+                    value={editShootDate}
+                    onChange={(e) => setEditShootDate(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Giờ chụp (nếu có)</label>
+                  <input 
+                    type="time"
+                    value={editShootTime}
+                    onChange={(e) => setEditShootTime(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Tên gói dịch vụ *</label>
+                <input 
+                  type="text"
+                  placeholder="Ví dụ: Gói Album Studio Cao Cấp"
+                  value={editPackageName}
+                  onChange={(e) => setEditPackageName(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Doanh thu / Giá gói</label>
+                  <input 
+                    type="number"
+                    placeholder="Ví dụ: 1200"
+                    value={editPackagePrice}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value) || 0;
+                      setEditPackagePrice(val);
+                    }}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
+                  />
+                  <p className="text-[10px] font-semibold text-slate-400">{MONEY_INPUT_HINT}</p>
+                  <p className="text-[10px] font-bold text-emerald-700">= {formatVndFromThousands(editPackagePrice)}</p>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Tiền cọc đã trả</label>
+                  <input 
+                    type="number"
+                    placeholder="Ví dụ: 500"
+                    value={editDepositAmount}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value) || 0;
+                      setEditDepositAmount(val);
+                    }}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
+                  />
+                  <p className="text-[10px] font-semibold text-slate-400">Nhập theo nghìn đồng.</p>
+                  <p className="text-[10px] font-bold text-emerald-700">= {formatVndFromThousands(editDepositAmount)}</p>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Ghi chú, yêu cầu thêm</label>
+                <textarea 
+                  rows={3}
+                  value={editOrderNotes}
+                  onChange={(e) => setEditOrderNotes(e.target.value)}
+                  placeholder="Yêu cầu chụp ngoại cảnh, concept chụp, số lượng ảnh photoshop..."
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none resize-none"
+                />
+              </div>
+
+              <div className="flex space-x-3 pt-4 border-t border-gray-100">
+                <button 
+                  type="button" 
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="w-1/2 border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  Hủy bỏ
+                </button>
+                <button 
+                  type="submit"
+                  className="w-1/2 bg-gold-500 hover:bg-gold-600 text-white py-2.5 rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                >
+                  Lưu thay đổi
                 </button>
               </div>
             </form>

@@ -13,6 +13,7 @@ export interface User {
   role_id: string;
   is_active: boolean;
   created_at: string;
+  session_version: number;
 }
 
 export interface Role {
@@ -29,6 +30,9 @@ export interface Customer {
   email: string | null;
   address: string | null;
   notes: string | null;
+  birthday?: string | null;
+  wedding_date?: string | null;
+  facebook_url?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -171,12 +175,7 @@ export interface StudioSettings {
   notes: string;
   backup_schedule: 'daily' | 'weekly' | 'monthly';
   last_backup_time: string;
-  mimo_api_key?: string;
-  mimo_api_base_url?: string;
-  mimo_model?: string;
-  gemini_api_key?: string;
-  gemini_api_base_url?: string;
-  gemini_model?: string;
+  anniversary_reminder_days: number;
 }
 
 export interface DatabaseBackup {
@@ -271,28 +270,41 @@ const defaultRoles: Role[] = [
     id: 'role-sales',
     name: 'sales',
     display_name: 'Tư vấn & Sales',
-    permissions: ['leads.manage', 'tasks.view_own']
+    permissions: ['leads.manage', 'tasks.view_own', 'customers.view', 'customers.edit', 'orders.view', 'orders.create', 'orders.edit']
   }
 ];
 
-const defaultUsers: User[] = [
+const getSeedPassword = (envName: string) => {
+  const value = process.env[envName];
+  if (value) return value;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(`${envName} is required for first-run production seed`);
+  }
+  const randomPass = crypto.randomBytes(16).toString('hex');
+  console.log(`[SEED] Generated ephemeral password for ${envName}: ${randomPass} (Use only for dev, please change after logging in)`);
+  return randomPass;
+};
+
+const defaultUsersFunc = (): User[] => [
   {
     id: 'user-admin',
     full_name: 'Viet Hoang',
     email: 'viet@studio.com',
-    password_hash: bcrypt.hashSync('123abc456', 10),
+    password_hash: bcrypt.hashSync(getSeedPassword('SEED_ADMIN_PASSWORD'), 10),
     role_id: 'role-admin',
     is_active: true,
-    created_at: '2026-01-01T00:00:00Z'
+    created_at: '2026-01-01T00:00:00Z',
+    session_version: 0
   },
   {
     id: 'user-sale',
     full_name: 'Nguyễn Thị Sales',
     email: 'sale@studio.com',
-    password_hash: bcrypt.hashSync('staff123', 10),
+    password_hash: bcrypt.hashSync(getSeedPassword('SEED_SALES_PASSWORD'), 10),
     role_id: 'role-sales',
     is_active: true,
-    created_at: '2026-06-01T00:00:00Z'
+    created_at: '2026-06-01T00:00:00Z',
+    session_version: 0
   }
 ];
 
@@ -312,13 +324,28 @@ export class LocalDatabase {
         for (const role of defaultRoles) {
           await prisma.role.create({ data: role });
         }
+      } else {
+        // Sync permissions for existing default roles (in case code added new permissions)
+        for (const role of defaultRoles) {
+          const existing = await prisma.role.findUnique({ where: { id: role.id } });
+          if (existing) {
+            const existingPerms: string[] = existing.permissions as string[];
+            const newPerms = role.permissions.filter((p: string) => !existingPerms.includes(p));
+            if (newPerms.length > 0) {
+              const merged = [...existingPerms, ...newPerms];
+              await prisma.role.update({ where: { id: role.id }, data: { permissions: merged } });
+              console.log(`[SYNC] Updated role ${role.id} with new permissions: ${newPerms.join(', ')}`);
+            }
+          }
+        }
       }
 
       // Seed users if empty
       const userCount = await prisma.user.count();
       if (userCount === 0) {
         console.log('Seeding default users to PostgreSQL...');
-        for (const user of defaultUsers) {
+        const usersToSeed = defaultUsersFunc();
+        for (const user of usersToSeed) {
           await prisma.user.create({ data: user });
         }
       }
@@ -350,7 +377,8 @@ export class LocalDatabase {
         opening_hours: "08:30 - 21:30",
         notes: "Studio váy cưới cao cấp & dịch vụ chụp ảnh trọn gói chuyên nghiệp.",
         backup_schedule: "weekly",
-        last_backup_time: ""
+        last_backup_time: "",
+        anniversary_reminder_days: 7
       };
 
       this.data = {
@@ -388,6 +416,10 @@ export class LocalDatabase {
   public static save(data: DatabaseSchema) {
     this.data = data;
     
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
     // Queue the PostgreSQL sync to prevent concurrent database transaction/overwrite collisions
     this.writeQueue = this.writeQueue
       .then(() => this.syncToPostgres(data))
@@ -401,8 +433,8 @@ export class LocalDatabase {
       await prisma.$transaction(async (tx) => {
         // Sync tables
         await this.reconcileTable(tx, 'role', data.roles || [], ['name', 'display_name', 'permissions']);
-        await this.reconcileTable(tx, 'user', data.users || [], ['full_name', 'email', 'password_hash', 'role_id', 'is_active', 'created_at']);
-        await this.reconcileTable(tx, 'customer', data.customers || [], ['full_name', 'phone', 'email', 'address', 'notes', 'created_at', 'updated_at']);
+        await this.reconcileTable(tx, 'user', data.users || [], ['full_name', 'email', 'password_hash', 'role_id', 'is_active', 'created_at', 'session_version']);
+        await this.reconcileTable(tx, 'customer', data.customers || [], ['full_name', 'phone', 'email', 'address', 'notes', 'birthday', 'wedding_date', 'facebook_url', 'created_at', 'updated_at']);
         await this.reconcileTable(tx, 'order', data.orders || [], ['order_code', 'customer_id', 'status', 'shoot_date', 'shoot_time', 'package_name', 'package_price', 'deposit_amount', 'total_amount', 'notes', 'created_by', 'created_at', 'updated_at']);
         await this.reconcileTable(tx, 'orderStatusHistory', data.order_status_history || [], ['order_id', 'from_status', 'to_status', 'changed_by', 'note', 'changed_at']);
         await this.reconcileTable(tx, 'task', data.tasks || [], ['title', 'description', 'order_id', 'assigned_to', 'assigned_by', 'status', 'priority', 'due_date', 'created_at', 'updated_at']);
@@ -431,12 +463,7 @@ export class LocalDatabase {
             notes: data.studio_settings.notes || '',
             backup_schedule: data.studio_settings.backup_schedule || 'weekly',
             last_backup_time: data.studio_settings.last_backup_time || '',
-            mimo_api_key: data.studio_settings.mimo_api_key || '',
-            mimo_api_base_url: data.studio_settings.mimo_api_base_url || '',
-            mimo_model: data.studio_settings.mimo_model || '',
-            gemini_api_key: data.studio_settings.gemini_api_key || '',
-            gemini_api_base_url: data.studio_settings.gemini_api_base_url || '',
-            gemini_model: data.studio_settings.gemini_model || ''
+            anniversary_reminder_days: data.studio_settings.anniversary_reminder_days || 7
           };
           
           if (!dbSettings) {

@@ -49,9 +49,9 @@ Hệ thống được xây dựng trên một Tech Stack hiện đại, gọn nh
 *   **Backend (Máy chủ xử lý):**
     *   **Node.js & Express.js** (Máy chủ viết bằng TypeScript với sự hỗ trợ của `tsx`).
     *   **Prisma ORM (6.2.0)** (Thư viện liên kết cơ sở dữ liệu an toàn và nhất quán).
-*   **Database (Cơ sở dữ liệu song hành):**
-    *   **Primary DB:** `db.json` (File JSON lưu dữ liệu thực tế runtime - giúp sao lưu, di chuyển dữ liệu nhanh gọn và không cần cài đặt SQL phức tạp).
-    *   **Secondary DB:** **PostgreSQL** (Được Prisma tự động đồng bộ hóa bất đồng bộ để làm cơ sở dữ liệu lưu trữ lâu dài/backup).
+*   **Database (Cơ sở dữ liệu):**
+    *   **Primary DB:** **PostgreSQL** (lưu dữ liệu runtime chính cho production và local development).
+    *   **Data Access:** **PostgreSQL Active Cache** qua Prisma, không còn sử dụng `db.json` làm cơ sở dữ liệu chính.
 
 ---
 
@@ -61,10 +61,9 @@ Hệ thống được xây dựng trên một Tech Stack hiện đại, gọn nh
 STUDIO V2/
 ├── package.json                  # Định nghĩa thư viện và lệnh build/run dự án
 ├── tsconfig.json                 # Cấu hình TypeScript cho dự án
-├── server.ts                     # File mã nguồn máy chủ Backend Express (quản lý API & Đồng bộ database)
-├── db.json                       # File cơ sở dữ liệu runtime chính (dạng JSON)
+├── server.ts                     # File mã nguồn máy chủ Backend Express (quản lý API & Active Cache)
 ├── prisma/
-│   └── schema.prisma             # Định nghĩa cấu trúc bảng dữ liệu (16 Models) cho PostgreSQL
+│   └── schema.prisma             # Định nghĩa cấu trúc bảng dữ liệu cho PostgreSQL
 ├── backups/
 │   └── backup_*.json             # Các bản sao lưu dữ liệu tự động/thủ công của Studio
 ├── design/                       # Chứa các bản vẽ phác thảo giao diện (HTML Mockups)
@@ -109,10 +108,10 @@ STUDIO V2/
 
 2.  **Thiết lập file biến môi trường:**
     *   Nhân bản file `.env.example` thành file `.env` ở thư mục gốc.
-    *   Điền các thông số kết nối (Database URL của PostgreSQL nếu dùng, Port chạy server, v.v.).
+    *   Điền các thông số kết nối PostgreSQL (`DATABASE_URL`), port chạy server, và các khóa tích hợp nếu dùng.
 
-3.  **Khởi tạo Database cấu trúc bảng:**
-    Nếu sử dụng cơ sở dữ liệu PostgreSQL đi kèm, chạy lệnh sau để đồng bộ bảng dữ liệu:
+3.  **Khởi tạo cấu trúc PostgreSQL:**
+    Chạy lệnh sau để đồng bộ bảng dữ liệu:
     ```bash
     npx prisma db push
     ```
@@ -153,11 +152,18 @@ npm run start
 ```
 Hệ thống sẽ chạy bằng file tối ưu hóa cao `dist/server.cjs` và lắng nghe ở cổng được cấu hình trong file `.env` (mặc định là cổng `5000`).
 
+### 4. Cập nhật Database Schema khi triển khai (Deploy session_version)
+Do hệ thống được cập nhật tính năng quản lý phiên đăng nhập an toàn và yêu cầu trường `session_version` trong bảng `User` để xác thực token trên server-side, bạn phải đồng bộ lại cấu hình schema của PostgreSQL trên môi trường production trước khi chạy ứng dụng bằng cách thực thi lệnh:
+```bash
+npx prisma db push
+```
+
 ---
 
 ## 📘 Tài liệu & Báo cáo đi kèm
 
-Để hỗ trợ quá trình nghiên cứu cấu trúc mã nguồn hoặc hướng dẫn chuyển giao:
-*   📖 **[Tài liệu Hướng dẫn sử dụng cho nhân sự (huong_dan_su_dung.html)](file:///c:/Users/ROYAL%20PALACE/Desktop/STUDIO%20V2/huong_dan_su_dung.html):** Hướng dẫn chi tiết bằng giao diện tiếng Việt.
-*   📝 **[Nhật ký điều chỉnh & cải tiến hôm nay (LICH_SU_DIEU_CHINH.md)](file:///c:/Users/ROYAL%20PALACE/Desktop/STUDIO%20V2/LICH_SU_DIEU_CHINH.md):** Xem tóm tắt bằng ngôn ngữ đời thường về các thay đổi giao diện mobile, phân trang và fix lỗi build.
-*   🤖 **[Báo cáo Đánh giá mã nguồn tổng thể (BAO_CAO_DANH_GIA_STUDIO_V2.md)](file:///c:/Users/ROYAL%20PALACE/Desktop/STUDIO%20V2/BAO_CAO_DANH_GIA_STUDIO_V2.md):** Bản phân tích đánh giá cấu trúc hệ thống của AI agent để nắm bắt hiện trạng kỹ thuật.
+Các báo cáo, handoff, spec và mockup HTML cũ không tham gia runtime/build đã được gom vào:
+
+```text
+docs/archive/
+```

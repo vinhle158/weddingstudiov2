@@ -392,7 +392,7 @@ async function seedMockData() {
       title: "Đạt doanh số ký mới 500 triệu đồng",
       assigned_department: "Kinh doanh",
       assigned_to_user_id: "user-admin",
-      status: "in_progress",
+      status: "active",
       progress: 64,
       notes: "Hiện tại đã đạt 320 triệu từ 9 hợp đồng.",
       updated_at: "2026-07-06T15:00:00.000Z"
@@ -403,7 +403,7 @@ async function seedMockData() {
       title: "Ký mới 5 hợp đồng trọn gói VIP Luxury (>40tr)",
       assigned_department: "Tư vấn",
       assigned_to_user_id: "user-sale",
-      status: "in_progress",
+      status: "active",
       progress: 60,
       notes: "Đã ký được 3 hợp đồng, còn 2 hợp đồng mục tiêu.",
       updated_at: "2026-07-06T15:00:00.000Z"
@@ -414,7 +414,7 @@ async function seedMockData() {
       title: "Đạt tỷ lệ khách hàng đánh giá 5 sao > 95%",
       assigned_department: "Chăm sóc khách hàng",
       assigned_to_user_id: "user-sale",
-      status: "in_progress",
+      status: "active",
       progress: 92,
       notes: "Đang duy trì chất lượng phục vụ rất tốt từ đầu tháng.",
       updated_at: "2026-07-06T15:00:00.000Z"
@@ -425,7 +425,7 @@ async function seedMockData() {
       title: "Đạt 20.000 lượt theo dõi trên TikTok Studio",
       assigned_department: "Tiếp thị trực tuyến",
       assigned_to_user_id: "user-admin",
-      status: "in_progress",
+      status: "active",
       progress: 80,
       notes: "Các video clip mẫu váy cưới thu hút nhiều bình luận cô dâu.",
       updated_at: "2026-07-06T15:00:00.000Z"
@@ -436,7 +436,7 @@ async function seedMockData() {
       title: "Thu thập 150 lead tư vấn từ các kênh Social",
       assigned_department: "Tư vấn",
       assigned_to_user_id: "user-sale",
-      status: "in_progress",
+      status: "active",
       progress: 73,
       notes: "Đã có 110 khách hàng tiềm năng gửi tin nhắn xin báo giá.",
       updated_at: "2026-07-06T15:00:00.000Z"

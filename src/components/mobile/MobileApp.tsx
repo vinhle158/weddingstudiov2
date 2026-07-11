@@ -156,10 +156,10 @@ export default function MobileApp({ user, role, onLogout, studioSettings }: Mobi
       <div className="space-y-5 animate-fade-in">
         <div className="bg-gradient-to-r from-gold-500/10 to-gold-600/15 p-4 rounded-2xl border border-gold-200/20 text-slate-800">
           <p className="text-[9px] uppercase font-bold text-gold-800 tracking-widest mb-1 font-mono">Bảng điều phối</p>
-          <h3 className="text-sm font-bold text-slate-900 leading-tight">Xin chào, {user?.full_name}</h3>
-          <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
-            Hệ thống The Will đã đồng bộ hóa tối ưu cho thiết bị di động cá nhân.
-          </p>
+	          <h3 className="text-sm font-bold text-slate-900 leading-tight">Xin chào, {user?.full_name}</h3>
+	          <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
+	            Mở nhanh hồ sơ, công việc và thông báo cần xử lý.
+	          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">

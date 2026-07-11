@@ -15,6 +15,7 @@ model User {
   role_id       String
   is_active     Boolean
   created_at    String
+  session_version Int    @default(0)
 }
 
 model Role {
@@ -25,14 +26,17 @@ model Role {
 }
 
 model Customer {
-  id         String   @id
-  full_name  String
-  phone      String
-  email      String?
-  address    String?
-  notes      String?
-  created_at String
-  updated_at String
+  id           String   @id
+  full_name    String
+  phone        String
+  email        String?
+  address      String?
+  notes        String?
+  birthday     String?
+  wedding_date String?
+  facebook_url String?
+  created_at   String
+  updated_at   String
 }
 
 model Order {
@@ -164,22 +168,17 @@ model ChatMessage {
 }
 
 model StudioSettings {
-  id              String @id @default("singleton")
-  name            String
-  phone           String
-  email           String
-  address         String
-  website         String
-  opening_hours   String
-  notes           String
-  backup_schedule String
-  last_backup_time String
-  mimo_api_key        String?
-  mimo_api_base_url   String?
-  mimo_model          String?
-  gemini_api_key      String?
-  gemini_api_base_url String?
-  gemini_model        String?
+  id                        String @id @default("singleton")
+  name                      String
+  phone                     String
+  email                     String
+  address                   String
+  website                   String
+  opening_hours             String
+  notes                     String
+  backup_schedule           String
+  last_backup_time          String
+  anniversary_reminder_days Int    @default(7)
 }
 
 model DatabaseBackup {

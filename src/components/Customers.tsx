@@ -14,7 +14,10 @@ import {
   Tag, 
   ChevronRight,
   X,
-  AlertCircle
+  AlertCircle,
+  Gift,
+  Heart,
+  Facebook
 } from 'lucide-react';
 
 interface CustomersProps {
@@ -41,6 +44,9 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
   const [formEmail, setFormEmail] = useState('');
   const [formAddress, setFormAddress] = useState('');
   const [formNotes, setFormNotes] = useState('');
+  const [formBirthday, setFormBirthday] = useState('');
+  const [formWeddingDate, setFormWeddingDate] = useState('');
+  const [formFacebookUrl, setFormFacebookUrl] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
   const fetchCustomers = async () => {
@@ -87,6 +93,9 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
     setFormEmail('');
     setFormAddress('');
     setFormNotes('');
+    setFormBirthday('');
+    setFormWeddingDate('');
+    setFormFacebookUrl('');
     setFormError(null);
     setIsFormOpen(true);
   };
@@ -98,6 +107,9 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
     setFormEmail(cust.email || '');
     setFormAddress(cust.address || '');
     setFormNotes(cust.notes || '');
+    setFormBirthday(cust.birthday || '');
+    setFormWeddingDate(cust.wedding_date || '');
+    setFormFacebookUrl(cust.facebook_url || '');
     setFormError(null);
     setIsFormOpen(true);
   };
@@ -109,6 +121,11 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
       return;
     }
 
+    let formattedFbUrl = formFacebookUrl.trim();
+    if (formattedFbUrl && !formattedFbUrl.startsWith('http://') && !formattedFbUrl.startsWith('https://')) {
+      formattedFbUrl = 'https://' + formattedFbUrl;
+    }
+
     try {
       if (isEditing && selectedCustomer) {
         const updated = await apiRequest(`/api/customers/${selectedCustomer.id}`, 'PUT', {
@@ -116,7 +133,10 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
           phone: formPhone,
           email: formEmail,
           address: formAddress,
-          notes: formNotes
+          notes: formNotes,
+          birthday: formBirthday || null,
+          wedding_date: formWeddingDate || null,
+          facebook_url: formattedFbUrl || null
         });
         setSelectedCustomer(updated);
         setIsFormOpen(false);
@@ -127,7 +147,10 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
           phone: formPhone,
           email: formEmail,
           address: formAddress,
-          notes: formNotes
+          notes: formNotes,
+          birthday: formBirthday || null,
+          wedding_date: formWeddingDate || null,
+          facebook_url: formattedFbUrl || null
         });
         setIsFormOpen(false);
         fetchCustomers();
@@ -138,7 +161,7 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
     }
   };
 
-  const canEdit = userRole === 'admin' || userRole === 'manager';
+  const canEdit = userRole === 'admin' || userRole === 'manager' || userRole === 'sales';
 
   return (
     <div className="space-y-6 animate-fade-in" id="customers-section-container">
@@ -149,11 +172,11 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
             <Tag className="w-5 h-5 text-gold-600 shrink-0" />
             <span>{isMobile ? "Danh sách khách hàng" : "Hồ sơ & Danh sách khách hàng (Dạng bảng)"}</span>
           </h3>
-          {!isMobile && (
-            <p className="text-xs text-slate-500 mt-1">
-              Tra cứu thông tin, lịch sử hợp đồng và quản lý ghi chú khách hàng bằng hệ thống bảng lưới khoa học.
-            </p>
-          )}
+	          {!isMobile && (
+	            <p className="text-xs text-slate-500 mt-1">
+	              Tra cứu thông tin liên hệ, lịch sử hợp đồng, ngày kỷ niệm và ghi chú chăm sóc.
+	            </p>
+	          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -194,17 +217,26 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
-            <thead>
+        <div className="max-h-[520px] overflow-auto">
+          <table className="w-full text-left border-collapse table-fixed min-w-[1160px]">
+            <colgroup>
+              <col className="w-[52px]" />
+              <col className="w-[240px]" />
+              <col className="w-[140px]" />
+              <col className="w-[190px]" />
+              <col className="w-[240px]" />
+              <col className="w-[205px]" />
+              <col className="w-[96px]" />
+            </colgroup>
+            <thead className="sticky top-0 z-10">
               <tr className="bg-slate-100 text-xs font-bold text-slate-700 border-b border-slate-200">
-                <th className="w-16 py-2 px-3 text-center border-r border-slate-200 font-mono text-[11px] select-none text-slate-400 bg-slate-50/50">STT</th>
-                <th className="w-52 px-4 py-2 border-r border-slate-200">Họ và Tên</th>
-                <th className="w-44 px-4 py-2 border-r border-slate-200">Số Điện Thoại</th>
-                <th className="w-56 px-4 py-2 border-r border-slate-200">Email</th>
-                <th className="w-64 px-4 py-2 border-r border-slate-200">Địa Chỉ</th>
+                <th className="py-2 px-3 text-center border-r border-slate-200 font-mono text-[11px] select-none text-slate-400 bg-slate-50">STT</th>
+                <th className="px-4 py-2 border-r border-slate-200">Họ và Tên</th>
+                <th className="px-4 py-2 border-r border-slate-200">Số Điện Thoại</th>
+                <th className="px-4 py-2 border-r border-slate-200">Email</th>
+                <th className="px-4 py-2 border-r border-slate-200">Địa Chỉ</th>
                 <th className="px-4 py-2 border-r border-slate-200">Ghi Chú Nội Bộ</th>
-                <th className="w-32 px-4 py-2 text-center">Thao tác</th>
+                <th className="px-3 py-2 text-center">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 text-xs font-medium text-slate-700">
@@ -274,7 +306,7 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
                       </td>
 
                       {/* Thao tác */}
-                      <td className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-3 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center space-x-1.5">
                           {canEdit && (
                             <button 
@@ -427,6 +459,36 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
                   <strong className="w-20 shrink-0">Địa chỉ:</strong>
                   <span className="text-gray-900">{selectedCustomer.address || 'Chưa cập nhật'}</span>
                 </div>
+                <div className="flex items-center text-xs text-gray-600">
+                  <Facebook className="w-4 h-4 text-blue-500 mr-2.5 shrink-0" />
+                  <strong className="w-20 shrink-0">Facebook:</strong>
+                  {selectedCustomer.facebook_url ? (
+                    <a 
+                      href={selectedCustomer.facebook_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-blue-600 hover:text-blue-800 font-semibold underline truncate"
+                    >
+                      Link trang cá nhân
+                    </a>
+                  ) : (
+                    <span className="text-gray-400 italic">Chưa cập nhật</span>
+                  )}
+                </div>
+                {selectedCustomer.birthday && (
+                  <div className="flex items-center text-xs text-gray-600">
+                    <Gift className="w-4 h-4 text-gray-400 mr-2.5 shrink-0" />
+                    <strong className="w-20 shrink-0">Sinh nhật:</strong>
+                    <span className="text-gray-900 font-semibold">{selectedCustomer.birthday}</span>
+                  </div>
+                )}
+                {selectedCustomer.wedding_date && (
+                  <div className="flex items-center text-xs text-gray-600">
+                    <Heart className="w-4 h-4 text-gray-400 mr-2.5 shrink-0" />
+                    <strong className="w-20 shrink-0">Ngày cưới:</strong>
+                    <span className="text-gray-900 font-semibold">{selectedCustomer.wedding_date}</span>
+                  </div>
+                )}
               </div>
 
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60">
@@ -489,11 +551,11 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-400 shadow-xs flex flex-col items-center justify-center h-48">
-            <UserPlus className="w-10 h-10 opacity-30 mb-2" />
-            <h4 className="text-xs font-semibold text-gray-600">Chọn một dòng trên danh sách để xem nhanh lịch sử & hồ sơ chi tiết</h4>
-            <p className="text-[11px] text-gray-400 mt-0.5">Mọi cập nhật thông tin sẽ được tự động đồng bộ hóa trên hệ thống.</p>
-          </div>
+	          <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-400 shadow-xs flex flex-col items-center justify-center h-48">
+	            <UserPlus className="w-10 h-10 opacity-30 mb-2" />
+	            <h4 className="text-xs font-semibold text-gray-600">Chọn một dòng trên danh sách để xem nhanh lịch sử & hồ sơ chi tiết</h4>
+	            <p className="text-[11px] text-gray-400 mt-0.5">Theo dõi liên hệ, ngày kỷ niệm và lịch sử hợp đồng của khách hàng.</p>
+	          </div>
         )}
       </div>
 
@@ -565,6 +627,38 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
                   placeholder="Ví dụ: 123 Đường ABC, Quận XYZ"
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-gold-500"
                 />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Link Facebook cá nhân</label>
+                <input 
+                  type="text" 
+                  value={formFacebookUrl}
+                  onChange={(e) => setFormFacebookUrl(e.target.value)}
+                  placeholder="Ví dụ: facebook.com/username hoặc https://facebook.com/username"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-gold-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Sinh nhật / Thôi nôi</label>
+                  <input 
+                    type="date" 
+                    value={formBirthday}
+                    onChange={(e) => setFormBirthday(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-gold-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Kỷ niệm cưới</label>
+                  <input 
+                    type="date" 
+                    value={formWeddingDate}
+                    onChange={(e) => setFormWeddingDate(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-gold-500"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1">

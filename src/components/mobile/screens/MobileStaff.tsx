@@ -95,7 +95,7 @@ export default function MobileStaff({ userRole }: MobileStaffProps) {
     return (
       <div className="bg-rose-50 text-rose-700 p-4 rounded-xl text-xs flex items-center gap-2">
         <Shield className="w-5 h-5 shrink-0" />
-        <span>Bạn không có quyền truy cập chức năng quản lý nhân sự.</span>
+        <span>Bạn không có quyền quản lý nhân sự.</span>
       </div>
     );
   }

@@ -12,14 +12,9 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3005
-      - DATABASE_URL=postgresql://studio_user:production_password@postgres:5432/studio_db?schema=public
+      - DATABASE_URL=postgresql://studio_user:${POSTGRES_PASSWORD}@postgres:5432/studio_db?schema=public
       - APP_URL=http://localhost:3005
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - GEMINI_API_BASE_URL=${GEMINI_API_BASE_URL}
-      - GEMINI_MODEL=${GEMINI_MODEL}
-      - MIMO_API_KEY=${MIMO_API_KEY}
-      - MIMO_API_BASE_URL=${MIMO_API_BASE_URL}
-      - MIMO_MODEL=${MIMO_MODEL}
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - postgres
 
@@ -29,7 +24,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: studio_user
-      POSTGRES_PASSWORD: production_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: studio_db
     ports:
       - "5433:5432" # Use 5433 host port to avoid conflicting with local Postgres container on 5432 if running

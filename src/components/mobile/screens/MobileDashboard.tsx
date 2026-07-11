@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../../../lib/api';
+import { formatCompactVndFromThousands } from '../../../lib/money';
 import { 
   Calendar, 
   Clock, 
@@ -120,9 +121,7 @@ export default function MobileDashboard({ userRole, userId, onNavigate }: Mobile
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-800">
-                  {(summary.revenue?.monthly || 0) >= 1000000 
-                    ? `${((summary.revenue?.monthly || 0) / 1000000).toFixed(1)}M` 
-                    : `${summary.revenue?.monthly || 0}đ`}
+                  {formatCompactVndFromThousands(summary.revenue?.monthly || 0)}
                 </h3>
                 <p className="text-[8px] text-emerald-600 font-bold mt-0.5">Tăng trưởng ổn định</p>
               </div>

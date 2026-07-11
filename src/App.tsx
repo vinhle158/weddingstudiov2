@@ -104,25 +104,71 @@ export default function App() {
   }, []);
 
   const [unreadCount, setUnreadCount] = useState(0);
+  const [toast, setToast] = useState<{ id: string; title: string; content: string; type: string } | null>(null);
+  const [previewNotification, setPreviewNotification] = useState<{ id: string; title: string; content: string; type: string } | null>(null);
+  const [knownNotifIds, setKnownNotifIds] = useState<Set<string>>(new Set());
+  const [isFirstNotifLoad, setIsFirstNotifLoad] = useState(true);
 
-  // Poll for unread notification count
+  // Poll for unread notifications and show toast alert
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const fetchUnreadCount = async () => {
+    const fetchNotifications = async () => {
       try {
         const notifs = await apiRequest('/api/notifications');
         const count = notifs.filter((n: any) => !n.is_read).length;
         setUnreadCount(count);
+
+        const currentIds = notifs.map((n: any) => n.id);
+        
+        if (isFirstNotifLoad) {
+          setKnownNotifIds(new Set(currentIds));
+          setIsFirstNotifLoad(false);
+        } else {
+          // Tìm những thông báo mới chưa từng biết và chưa đọc
+          const newUnread = notifs.find((n: any) => !n.is_read && !knownNotifIds.has(n.id));
+          if (newUnread) {
+            setToast({
+              id: newUnread.id,
+              title: newUnread.title,
+              content: newUnread.content,
+              type: newUnread.type
+            });
+
+            // Phát tiếng bip nhẹ
+            try {
+              const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+              const oscillator = audioCtx.createOscillator();
+              const gainNode = audioCtx.createGain();
+              oscillator.connect(gainNode);
+              gainNode.connect(audioCtx.destination);
+              oscillator.type = 'sine';
+              oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+              gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+              oscillator.start();
+              gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+              oscillator.stop(audioCtx.currentTime + 0.5);
+            } catch (e) {
+              console.log('Audio notification bypass:', e);
+            }
+
+            // Thêm vào danh sách đã biết
+            setKnownNotifIds(prev => {
+              const next = new Set(prev);
+              next.add(newUnread.id);
+              return next;
+            });
+          }
+        }
       } catch (err) {
-        console.error('Failed to fetch unread count:', err);
+        console.error('Failed to fetch notifications:', err);
       }
     };
 
-    fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 20000);
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000); // Polling mỗi 10 giây
     return () => clearInterval(interval);
-  }, [isAuthenticated, activeTab]);
+  }, [isAuthenticated, isFirstNotifLoad, knownNotifIds]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,6 +220,12 @@ export default function App() {
     setActiveTab(tab);
     setNavigationArg(arg);
     setMobileMenuOpen(false);
+  };
+
+  const handleOpenNotificationDetail = (notificationId: string) => {
+    setPreviewNotification(null);
+    setToast(null);
+    handleNavigate('notifications', { selectNotificationId: notificationId });
   };
 
   // Clear navigation args on subsequent tab switches (to avoid repeating modal openings)
@@ -342,6 +394,7 @@ export default function App() {
         {activeTab === 'leads' && (
           <Leads 
             userRole={role?.name} 
+            onNavigate={handleNavigate}
           />
         )}
         
@@ -351,6 +404,8 @@ export default function App() {
             onNavigate={handleNavigate}
             initialSelectedOrderId={navigationArg?.selectOrderId}
             initialOpenCreateForCustomerId={navigationArg?.openCreateForCustomerId}
+            initialCreateCustomerDraft={navigationArg?.createCustomerDraft}
+            initialCreatePrefill={navigationArg?.createOrderPrefill}
             isMobile={viewMode === 'mobile'}
           />
         )}
@@ -370,6 +425,7 @@ export default function App() {
             userId={user?.id}
             onNavigate={handleNavigate}
             initialSelectedTaskId={navigationArg?.selectTaskId}
+            initialOpenCreateWithTemplate={navigationArg?.createTaskTemplate}
             isMobile={viewMode === 'mobile'}
           />
         )}
@@ -391,6 +447,8 @@ export default function App() {
           <Notifications 
             userId={user?.id}
             userRole={role?.name}
+            onNavigate={handleNavigate}
+            initialSelectedNotificationId={navigationArg?.selectNotificationId}
           />
         )}
 
@@ -478,10 +536,10 @@ export default function App() {
                   /* Mobile system launcher menu */
                   <div className="space-y-5 animate-fade-in">
                     <div className="bg-gradient-to-r from-gold-500/10 to-gold-600/15 p-4 rounded-2xl border border-gold-200/20 text-slate-800">
-                      <p className="text-[9px] uppercase font-bold text-gold-800 tracking-widest mb-1 font-mono">Bảng điều phối</p>
-                      <h3 className="text-sm font-bold text-slate-900 leading-tight">Xin chào, {user?.full_name}</h3>
-                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">Hệ thống The Will đã đồng bộ hóa tối ưu cho thiết bị di động cá nhân.</p>
-                    </div>
+	                      <p className="text-[9px] uppercase font-bold text-gold-800 tracking-widest mb-1 font-mono">Bảng điều phối</p>
+	                      <h3 className="text-sm font-bold text-slate-900 leading-tight">Xin chào, {user?.full_name}</h3>
+	                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">Mở nhanh hồ sơ, công việc và thông báo cần xử lý.</p>
+	                    </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <button 
@@ -754,6 +812,81 @@ export default function App() {
           handleLogout={handleLogout}
           setViewMode={setViewMode}
         />
+      )}
+
+      {toast && (
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm w-full bg-white rounded-2xl border border-amber-200 shadow-xl p-4 flex gap-3 animate-slide-in cursor-pointer hover:border-gold-500 transition-colors"
+          onClick={() => {
+            setPreviewNotification(toast);
+            setToast(null);
+          }}
+        >
+          <div className="w-10 h-10 rounded-full bg-amber-50 shrink-0 flex items-center justify-center text-amber-500">
+            <Bell className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="text-xs font-bold text-slate-900 truncate">{toast.title}</h4>
+            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">{toast.content}</p>
+          </div>
+          <button 
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setToast(null);
+            }}
+            className="text-gray-400 hover:text-gray-600 self-start p-1 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {previewNotification && (
+        <div className="fixed inset-0 z-50 flex items-end justify-end bg-slate-950/25 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl border border-amber-200 bg-white p-5 shadow-2xl animate-slide-in">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600">
+                <Bell className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Thông báo mới</p>
+                <h4 className="mt-1 text-sm font-extrabold text-slate-900 leading-snug">{previewNotification.title}</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewNotification(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-relaxed text-slate-700 whitespace-pre-line">
+              {previewNotification.content.length > 220
+                ? `${previewNotification.content.slice(0, 220).trim()}...`
+                : previewNotification.content}
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPreviewNotification(null)}
+                className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
+              >
+                Đóng
+              </button>
+              {previewNotification.content.length > 220 && (
+                <button
+                  type="button"
+                  onClick={() => handleOpenNotificationDetail(previewNotification.id)}
+                  className="rounded-xl bg-amber-600 px-3 py-2 text-xs font-bold text-white hover:bg-amber-700"
+                >
+                  Xem chi tiết
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

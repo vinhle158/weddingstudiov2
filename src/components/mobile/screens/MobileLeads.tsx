@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../../lib/api';
+import { MONEY_INPUT_HINT, formatVndFromThousands } from '../../../lib/money';
 import BottomSheet from '../shared/BottomSheet';
 import { 
   Plus, 
@@ -588,14 +589,16 @@ export default function MobileLeads({ userRole, userId }: MobileLeadsProps) {
 
               {editStatus === 'won' && (
                 <div className="space-y-1 animate-fade-in">
-                  <label className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Doanh thu chốt (VND)</label>
+                  <label className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Doanh thu chốt</label>
                   <input 
                     type="number"
                     value={editRevenue}
                     onChange={(e) => setEditRevenue(e.target.value)}
-                    placeholder="Ví dụ: 15000000"
+                    placeholder="Ví dụ: 1200"
                     className="w-full bg-slate-50 border border-emerald-300 rounded-xl py-2 px-3 text-xs focus:outline-none"
                   />
+                  <p className="text-[10px] font-semibold text-slate-400">{MONEY_INPUT_HINT}</p>
+                  <p className="text-[10px] font-bold text-emerald-700">= {formatVndFromThousands(editRevenue)}</p>
                 </div>
               )}
 

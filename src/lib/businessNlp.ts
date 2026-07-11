@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { prisma } from '../db_service';
+import { formatVndFromThousands } from './money';
 
 // Interfaces mapping to Section 2 of spec
 export interface DictionaryEntry {
@@ -249,7 +250,7 @@ export function generateNaturalResponse(intent: string, resolvedConcepts: string
     reply += `Chào bạn! Dưới đây là thông tin hoạt động tổng quan của studio:\n\n`;
     reply += `• **Khách hàng:** Tổng số **${stats.customers || 0}** khách hàng đã đăng ký.\n`;
     reply += `• **Đơn hàng:** Có **${stats.orders || 0}** đơn hàng (trong đó đang xử lý **${stats.active_orders || 0}** đơn).\n`;
-    reply += `• **Doanh thu:** Tổng doanh thu đạt **${stats.total_order_value ? Number(stats.total_order_value).toLocaleString('vi-VN') : 0} đ**.\n`;
+    reply += `• **Doanh thu:** Tổng doanh thu đạt **${formatVndFromThousands(stats.total_order_value)}**.\n`;
     reply += `• **Công việc:** Có **${stats.pending_tasks || 0}** việc cần làm (trong đó **${stats.overdue_tasks || 0}** việc đã quá hạn).\n`;
     reply += `• **Lead tư vấn:** Hiện có **${stats.active_leads || 0}** khách hàng tiềm năng đang được chăm sóc.`;
   }
@@ -324,7 +325,7 @@ export function generateNaturalResponse(intent: string, resolvedConcepts: string
     if (missingDeposits.length > 0) {
       reply += `\n⚠️ **Hợp đồng chưa đặt cọc:**\n`;
       missingDeposits.forEach((o: any) => {
-        reply += `  - Đơn **[${o.order_code}]** KH: **${o.customer_name}** (Tổng: **${o.total_amount ? Number(o.total_amount).toLocaleString('vi-VN') : 0} đ**)\n`;
+        reply += `  - Đơn **[${o.order_code}]** KH: **${o.customer_name}** (Tổng: **${formatVndFromThousands(o.total_amount)}**)\n`;
       });
     }
   }

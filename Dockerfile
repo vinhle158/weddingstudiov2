@@ -23,5 +23,8 @@ ENV NODE_ENV=production
 ENV PORT=3005
 EXPOSE 3005
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:3005/healthz || exit 1
+
 # Run migration (db push) at container startup, then start server
 CMD ["sh", "-c", "npx prisma db push && node dist/server.cjs"]

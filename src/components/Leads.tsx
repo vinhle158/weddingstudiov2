@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../lib/api';
+import { MONEY_INPUT_HINT, formatVndFromThousands } from '../lib/money';
 import { 
   User, 
   Phone, 
@@ -19,6 +20,7 @@ import {
   Sparkles, 
   AlertCircle, 
   Send, 
+  Gift, 
   TrendingUp, 
   Users, 
   Camera,
@@ -82,15 +84,16 @@ interface Lead {
 
 interface LeadsProps {
   userRole: string;
+  onNavigate?: (tab: string, arg?: any) => void;
 }
 
-export default function Leads({ userRole }: LeadsProps) {
+export default function Leads({ userRole, onNavigate }: LeadsProps) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   // View states
-  const [viewMode, setViewMode] = useState<'kanban' | 'table' | 'analytics'>('kanban');
+  const [viewMode] = useState<'kanban' | 'table' | 'analytics'>('table');
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -98,10 +101,18 @@ export default function Leads({ userRole }: LeadsProps) {
   const [selectedSource, setSelectedSource] = useState<string>('all');
   const [selectedPackage, setSelectedPackage] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedStep, setSelectedStep] = useState<number | 'all'>('all');
   
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  
+  // Custom Won Success Modal states
+  const [showWonModal, setShowWonModal] = useState(false);
+  const [newlyCreatedCustomerId, setNewlyCreatedCustomerId] = useState<string | null>(null);
+  const [wonCustomerDraft, setWonCustomerDraft] = useState<any>(null);
+  const [wonOrderPrefill, setWonOrderPrefill] = useState<any>(null);
+  const [newlyCreatedCustomerName, setNewlyCreatedCustomerName] = useState('');
   
   // Form states (Create Lead)
   const [newName, setNewName] = useState('');
@@ -269,7 +280,18 @@ export default function Leads({ userRole }: LeadsProps) {
       setSelectedLead(updated);
       fetchLeads();
       if (isAdmin) fetchAnalytics();
-      alert('Cập nhật thông tin thành công!');
+
+      // If just won: trigger our beautiful custom React modal
+      if (editStatus === 'won' && selectedLead.status !== 'won') {
+        setNewlyCreatedCustomerName(editName);
+        setNewlyCreatedCustomerId(updated.new_customer_id || null);
+        setWonCustomerDraft(updated.customer_prefill || null);
+        setWonOrderPrefill(updated.order_prefill || null);
+        setShowWonModal(true);
+        setSelectedLead(null);
+      } else {
+        alert('Cập nhật thông tin thành công!');
+      }
     } catch (err: any) {
       alert(err.message || 'Lỗi khi cập nhật thông tin');
     }
@@ -319,6 +341,12 @@ export default function Leads({ userRole }: LeadsProps) {
 
   // Filtering Logic
   const getFilteredLeads = () => {
+    const getLeadTime = (lead: Lead) => {
+      const raw = lead.date || lead.created_at || lead.updated_at || '';
+      const time = new Date(raw).getTime();
+      return Number.isFinite(time) ? time : 0;
+    };
+
     return leads.filter(l => {
       // 1. Search term (Name, Phone, Notes)
       const matchesSearch = 
@@ -351,11 +379,41 @@ export default function Leads({ userRole }: LeadsProps) {
         matchesStatus = l.status === 'lost';
       }
 
-      return matchesSearch && matchesMonth && matchesSource && matchesPackage && matchesStatus;
-    });
+      const matchesStep = selectedStep === 'all' || (l.status === 'consulting' && l.sales_step === selectedStep);
+
+      return matchesSearch && matchesMonth && matchesSource && matchesPackage && matchesStatus && matchesStep;
+    }).sort((a, b) => getLeadTime(b) - getLeadTime(a));
   };
 
   const filteredLeads = getFilteredLeads();
+
+  const getPackageNameFromLead = (lead: Lead) => {
+    if (lead.interested_packages.wedding) return 'Gói Album cưới Wedding';
+    if (lead.interested_packages.family) return 'Gói chụp ảnh gia đình Family';
+    if (lead.interested_packages.beauty) return 'Gói chân dung nghệ thuật Beauty';
+    if (lead.interested_packages.combo) return 'Gói chụp trọn gói Combo';
+    if (lead.interested_packages.couple) return 'Gói chụp ảnh đôi Couple';
+    return 'Gói Chụp Ảnh';
+  };
+
+  const handleCreateOrderFromWonLead = (event: React.MouseEvent, lead: Lead) => {
+    event.stopPropagation();
+    if (!onNavigate) return;
+
+    onNavigate('orders', {
+      createCustomerDraft: {
+        full_name: lead.customer_name,
+        phone: lead.phone,
+        notes: lead.notes || 'Khách hàng từ tư vấn CRM.'
+      },
+      createOrderPrefill: {
+        package_name: getPackageNameFromLead(lead),
+        package_price: lead.revenue || 0,
+        total_amount: lead.revenue || 0,
+        notes: lead.notes || 'Đơn hàng khởi tạo từ tư vấn CRM.'
+      }
+    });
+  };
 
   // Helper values for selectors
   const allMonths = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
@@ -435,35 +493,8 @@ export default function Leads({ userRole }: LeadsProps) {
 
         {/* Buttons / Actions */}
         <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-          {/* View Modes */}
-          <div className="bg-slate-100 p-0.5 rounded-xl border border-slate-200/30 flex text-xs font-semibold text-slate-500 shadow-2xs">
-            <button 
-              onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all ${viewMode === 'kanban' ? 'bg-white text-slate-800 shadow-2xs font-bold' : 'hover:text-slate-800'}`}
-            >
-              <KanbanIcon className="w-3.5 h-3.5" />
-              <span>Kanban</span>
-            </button>
-            <button 
-              onClick={() => setViewMode('table')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all ${viewMode === 'table' ? 'bg-white text-slate-800 shadow-2xs font-bold' : 'hover:text-slate-800'}`}
-            >
-              <List className="w-3.5 h-3.5" />
-              <span>Bảng dữ liệu</span>
-            </button>
-            {isAdmin && (
-              <button 
-                onClick={() => { setViewMode('analytics'); fetchAnalytics(); }}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all ${viewMode === 'analytics' ? 'bg-white text-slate-800 shadow-2xs font-bold' : 'hover:text-slate-800'}`}
-              >
-                <BarChart2 className="w-3.5 h-3.5" />
-                <span>Báo cáo</span>
-              </button>
-            )}
-          </div>
-
           {/* Add lead (Only Sales/Admin) */}
-          <button 
+          <button
             onClick={() => setIsCreateModalOpen(true)}
             data-demo-btn="add-lead"
             className="flex items-center gap-1 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs hover:shadow-md cursor-pointer ml-auto md:ml-0"
@@ -537,7 +568,12 @@ export default function Leads({ userRole }: LeadsProps) {
             <div>
               <select
                 value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
+                onChange={(e) => {
+                  setSelectedStatus(e.target.value);
+                  if (e.target.value !== 'consulting') {
+                    setSelectedStep('all');
+                  }
+                }}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs focus:outline-none focus:border-gold-400 font-semibold text-slate-600"
               >
                 <option value="all">📈 Tất cả trạng thái</option>
@@ -550,192 +586,226 @@ export default function Leads({ userRole }: LeadsProps) {
         </div>
       )}
 
+      <div className="bg-white border border-slate-200/60 rounded-2xl p-3 shadow-2xs">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedStep('all');
+              setSelectedStatus('all');
+            }}
+              className={`flex min-w-[116px] items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
+                selectedStep === 'all' && selectedStatus === 'all'
+                  ? 'bg-slate-900 text-white border-slate-900'
+                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              <span>Tất cả lead</span>
+              <span className={`flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-sm font-black ${
+                selectedStep === 'all' && selectedStatus === 'all'
+                  ? 'bg-white text-slate-900'
+                  : 'bg-white text-slate-700 border border-slate-200'
+              }`}>
+                {leads.length}
+              </span>
+            </button>
+            {stepNames.map(step => {
+              const count = leads.filter(l => l.status === 'consulting' && l.sales_step === step.num).length;
+              const isActive = selectedStep === step.num;
+              const hasWork = count > 0;
+              return (
+                <button
+                  key={step.num}
+                type="button"
+                onClick={() => {
+                  setSelectedStep(step.num);
+                  setSelectedStatus('consulting');
+                }}
+                  className={`flex min-w-[145px] flex-1 items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left transition-colors ${
+                    isActive
+                      ? 'bg-gold-50 text-gold-950 border-gold-400 shadow-2xs'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-white hover:border-gold-200'
+                  }`}
+                >
+                  <span className="min-w-0">
+                    <span className="block text-[10px] font-extrabold uppercase tracking-wider">B{step.num}</span>
+                    <span className="block truncate text-[11px] font-bold">{step.label}</span>
+                  </span>
+                  <span className={`flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full px-2 text-base font-black leading-none shadow-2xs ${
+                    isActive
+                      ? 'bg-gold-500 text-white ring-2 ring-gold-200'
+                      : hasWork
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                        : 'bg-white text-slate-400 border border-slate-200'
+                  }`}>
+                    {count}
+                  </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* 3. Main Views Rendering */}
 
-      {/* KANBAN BOARD */}
+      {/* KANBAN BOARD — Dashboard Overview (read-only) */}
       {viewMode === 'kanban' && (
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 overflow-x-auto pb-4 select-none">
-          {stepNames.map(step => {
-            const leadsInStep = filteredLeads.filter(l => l.sales_step === step.num && l.status === 'consulting');
-            
-            return (
-              <div 
-                key={step.num}
-                className="flex flex-col bg-slate-50 border border-slate-200/50 rounded-2xl p-3 min-w-[240px] max-h-[600px] shrink-0"
-              >
-                {/* Column Header */}
-                <div className="mb-3 shrink-0">
-                  <div className="flex justify-between items-center mb-1">
-                    <h3 className="text-xs font-bold text-slate-700 flex items-center gap-1.5 truncate max-w-[80%]">
-                      <span className="w-5 h-5 flex items-center justify-center bg-gold-100 text-gold-800 rounded-md font-mono text-[10px] font-bold shrink-0">
-                        {step.num}
+        <div className="space-y-4">
+          {/* Pipeline columns */}
+          <div className="flex gap-2.5 pb-2 select-none">
+            {stepNames.map(step => {
+              const leadsInStep = filteredLeads.filter(l => l.sales_step === step.num && l.status === 'consulting');
+              
+              return (
+                <div 
+                  key={step.num}
+                  className="flex flex-col flex-1 min-w-0 bg-white border border-slate-200/60 rounded-2xl overflow-hidden shadow-2xs"
+                >
+                  {/* Column Header */}
+                  <div className="px-3 py-2.5 bg-slate-50 border-b border-slate-200/50">
+                    <div className="flex justify-between items-center mb-0.5">
+                      <h3 className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5 truncate">
+                        <span className="w-5 h-5 flex items-center justify-center bg-gold-100 text-gold-800 rounded-md font-mono text-[10px] font-bold shrink-0">
+                          {step.num}
+                        </span>
+                        <span className="truncate">{step.label}</span>
+                      </h3>
+                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full font-mono shrink-0 ${leadsInStep.length > 0 ? 'bg-gold-100 text-gold-800' : 'bg-slate-100 text-slate-400'}`}>
+                        {leadsInStep.length}
                       </span>
-                      <span className="truncate">{step.label}</span>
-                    </h3>
-                    <span className="bg-slate-200/80 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">
-                      {leadsInStep.length}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-slate-400 font-medium leading-normal line-clamp-2">
-                    {step.desc}
-                  </p>
-                </div>
-
-                {/* Column Content */}
-                <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 scrollbar-thin">
-                  {leadsInStep.length === 0 ? (
-                    <div className="h-20 border border-dashed border-slate-200 rounded-xl flex items-center justify-center text-center p-3">
-                      <p className="text-[10px] text-slate-400 font-medium italic">Không có khách hàng</p>
                     </div>
-                  ) : (
-                    leadsInStep.map(lead => {
-                      const hasAdminFeedback = lead.admin_feedbacks.length > 0;
-                      const hasSupportRequest = lead.support_needed !== null;
+                    <p className="text-[9px] text-slate-400 font-medium leading-snug line-clamp-1">
+                      {step.desc}
+                    </p>
+                  </div>
 
-                      return (
+                  {/* Column Content — compact list */}
+                  <div className="flex-1 overflow-y-auto max-h-[calc(100vh-380px)] p-2 space-y-1.5 scrollbar-thin">
+                    {leadsInStep.length === 0 ? (
+                      <div className="h-14 flex items-center justify-center">
+                        <p className="text-[9px] text-slate-300 font-medium italic">Trống</p>
+                      </div>
+                    ) : (
+                      leadsInStep.map(lead => (
                         <div
                           key={lead.id}
                           onClick={() => openDetailModal(lead)}
-                          className="bg-white border border-slate-200/70 hover:border-gold-300 p-3 rounded-xl shadow-3xs hover:shadow-2xs transition-all cursor-pointer group space-y-2"
+                          className="bg-slate-50/60 border border-slate-100 hover:border-gold-300 rounded-lg px-2.5 py-2 space-y-1 cursor-pointer transition-colors"
                         >
-                          {/* Name & Source */}
-                          <div className="flex justify-between items-start gap-1.5">
-                            <h4 className="text-[12px] font-bold text-slate-800 group-hover:text-gold-700 truncate">
-                              {lead.customer_name}
-                            </h4>
-                            <span className="bg-slate-100 text-slate-600 text-[8px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0 font-mono border border-slate-200/40">
-                              {lead.source.replace('PAGE ', '')}
-                            </span>
-                          </div>
+                          {/* Customer name */}
+                          <h4 className="text-[11px] font-bold text-slate-700 truncate">
+                            {lead.customer_name}
+                          </h4>
 
-                          {/* Interested Packages Tags */}
-                          <div className="flex flex-wrap gap-1">
-                            {lead.interested_packages.wedding && (
-                              <span className="bg-rose-50 text-rose-600 text-[8px] font-bold px-1.5 py-0.5 rounded-sm">💍 Wedding</span>
-                            )}
-                            {lead.interested_packages.family && (
-                              <span className="bg-indigo-50 text-indigo-600 text-[8px] font-bold px-1.5 py-0.5 rounded-sm">👨‍👩‍👦 Family</span>
-                            )}
-                            {lead.interested_packages.beauty && (
-                              <span className="bg-teal-50 text-teal-600 text-[8px] font-bold px-1.5 py-0.5 rounded-sm">👸 Beauty</span>
-                            )}
-                          </div>
-
-                          {/* Follow-up State & Date */}
-                          <div className="flex justify-between items-center text-[9px] text-slate-400 font-semibold border-t border-slate-100 pt-2 font-mono">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3 text-slate-300" />
-                              {lead.date.substring(5)}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              <span className={`w-3 h-3 rounded-full flex items-center justify-center text-[7px] font-bold ${lead.follow_up_status.follow_1 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>1</span>
-                              <span className={`w-3 h-3 rounded-full flex items-center justify-center text-[7px] font-bold ${lead.follow_up_status.follow_2 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>2</span>
-                              <span className={`w-3 h-3 rounded-full flex items-center justify-center text-[7px] font-bold ${lead.follow_up_status.follow_3 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>3</span>
+                          {/* Package tags + date */}
+                          <div className="flex items-center justify-between gap-1">
+                            <div className="flex flex-wrap gap-0.5">
+                              {lead.interested_packages.wedding && (
+                                <span className="bg-rose-50 text-rose-500 text-[7px] font-bold px-1 py-px rounded">Wedding</span>
+                              )}
+                              {lead.interested_packages.family && (
+                                <span className="bg-indigo-50 text-indigo-500 text-[7px] font-bold px-1 py-px rounded">Family</span>
+                              )}
+                              {lead.interested_packages.beauty && (
+                                <span className="bg-teal-50 text-teal-500 text-[7px] font-bold px-1 py-px rounded">Beauty</span>
+                              )}
                             </div>
+                            <span className="text-[8px] text-slate-400 font-mono shrink-0">{lead.date.substring(5)}</span>
                           </div>
 
-                          {/* Alerts/Status badges */}
-                          {(hasAdminFeedback || hasSupportRequest) && (
-                            <div className="flex flex-wrap gap-1.5 pt-1">
-                              {hasSupportRequest && (
-                                <span className="bg-amber-50 text-amber-700 text-[8px] font-bold px-1.5 py-0.5 rounded-sm border border-amber-200/40 flex items-center gap-0.5 shrink-0">
-                                  <AlertCircle className="w-2.5 h-2.5 text-amber-600" /> Cần Hỗ Trợ
+                          {/* Follow-up dots + alerts */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-0.5">
+                              <span className={`w-2.5 h-2.5 rounded-full flex items-center justify-center text-[6px] font-bold ${lead.follow_up_status.follow_1 ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-400'}`}>1</span>
+                              <span className={`w-2.5 h-2.5 rounded-full flex items-center justify-center text-[6px] font-bold ${lead.follow_up_status.follow_2 ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-400'}`}>2</span>
+                              <span className={`w-2.5 h-2.5 rounded-full flex items-center justify-center text-[6px] font-bold ${lead.follow_up_status.follow_3 ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-400'}`}>3</span>
+                            </div>
+                            <div className="flex gap-1">
+                              {lead.support_needed !== null && (
+                                <span className="text-amber-500" title="Cần hỗ trợ">
+                                  <AlertCircle className="w-3 h-3" />
                                 </span>
                               )}
-                              {hasAdminFeedback && (
-                                <span className="bg-blue-50 text-blue-700 text-[8px] font-bold px-1.5 py-0.5 rounded-sm border border-blue-200/40 flex items-center gap-0.5 shrink-0">
-                                  <MessageSquare className="w-2.5 h-2.5 text-blue-600" /> Phản Hồi
+                              {lead.admin_feedbacks.length > 0 && (
+                                <span className="text-blue-500" title="Có phản hồi">
+                                  <MessageSquare className="w-3 h-3" />
                                 </span>
                               )}
                             </div>
-                          )}
-
-                          {/* Quick navigation arrows (Kanban move) */}
-                          <div 
-                            className="flex justify-end gap-1.5 pt-1.5 opacity-0 group-hover:opacity-100 transition-opacity border-t border-slate-100"
-                            onClick={(e) => e.stopPropagation()} // prevent opening detail modal
-                          >
-                            <button
-                              disabled={step.num === 1}
-                              onClick={() => moveLeadStep(lead.id, step.num, 'prev')}
-                              className="p-1 hover:bg-slate-100 rounded-md disabled:opacity-30 cursor-pointer"
-                            >
-                              <ChevronLeft className="w-3 h-3 text-slate-500" />
-                            </button>
-                            <button
-                              disabled={step.num === 6}
-                              onClick={() => moveLeadStep(lead.id, step.num, 'next')}
-                              className="p-1 hover:bg-slate-100 rounded-md disabled:opacity-30 cursor-pointer"
-                            >
-                              <ChevronRight className="w-3 h-3 text-slate-500" />
-                            </button>
                           </div>
                         </div>
-                      );
-                    })
-                  )}
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Won / Lost Summary Row */}
+          {(() => {
+            const closedLeads = filteredLeads.filter(l => l.status !== 'consulting');
+            const wonLeads = closedLeads.filter(l => l.status === 'won');
+            const lostLeads = closedLeads.filter(l => l.status === 'lost');
+            const totalRevenue = wonLeads.reduce((sum, l) => sum + (l.revenue || 0), 0);
+
+            if (closedLeads.length === 0) return null;
+
+            return (
+              <div className="bg-white border border-slate-200/60 rounded-2xl overflow-hidden shadow-2xs">
+                <div className="px-4 py-3 bg-slate-50 border-b border-slate-200/50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 bg-gold-100 text-gold-700 rounded-lg">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                    </span>
+                    <h3 className="text-xs font-bold text-slate-700">Đã Kết Thúc</h3>
+                  </div>
+                  <div className="flex items-center gap-3 text-[10px] font-bold">
+                    <span className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg border border-emerald-200/50">
+                      ✅ Thành công: {wonLeads.length}
+                    </span>
+                    <span className="bg-rose-50 text-rose-600 px-2 py-1 rounded-lg border border-rose-200/50">
+                      ❌ Thất bại: {lostLeads.length}
+                    </span>
+                    {totalRevenue > 0 && (
+                      <span className="bg-gold-50 text-gold-800 px-2 py-1 rounded-lg border border-gold-200/50">
+                        💰 Doanh số: {formatVndFromThousands(totalRevenue)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <tbody>
+                      {closedLeads.map(lead => (
+                        <tr key={lead.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50">
+                          <td className="py-2 px-4">
+                            <span className="text-[11px] font-bold text-slate-700">{lead.customer_name}</span>
+                          </td>
+                          <td className="py-2 px-4">
+                            <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase ${lead.status === 'won' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-600'}`}>
+                              {lead.status === 'won' ? 'Thành Công' : 'Thất Bại'}
+                            </span>
+                          </td>
+                          <td className="py-2 px-4 text-[10px] text-slate-500 font-medium">
+                            {lead.status === 'won' && lead.revenue ? formatVndFromThousands(lead.revenue) : ''}
+                            {lead.status === 'lost' && lead.failure_reason ? lead.failure_reason : ''}
+                          </td>
+                          <td className="py-2 px-4">
+                            <span className="text-[9px] text-slate-400 font-mono">Nguồn: {lead.source.replace('PAGE ', '')}</span>
+                          </td>
+                          <td className="py-2 px-4">
+                            <span className="text-[9px] text-slate-400 font-mono">{lead.date.substring(5)}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             );
-          })}
-
-          {/* Column for CLOSED (Won / Lost) */}
-          <div className="flex flex-col bg-gold-50/20 border border-gold-200/30 rounded-2xl p-3 min-w-[240px] max-h-[600px] shrink-0">
-            <div className="mb-3 shrink-0">
-              <h3 className="text-xs font-bold text-gold-900 flex items-center gap-1.5">
-                <span className="p-1 bg-gold-100 text-gold-700 rounded-md">
-                  <CheckCircle className="w-3.5 h-3.5" />
-                </span>
-                <span>Đã Kết Thúc (Won / Lost)</span>
-              </h3>
-              <p className="text-[10px] text-gold-600/70 font-medium leading-normal mt-1">
-                Các hợp đồng đã chốt thành công hoặc đã đánh dấu thất bại.
-              </p>
-            </div>
-
-            <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 scrollbar-thin">
-              {filteredLeads.filter(l => l.status !== 'consulting').length === 0 ? (
-                <div className="h-20 border border-dashed border-gold-200/40 rounded-xl flex items-center justify-center text-center p-3">
-                  <p className="text-[10px] text-gold-600/60 font-medium italic">Không có dữ liệu</p>
-                </div>
-              ) : (
-                filteredLeads.filter(l => l.status !== 'consulting').map(lead => (
-                  <div
-                    key={lead.id}
-                    onClick={() => openDetailModal(lead)}
-                    className={`border p-3 rounded-xl shadow-3xs transition-all cursor-pointer space-y-2 ${lead.status === 'won' ? 'bg-emerald-50/30 border-emerald-200/60 hover:border-emerald-400' : 'bg-rose-50/20 border-rose-200/40 hover:border-rose-400'}`}
-                  >
-                    <div className="flex justify-between items-start gap-1">
-                      <h4 className="text-[12px] font-bold text-slate-800 truncate">
-                        {lead.customer_name}
-                      </h4>
-                      <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-md uppercase ${lead.status === 'won' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                        {lead.status === 'won' ? 'Chốt' : 'Thất bại'}
-                      </span>
-                    </div>
-
-                    {lead.status === 'won' && lead.revenue && (
-                      <div className="flex items-center gap-0.5 text-xs font-bold text-emerald-700">
-                        <DollarSign className="w-3.5 h-3.5" />
-                        <span>{(lead.revenue).toLocaleString()}kđ</span>
-                      </div>
-                    )}
-
-                    {lead.status === 'lost' && lead.failure_reason && (
-                      <p className="text-[9px] font-bold text-rose-600 line-clamp-2">
-                        Lý do: {lead.failure_reason}
-                      </p>
-                    )}
-
-                    <div className="flex justify-between items-center text-[9px] text-slate-400 font-semibold border-t border-slate-100/50 pt-2 font-mono">
-                      <span>Nguồn: {lead.source.replace('PAGE ', '')}</span>
-                      <span>{lead.date.substring(5)}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          })()}
         </div>
       )}
 
@@ -756,12 +826,13 @@ export default function Leads({ userRole }: LeadsProps) {
                   <th className="py-3 px-4">Doanh số</th>
                   <th className="py-3 px-4">Trạng thái</th>
                   <th className="py-3 px-4">Phản hồi</th>
+                  <th className="py-3 px-4 text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
                 {filteredLeads.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="py-12 text-center text-slate-400 font-semibold italic">
+                    <td colSpan={11} className="py-12 text-center text-slate-400 font-semibold italic">
                       Không tìm thấy dữ liệu phù hợp với bộ lọc
                     </td>
                   </tr>
@@ -789,9 +860,25 @@ export default function Leads({ userRole }: LeadsProps) {
                       </td>
                       <td className="py-3 px-4 text-center">
                         {lead.status === 'consulting' ? (
-                          <span className="bg-gold-50 text-gold-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-gold-200/30">
-                            B/{lead.sales_step}
-                          </span>
+                          <div className="inline-flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              disabled={lead.sales_step === 1}
+                              onClick={() => moveLeadStep(lead.id, lead.sales_step, 'prev')}
+                              className="p-0.5 hover:bg-slate-100 rounded disabled:opacity-20 cursor-pointer transition-colors"
+                            >
+                              <ChevronLeft className="w-3.5 h-3.5 text-slate-500" />
+                            </button>
+                            <span className="bg-gold-50 text-gold-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-gold-200/30 min-w-[36px] text-center">
+                              B/{lead.sales_step}
+                            </span>
+                            <button
+                              disabled={lead.sales_step === 6}
+                              onClick={() => moveLeadStep(lead.id, lead.sales_step, 'next')}
+                              className="p-0.5 hover:bg-slate-100 rounded disabled:opacity-20 cursor-pointer transition-colors"
+                            >
+                              <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+                            </button>
+                          </div>
                         ) : (
                           <span className="text-slate-400 font-bold">—</span>
                         )}
@@ -804,7 +891,7 @@ export default function Leads({ userRole }: LeadsProps) {
                         </div>
                       </td>
                       <td className="py-3 px-4 font-bold text-slate-700">
-                        {lead.revenue ? `${(lead.revenue).toLocaleString()}kđ` : '—'}
+                        {lead.revenue ? formatVndFromThousands(lead.revenue) : '—'}
                       </td>
                       <td className="py-3 px-4">
                         <span className={`inline-flex items-center text-[9px] font-extrabold px-2 py-0.5 rounded-full border ${
@@ -822,6 +909,21 @@ export default function Leads({ userRole }: LeadsProps) {
                             {lead.admin_feedbacks.length}
                           </span>
                         ) : '—'}
+                      </td>
+                      <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                        {lead.status === 'won' ? (
+                          <button
+                            type="button"
+                            onClick={(e) => handleCreateOrderFromWonLead(e, lead)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-[10px] font-extrabold text-emerald-700 transition-colors hover:bg-emerald-100 hover:border-emerald-300"
+                            title="Tạo hợp đồng hoặc đơn hàng từ lead đã chốt"
+                          >
+                            <Briefcase className="h-3.5 w-3.5" />
+                            <span>Tạo HĐ</span>
+                          </button>
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -888,7 +990,7 @@ export default function Leads({ userRole }: LeadsProps) {
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tổng Doanh số Chốt</p>
                 <h3 className="text-xl font-extrabold text-slate-800 mt-0.5">
-                  {(analytics.summary.totalRevenue * 1000).toLocaleString()}đ
+                  {formatVndFromThousands(analytics.summary.totalRevenue)}
                 </h3>
                 <p className="text-[10px] text-slate-500 mt-1 font-semibold font-mono">
                   Ghi nhận từ các hợp đồng won
@@ -1301,7 +1403,7 @@ export default function Leads({ userRole }: LeadsProps) {
                         <div>
                           <p className="text-xs font-bold text-emerald-800">Đã chốt thành công!</p>
                           <p className="text-[11px] text-emerald-700 mt-0.5">
-                            Doanh số: <span className="font-bold">{editRevenue ? `${Number(editRevenue).toLocaleString()} kđ` : 'Chưa cập nhật'}</span>
+                            Doanh số: <span className="font-bold">{editRevenue ? formatVndFromThousands(editRevenue) : 'Chưa cập nhật'}</span>
                             {editSuccessReason && <span className="ml-2">· Lý do: {editSuccessReason}</span>}
                           </p>
                         </div>
@@ -1519,19 +1621,21 @@ export default function Leads({ userRole }: LeadsProps) {
                   {editStatus === 'won' && (
                     <div className="grid grid-cols-2 gap-4 animate-fade-in">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Doanh số chốt (kđ) *</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Doanh số chốt *</label>
                         <div className="relative">
                           <DollarSign className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
                           <input 
                             type="number"
                             required
                             disabled={isReadOnly}
-                            placeholder="Ví dụ: 4300 (4.3 triệu)"
+                            placeholder="Ví dụ: 1200"
                             value={editRevenue}
                             onChange={(e) => setEditRevenue(e.target.value)}
                             className="w-full bg-white border border-slate-200 rounded-xl py-2 pl-8 pr-3 text-xs focus:outline-none focus:border-gold-400 font-bold text-emerald-700 disabled:opacity-75 disabled:bg-slate-100/50"
                           />
                         </div>
+                        <p className="text-[10px] font-semibold text-slate-400">{MONEY_INPUT_HINT}</p>
+                        <p className="text-[10px] font-bold text-emerald-700">= {formatVndFromThousands(editRevenue)}</p>
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lý do chốt thành công</label>
@@ -1674,6 +1778,73 @@ export default function Leads({ userRole }: LeadsProps) {
               </div>
 
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Won Success Modal */}
+      {showWonModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white border border-slate-100 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-6 text-center transform scale-95 transition-all duration-300">
+            
+            {/* Celebration Icon */}
+            <div className="w-16 h-16 bg-gold-100 text-gold-600 rounded-2xl flex items-center justify-center mx-auto shadow-md">
+              <Gift className="w-9 h-9" />
+            </div>
+
+            {/* Title & Description */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-black text-slate-800 tracking-tight">
+                Chốt Đơn Thành Công! 🎉
+              </h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed px-4">
+                Xin chúc mừng! Khách hàng <strong className="text-slate-800 font-bold">"{newlyCreatedCustomerName}"</strong> đã chốt tư vấn thành công.
+              </p>
+            </div>
+
+            {/* List of auto-created items */}
+            <div className="bg-slate-50 border border-slate-200/50 rounded-2xl p-4 text-left space-y-2.5">
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-[10px] font-extrabold shrink-0 mt-0.5">✓</span>
+                <div>
+                  <h5 className="text-[11px] font-bold text-slate-700">Đã liên kết hồ sơ khách hàng</h5>
+                  <p className="text-[9px] text-slate-400 font-semibold">Sẵn sàng bổ sung Facebook và ngày kỷ niệm</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-[10px] font-extrabold shrink-0 mt-0.5">✓</span>
+                <div>
+                  <h5 className="text-[11px] font-bold text-slate-700">Mở form tạo hợp đồng mới</h5>
+                  <p className="text-[9px] text-slate-400 font-semibold">Nhân viên nhập lịch chụp, Facebook và ngày kỷ niệm trước khi lưu</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-2.5">
+              <button
+                onClick={() => {
+                  setShowWonModal(false);
+                  if (onNavigate) {
+                    onNavigate('orders', {
+                      openCreateForCustomerId: newlyCreatedCustomerId || undefined,
+                      createCustomerDraft: newlyCreatedCustomerId ? undefined : wonCustomerDraft,
+                      createOrderPrefill: wonOrderPrefill
+                    });
+                  }
+                }}
+                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold py-3 rounded-2xl transition-all shadow-md cursor-pointer"
+              >
+                Tạo hợp đồng mới ngay
+              </button>
+              <button
+                onClick={() => setShowWonModal(false)}
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2.5 rounded-2xl transition-colors cursor-pointer"
+              >
+                Để sau
+              </button>
+            </div>
+
           </div>
         </div>
       )}

@@ -4,7 +4,7 @@
       "id": "user-admin",
       "full_name": "Viet Hoang",
       "email": "viet@studio.com",
-      "password_hash": "123abc456",
+      "password_hash": "$2a$10$K9W4WpI7j1eW3S4kG8S8du7.31N23d.O7aYv71O91g8182Yn0B1J.",
       "role_id": "role-admin",
       "is_active": true,
       "created_at": "2026-07-06T01:28:22.804Z"
@@ -13,7 +13,7 @@
       "id": "user-sale",
       "full_name": "Nguyễn Thị Sales",
       "email": "sale@studio.com",
-      "password_hash": "staff123",
+      "password_hash": "$2a$10$mBq08h1a7zF3jZeE8.T.pG2q.c0p8/T.oGg96vG/y663t2O.T.pG2q",
       "role_id": "role-sales",
       "is_active": true,
       "created_at": "2026-06-01T00:00:00Z"
@@ -22,7 +22,7 @@
       "id": "user-rbz3bmj",
       "full_name": "Minh",
       "email": "minh@studio.com",
-      "password_hash": "123456",
+      "password_hash": "$2a$10$E9W4WpI7j1eW3S4kG8S8du7.31N23d.O7aYv71O91g8182Yn0B1J.",
       "role_id": "role-s0aio5l",
       "is_active": true,
       "created_at": "2026-07-06T01:48:12.555Z"

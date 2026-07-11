@@ -775,21 +775,21 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
             <div className="min-w-0 flex-1">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
-                  <h3 className="text-sm font-extrabold text-slate-900">
-                    {dashboardAlerts.length > 0 ? 'Có cập nhật nội bộ mới' : 'Không có tin nhắn hay thông báo mới.'}
-                  </h3>
-                  <p className="text-xs text-slate-600 mt-0.5">
-                    {dashboardAlerts.length > 0
-                      ? 'Thông báo quan trọng vừa được đồng bộ khi bạn vào dashboard.'
-                      : 'Các thông báo đã đọc và tin nhắn cũ sẽ không xuất hiện trong khu vực này.'}
-                  </p>
+	                  <h3 className="text-sm font-extrabold text-slate-900">
+	                    {dashboardAlerts.length > 0 ? 'Có thông báo mới' : 'Không có thông báo mới'}
+	                  </h3>
+	                  <p className="text-xs text-slate-600 mt-0.5">
+	                    {dashboardAlerts.length > 0
+	                      ? `${dashboardAlerts.length} thông báo chưa đọc cần xem.`
+	                      : 'Bạn đã xử lý hết thông báo mới.'}
+	                  </p>
                 </div>
                 <div className="flex gap-2 shrink-0">
                   {dashboardAlerts.length > 0 && (
-                    <button
-                      onClick={() => onNavigate('notifications')}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3 py-2 text-xs font-bold text-white hover:bg-amber-700 transition-colors"
-                    >
+	                    <button
+	                      onClick={() => onNavigate('notifications', { selectNotificationId: dashboardAlerts[0]?.id })}
+	                      className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3 py-2 text-xs font-bold text-white hover:bg-amber-700 transition-colors"
+	                    >
                       Xem ngay <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   )}
@@ -810,11 +810,11 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
               {dashboardAlerts.length > 0 && (
                 <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
                   {dashboardAlerts.map((alert) => (
-                    <button
-                      key={`${alert.alert_kind}-${alert.id}`}
-                      onClick={() => onNavigate('notifications')}
-                      className="text-left rounded-xl bg-white/85 border border-amber-100 px-3 py-2.5 hover:border-amber-300 hover:bg-white transition-colors min-w-0"
-                    >
+	                    <button
+	                      key={`${alert.alert_kind}-${alert.id}`}
+	                      onClick={() => onNavigate('notifications', { selectNotificationId: alert.id })}
+	                      className="text-left rounded-xl bg-white/85 border border-amber-100 px-3 py-2.5 hover:border-amber-300 hover:bg-white transition-colors min-w-0"
+	                    >
                       <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-amber-700">
                         <Bell className="w-3.5 h-3.5" />
                         <span>Thông báo</span>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { apiRequest } from '../lib/api';
 import { 
   Bell, 
@@ -12,7 +12,9 @@ import {
   User as UserIcon,
   Search,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Gift,
+  Heart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -23,7 +25,7 @@ interface NotificationItem {
   receiver_id: string | null;
   title: string;
   content: string;
-  type: 'general' | 'task_assignment' | 'order_update' | 'system';
+  type: 'general' | 'task_assignment' | 'order_update' | 'system' | 'anniversary';
   related_id: string | null;
   is_read: boolean;
   created_at: string;
@@ -32,15 +34,19 @@ interface NotificationItem {
 interface NotificationsProps {
   userRole?: string;
   userId?: string;
+  onNavigate?: (tab: string, arg?: any) => void;
+  initialSelectedNotificationId?: string;
 }
 
-export default function Notifications({ userRole, userId }: NotificationsProps) {
+export default function Notifications({ userRole, userId, onNavigate, initialSelectedNotificationId }: NotificationsProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'notifications' | 'chat'>('notifications');
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [pendingNotificationId, setPendingNotificationId] = useState<string | null>(initialSelectedNotificationId || null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const notificationRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Announcement form states (Admin/Manager only)
   const [title, setTitle] = useState('');
@@ -80,6 +86,29 @@ export default function Notifications({ userRole, userId }: NotificationsProps) 
     const interval = setInterval(fetchNotificationsAndMessages, 20000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (initialSelectedNotificationId) {
+      setPendingNotificationId(initialSelectedNotificationId);
+      setActiveTab('notifications');
+    }
+  }, [initialSelectedNotificationId]);
+
+  useEffect(() => {
+    if (!pendingNotificationId || notifications.length === 0) return;
+    const target = notifications.find(n => n.id === pendingNotificationId);
+    if (!target) return;
+
+    setActiveTab('notifications');
+    setSelectedItem(target);
+    setTimeout(() => {
+      notificationRefs.current[target.id]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }, 80);
+    setPendingNotificationId(null);
+  }, [pendingNotificationId, notifications]);
 
   const handleMarkAsRead = async (id: string) => {
     try {
@@ -317,10 +346,10 @@ export default function Notifications({ userRole, userId }: NotificationsProps) 
           {loading ? (
             <div className="py-12 text-center text-slate-400 text-xs italic">Đang tải danh sách...</div>
           ) : activeTab === 'notifications' ? (
-            notifications.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center text-slate-400 text-xs italic">
-                Chưa có thông báo nào trong hệ thống.
-              </div>
+	            notifications.length === 0 ? (
+	              <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center text-slate-400 text-xs italic">
+	                Chưa có thông báo nào.
+	              </div>
             ) : (
               <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
                 {notifications.map((notif) => {
@@ -328,6 +357,9 @@ export default function Notifications({ userRole, userId }: NotificationsProps) 
                   return (
                     <div
                       key={notif.id}
+                      ref={(el) => {
+                        notificationRefs.current[notif.id] = el;
+                      }}
                       onClick={() => setSelectedItem(notif)}
                       className={`p-4 rounded-xl border transition-all cursor-pointer flex gap-4 ${
                         isSelected
@@ -336,9 +368,17 @@ export default function Notifications({ userRole, userId }: NotificationsProps) 
                       }`}
                     >
                       <div className={`p-2 rounded-lg h-fit ${
-                        notif.is_read ? 'bg-slate-100 text-slate-400' : 'bg-gold-50 text-gold-700 animate-pulse'
+                        notif.is_read
+                          ? 'bg-slate-100 text-slate-400'
+                          : notif.type === 'anniversary'
+                            ? 'bg-amber-50 text-amber-700 animate-pulse'
+                            : 'bg-gold-50 text-gold-700 animate-pulse'
                       }`}>
-                        <Bell className="w-4 h-4" />
+                        {notif.type === 'anniversary' ? (
+                          <Gift className="w-4 h-4" />
+                        ) : (
+                          <Bell className="w-4 h-4" />
+                        )}
                       </div>
                       
                       <div className="flex-1 min-w-0 space-y-1">
@@ -445,12 +485,63 @@ export default function Notifications({ userRole, userId }: NotificationsProps) 
                   {selectedItem.content}
                 </div>
 
-                {activeTab === 'notifications' && !selectedItem.is_read && (
+                {activeTab === 'notifications' && selectedItem.type === 'anniversary' && onNavigate && (userRole === 'admin' || userRole === 'manager') && (
+                  <button
+                    onClick={() => {
+                      const matchWedding = selectedItem.related_id.includes('anniversary:wedding');
+                      const titleTemplate = matchWedding 
+                        ? `Chăm sóc khách hàng: Kỷ niệm ngày cưới` 
+                        : `Chăm sóc khách hàng: Sinh nhật / Thôi nôi`;
+                      
+                      const customerNameMatch = selectedItem.content.match(/Khách hàng (.*?) \(SĐT:/);
+                      const customerName = customerNameMatch ? customerNameMatch[1] : 'Khách hàng';
+
+                      const phoneMatch = selectedItem.content.match(/SĐT: (.*?)(?: \| FB:|\))/);
+                      const phoneStr = phoneMatch ? phoneMatch[1] : '';
+
+                      const fbMatch = selectedItem.content.match(/FB: (.*?)\)/);
+                      const fbStr = fbMatch ? fbMatch[1] : '';
+
+                      const dateMatch = selectedItem.content.match(/vào ngày (.*?)\./);
+                      const dateStr = dateMatch ? dateMatch[1] : '';
+
+                      const finalTitle = `${titleTemplate} - ${customerName}`;
+                      
+                      let contactDetails = `📞 SĐT liên hệ: ${phoneStr}\n`;
+                      if (fbStr) {
+                        contactDetails += `🌐 Link Facebook: ${fbStr}\n`;
+                      } else {
+                        contactDetails += `🌐 Link Facebook: Chưa cập nhật\n`;
+                      }
+
+                      const finalDesc = `Gọi điện/nhắn tin chúc mừng khách hàng ${customerName}. Gửi lời tri ân và giới thiệu ưu đãi kỷ niệm cưới/sinh nhật của Studio.
+\n📌 THÔNG TIN LIÊN HỆ:\n${contactDetails}\n📅 Ngày sự kiện: ${dateStr}.`;
+
+                      onNavigate('tasks', {
+                        createTaskTemplate: {
+                          title: finalTitle,
+                          description: finalDesc
+                        }
+                      });
+                      
+                      if (!selectedItem.is_read) {
+                        handleMarkAsRead(selectedItem.id);
+                      }
+                    }}
+                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-2xs hover:shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Gift className="w-4 h-4" />
+                    Gán việc chăm sóc cho Sale
+                  </button>
+                )}
+
+                {activeTab === 'notifications' && (
                   <button
                     onClick={() => handleMarkAsRead(selectedItem.id)}
-                    className="w-full bg-gold-600 hover:bg-gold-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-2xs"
+                    disabled={selectedItem.is_read}
+                    className="w-full border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold py-2.5 rounded-xl transition-all shadow-2xs disabled:opacity-40 disabled:hover:bg-transparent"
                   >
-                    Xác nhận Đã đọc chỉ thị
+                    {selectedItem.is_read ? 'Đã đọc' : 'Xác nhận đã đọc'}
                   </button>
                 )}
 

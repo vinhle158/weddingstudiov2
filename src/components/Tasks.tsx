@@ -18,14 +18,31 @@ import {
   FileText,
   RefreshCw,
   Search,
-  Calendar
+  Calendar,
+  Facebook,
+  Phone
 } from 'lucide-react';
+
+const parseContactFromDesc = (desc: string) => {
+  if (!desc) return { phone: null, facebook: null };
+  const phoneMatch = desc.match(/SĐT liên hệ: (.*?)(?:\n|$)/);
+  const fbMatch = desc.match(/Link Facebook: (.*?)(?:\n|$)/);
+  return {
+    phone: phoneMatch ? phoneMatch[1].trim() : null,
+    facebook: fbMatch && fbMatch[1].includes('http') ? fbMatch[1].trim() : null
+  };
+};
 
 interface TasksProps {
   userRole: string;
   userId: string;
   onNavigate: (tab: string, arg?: any) => void;
   initialSelectedTaskId?: string;
+  initialOpenCreateWithTemplate?: {
+    title: string;
+    description: string;
+    orderId?: string;
+  };
   isMobile?: boolean;
 }
 
@@ -34,6 +51,7 @@ export default function Tasks({
   userId, 
   onNavigate, 
   initialSelectedTaskId,
+  initialOpenCreateWithTemplate,
   isMobile
 }: TasksProps) {
   const [tasks, setTasks] = useState<any[]>([]);
@@ -117,6 +135,20 @@ export default function Tasks({
     fetchTasks();
     fetchDropdowns();
   }, [filterStatus, filterPriority, filterStaff]);
+
+  useEffect(() => {
+    if (initialOpenCreateWithTemplate) {
+      setTaskTitle(initialOpenCreateWithTemplate.title);
+      setTaskDesc(initialOpenCreateWithTemplate.description || '');
+      setTaskOrderId(initialOpenCreateWithTemplate.orderId || '');
+      setTaskAssignedTo('');
+      setTaskPriority('normal');
+      // Set default due date to 7 days from now, or let user set it. In this case, we can leave it empty or pre-populate.
+      setTaskDueDate('');
+      setOrderSearch('');
+      setIsCreateOpen(true);
+    }
+  }, [initialOpenCreateWithTemplate]);
 
   const fetchTaskDetail = async (taskId: string) => {
     try {
@@ -253,11 +285,11 @@ export default function Tasks({
               <CheckSquare className="w-5 h-5 text-gold-600 shrink-0" />
               <span>{isMobile ? "Công việc của tôi" : "Phân công & Tiến độ Công việc (Dạng bảng)"}</span>
             </h3>
-            {!isMobile && (
-              <p className="text-xs text-slate-500 mt-1">
-                Theo dõi đầu việc bàn giao, cập nhật tiến độ xử lý và liên kết hợp đồng của nhân sự bằng hệ thống bảng lưới khoa học.
-              </p>
-            )}
+	            {!isMobile && (
+	              <p className="text-xs text-slate-500 mt-1">
+	                Theo dõi đầu việc bàn giao, người phụ trách, hạn xử lý và hợp đồng liên quan.
+	              </p>
+	            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -648,6 +680,61 @@ export default function Tasks({
                   </p>
                 </div>
               )}
+
+              {(() => {
+                const contacts = parseContactFromDesc(selectedTask.description || '');
+                if (contacts.phone || contacts.facebook) {
+                  return (
+                    <div className="bg-amber-50/40 p-4 rounded-xl border border-amber-200/50 space-y-2.5">
+                      <h4 className="text-[10px] font-bold text-amber-800 uppercase tracking-wider flex items-center">
+                        ⚡ Thao tác chăm sóc nhanh
+                      </h4>
+                      <div className="space-y-2">
+                        {contacts.phone && (
+                          <div className="flex items-center text-xs text-slate-600 gap-2 bg-white px-3 py-2 rounded-lg border border-slate-200/60">
+                            <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <strong>SĐT liên hệ:</strong>
+                            <span className="text-slate-800 font-mono font-bold select-all">{contacts.phone}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(contacts.phone || '');
+                                alert('Đã sao chép số điện thoại!');
+                              }}
+                              className="text-[10px] text-gold-600 hover:text-gold-700 font-bold ml-auto cursor-pointer"
+                            >
+                              Sao chép
+                            </button>
+                          </div>
+                        )}
+                        <div className="flex gap-2 pt-1">
+                          {contacts.facebook && (
+                            <a
+                              href={contacts.facebook}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer"
+                            >
+                              <Facebook className="w-3.5 h-3.5" /> Nhắn Facebook
+                            </a>
+                          )}
+                          {contacts.phone && (
+                            <a
+                              href={`https://zalo.me/${contacts.phone.replace(/[^0-9]/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer"
+                            >
+                              💬 Nhắn Zalo
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
 
             {/* Right Column (Colspan 2): Timeline & Progress Updates Reporting Box */}
@@ -741,11 +828,11 @@ export default function Tasks({
 
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-400 shadow-xs flex flex-col items-center justify-center h-48">
-            <CheckSquare className="w-10 h-10 opacity-30 mb-2" />
-            <h4 className="text-xs font-semibold text-gray-600">Chọn một dòng trên danh sách công việc để xem chi tiết & cập nhật nhật ký</h4>
-            <p className="text-[11px] text-gray-400 mt-0.5 font-normal">Hệ thống phân công việc trực tiếp đồng bộ hoá tức thì trên toàn hệ thống.</p>
-          </div>
+	          <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-400 shadow-xs flex flex-col items-center justify-center h-48">
+	            <CheckSquare className="w-10 h-10 opacity-30 mb-2" />
+	            <h4 className="text-xs font-semibold text-gray-600">Chọn một dòng trên danh sách công việc để xem chi tiết & cập nhật nhật ký</h4>
+	            <p className="text-[11px] text-gray-400 mt-0.5 font-normal">Kiểm tra nội dung bàn giao, deadline và lịch sử cập nhật công việc.</p>
+	          </div>
         )}
       </div>
 
@@ -795,73 +882,75 @@ export default function Tasks({
                 </select>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Liên kết Đơn hàng / Hợp đồng (nếu có)</label>
-                <div className="relative">
-                  <input 
-                    type="text"
-                    placeholder="Nhập mã đơn, tên khách hoặc gói dịch vụ để tìm..."
-                    value={orderSearch}
-                    onChange={(e) => {
-                      setOrderSearch(e.target.value);
-                      setIsOrderDropdownOpen(true);
-                      if (!e.target.value) {
-                        setTaskOrderId('');
-                      }
-                    }}
-                    onFocus={() => setIsOrderDropdownOpen(true)}
-                    onBlur={() => setTimeout(() => setIsOrderDropdownOpen(false), 250)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-gold-500 font-medium text-slate-700"
-                  />
-                  {isOrderDropdownOpen && (
-                    <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto divide-y divide-gray-100">
-                      {orderSearch && (
-                        <div 
-                          onMouseDown={() => {
-                            setTaskOrderId('');
-                            setOrderSearch('');
-                            setIsOrderDropdownOpen(false);
-                          }}
-                          className="p-2 text-xs text-rose-600 hover:bg-rose-50 cursor-pointer font-bold transition-colors"
-                        >
-                          -- Bỏ liên kết đơn hàng --
-                        </div>
-                      )}
-                      {orders.filter(o => 
-                        (o.order_code || '').toLowerCase().includes(orderSearch.toLowerCase()) ||
-                        (o.customer_name || '').toLowerCase().includes(orderSearch.toLowerCase()) ||
-                        (o.package_name || '').toLowerCase().includes(orderSearch.toLowerCase())
-                      ).length === 0 ? (
-                        <div className="p-2.5 text-xs text-gray-400 italic text-center">Không tìm thấy đơn hàng nào</div>
-                      ) : (
-                        orders.filter(o => 
+              {!initialOpenCreateWithTemplate && (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Liên kết Đơn hàng / Hợp đồng (nếu có)</label>
+                  <div className="relative">
+                    <input 
+                      type="text"
+                      placeholder="Nhập mã đơn, tên khách hoặc gói dịch vụ để tìm..."
+                      value={orderSearch}
+                      onChange={(e) => {
+                        setOrderSearch(e.target.value);
+                        setIsOrderDropdownOpen(true);
+                        if (!e.target.value) {
+                          setTaskOrderId('');
+                        }
+                      }}
+                      onFocus={() => setIsOrderDropdownOpen(true)}
+                      onBlur={() => setTimeout(() => setIsOrderDropdownOpen(false), 250)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-gold-500 font-medium text-slate-700"
+                    />
+                    {isOrderDropdownOpen && (
+                      <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto divide-y divide-gray-100">
+                        {orderSearch && (
+                          <div 
+                            onMouseDown={() => {
+                              setTaskOrderId('');
+                              setOrderSearch('');
+                              setIsOrderDropdownOpen(false);
+                            }}
+                            className="p-2 text-xs text-rose-600 hover:bg-rose-50 cursor-pointer font-bold transition-colors"
+                          >
+                            -- Bỏ liên kết đơn hàng --
+                          </div>
+                        )}
+                        {orders.filter(o => 
                           (o.order_code || '').toLowerCase().includes(orderSearch.toLowerCase()) ||
                           (o.customer_name || '').toLowerCase().includes(orderSearch.toLowerCase()) ||
                           (o.package_name || '').toLowerCase().includes(orderSearch.toLowerCase())
-                        ).map(o => (
-                          <div 
-                            key={o.id}
-                            onMouseDown={() => {
-                              setTaskOrderId(o.id);
-                              setOrderSearch(`[${o.order_code}] - ${o.customer_name}`);
-                              setIsOrderDropdownOpen(false);
-                            }}
-                            className={`p-2.5 text-xs cursor-pointer hover:bg-gold-50 transition-colors ${
-                              taskOrderId === o.id ? 'bg-gold-50/50 font-bold text-gold-900' : 'text-gray-750'
-                            }`}
-                          >
-                            <div className="flex justify-between items-center">
-                              <span className="font-mono font-bold text-slate-900">{o.order_code}</span>
-                              <span className="text-slate-500">{o.customer_name}</span>
+                        ).length === 0 ? (
+                          <div className="p-2.5 text-xs text-gray-400 italic text-center">Không tìm thấy đơn hàng nào</div>
+                        ) : (
+                          orders.filter(o => 
+                            (o.order_code || '').toLowerCase().includes(orderSearch.toLowerCase()) ||
+                            (o.customer_name || '').toLowerCase().includes(orderSearch.toLowerCase()) ||
+                            (o.package_name || '').toLowerCase().includes(orderSearch.toLowerCase())
+                          ).map(o => (
+                            <div 
+                              key={o.id}
+                              onMouseDown={() => {
+                                setTaskOrderId(o.id);
+                                setOrderSearch(`[${o.order_code}] - ${o.customer_name}`);
+                                setIsOrderDropdownOpen(false);
+                              }}
+                              className={`p-2.5 text-xs cursor-pointer hover:bg-gold-50 transition-colors ${
+                                taskOrderId === o.id ? 'bg-gold-50/50 font-bold text-gold-900' : 'text-gray-750'
+                              }`}
+                            >
+                              <div className="flex justify-between items-center">
+                                <span className="font-mono font-bold text-slate-900">{o.order_code}</span>
+                                <span className="text-slate-500">{o.customer_name}</span>
+                              </div>
+                              <div className="text-[10px] text-gray-400 mt-0.5 truncate">{o.package_name}</div>
                             </div>
-                            <div className="text-[10px] text-gray-400 mt-0.5 truncate">{o.package_name}</div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">

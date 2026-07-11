@@ -3,6 +3,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
@@ -16,7 +17,26 @@ import { buildAndExecuteQuery } from './src/lib/chatbot/queryBuilder';
 import { renderResponse } from './src/lib/chatbot/responseTemplates';
 import { resolveCustomer } from './src/lib/chatbot/fuzzyMatch';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-change-this-in-production';
+const DEV_JWT_SECRET = crypto.randomBytes(32).toString('hex');
+
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('FATAL: JWT_SECRET environment variable is missing in production!');
+  }
+  console.warn('WARNING: JWT_SECRET missing. Using ephemeral dev key; sessions reset on restart.');
+  return DEV_JWT_SECRET;
+}
+const JWT_SECRET = getJwtSecret();
+
+function sanitizeUser(user: User): Omit<User, 'password_hash'>;
+function sanitizeUser(user: undefined): undefined;
+function sanitizeUser(user: User | undefined): Omit<User, 'password_hash'> | undefined {
+  if (!user) return undefined;
+  const { password_hash, ...cleanUser } = user;
+  return cleanUser;
+}
 
 // Extend Express Request type to include authenticated user
 interface AuthenticatedRequest extends Request {
@@ -33,7 +53,22 @@ async function startServer() {
   const PORT = parseInt(process.env.PORT || '3000', 10);
 
   app.use(helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: process.env.NODE_ENV === 'production'
+      ? {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "blob:"],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'", "data:"],
+            objectSrc: ["'none'"],
+            frameSrc: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"]
+          }
+        }
+      : false,
     crossOriginEmbedderPolicy: false,
   }));
   app.use(cors({
@@ -60,12 +95,16 @@ async function startServer() {
     }
     const token = authHeader.split(' ')[1];
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+      const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; sessionVersion?: number };
       const db = LocalDatabase.get();
       const user = db.users.find(u => u.id === decoded.userId);
       
       if (!user || !user.is_active) {
         return res.status(401).json({ error: 'Unauthorized: Invalid or inactive user' });
+      }
+
+      if (decoded.sessionVersion === undefined || decoded.sessionVersion !== (user.session_version || 0)) {
+        return res.status(401).json({ error: 'Unauthorized: Session has expired or logged out' });
       }
 
       const role = db.roles.find(r => r.id === user.role_id);
@@ -234,6 +273,11 @@ async function startServer() {
   };
 
   const normalizeSearch = (value: unknown) => String(value || '').trim().toLowerCase();
+
+  const formatVndFromThousands = (value: unknown) => {
+    const parsed = Number(value) || 0;
+    return `${(parsed * 1000).toLocaleString('vi-VN')} đ`;
+  };
 
   const toDateKey = (date: Date) => date.toISOString().split('T')[0];
 
@@ -549,100 +593,6 @@ async function startServer() {
     return { error: 'Unknown tool' };
   };
 
-  const callMimoChat = async (body: Record<string, any>) => {
-    const db = LocalDatabase.get();
-    const apiKey = db.studio_settings?.mimo_api_key || process.env.MIMO_API_KEY;
-    if (!apiKey) {
-      throw new Error('MIMO_API_KEY is not configured');
-    }
-
-    const baseUrl = (db.studio_settings?.mimo_api_base_url || process.env.MIMO_API_BASE_URL || 'https://api.xiaomimimo.com/v1').replace(/\/$/, '');
-    const response = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: db.studio_settings?.mimo_model || process.env.MIMO_MODEL || 'mimo-v2.5-pro',
-        temperature: 0.1,
-        max_tokens: 260,
-        ...body
-      }),
-      signal: AbortSignal.timeout(25000)
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`MiMo API error ${response.status}: ${text.slice(0, 300)}`);
-    }
-
-    return response.json() as Promise<any>;
-  };
-
-  const compactGeminiSchema = (schema: Record<string, any>): Record<string, any> => {
-    const { additionalProperties, ...rest } = schema;
-    const compacted: Record<string, any> = { ...rest };
-    if (schema.properties) {
-      compacted.properties = Object.fromEntries(
-        Object.entries(schema.properties).map(([key, value]) => [
-          key,
-          typeof value === 'object' && value !== null
-            ? compactGeminiSchema(value as Record<string, any>)
-            : value
-        ])
-      );
-    }
-    return compacted;
-  };
-
-  const geminiTools = [{
-    functionDeclarations: assistantTools.map(tool => ({
-      name: tool.function.name,
-      description: tool.function.description,
-      parameters: compactGeminiSchema(tool.function.parameters)
-    }))
-  }];
-
-  const callGeminiGenerate = async (body: Record<string, any>) => {
-    const db = LocalDatabase.get();
-    const apiKey = db.studio_settings?.gemini_api_key || process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY is not configured');
-    }
-
-    const baseUrl = (db.studio_settings?.gemini_api_base_url || process.env.GEMINI_API_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta').replace(/\/$/, '');
-    const model = db.studio_settings?.gemini_model || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-    const response = await fetch(`${baseUrl}/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 260
-        },
-        ...body
-      }),
-      signal: AbortSignal.timeout(25000)
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Gemini API error ${response.status}: ${text.slice(0, 300)}`);
-    }
-
-    return response.json() as Promise<any>;
-  };
-
-  const getGeminiText = (response: any) => {
-    const parts = response.candidates?.[0]?.content?.parts || [];
-    return parts
-      .map((part: any) => part.text)
-      .filter(Boolean)
-      .join('\n')
-      .trim();
-  };
-
   const containsRawToolMarkup = (value: unknown) => {
     const text = String(value || '').toLowerCase();
     return text.includes('<tool_call') || text.includes('<function=') || text.includes('</tool_call>') || text.includes('function_call');
@@ -719,49 +669,6 @@ async function startServer() {
     return { name: 'get_business_overview', args: {} };
   };
 
-  const summarizeToolResultsWithMimo = async (messages: any[], name: AssistantToolName, result: unknown) => {
-    const second = await callMimoChat({
-      messages: [
-        ...messages,
-        {
-          role: 'assistant',
-          content: null,
-          tool_calls: [{
-            id: 'fallback-tool-call',
-            type: 'function',
-            function: {
-              name,
-              arguments: '{}'
-            }
-          }]
-        },
-        {
-          role: 'tool',
-          tool_call_id: 'fallback-tool-call',
-          name,
-          content: JSON.stringify(result).slice(0, 5000)
-        }
-      ]
-    });
-    return String(second.choices?.[0]?.message?.content || '').trim();
-  };
-
-  const summarizeToolResultsWithGemini = async (systemPrompt: string, question: string, name: AssistantToolName, result: unknown) => {
-    const response = await callGeminiGenerate({
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents: [
-        { role: 'user', parts: [{ text: question }] },
-        {
-          role: 'user',
-          parts: [{
-            text: `Du lieu he thong da kiem tra tu ${name}: ${JSON.stringify(result).slice(0, 5000)}. Hay tra loi ngan gon cho admin, khong nhac ten tool va khong in markup ky thuat.`
-          }]
-        }
-      ]
-    });
-    return getGeminiText(response);
-  };
-
   const translateStatus = (status: string): string => {
     const map: Record<string, string> = {
       new: 'Đơn mới',
@@ -791,7 +698,7 @@ async function startServer() {
       output += `Chào bạn! Dưới đây là thông tin hoạt động tổng quan của studio:\n\n`;
       output += `• **Khách hàng:** Tổng số **${result.customers}** khách hàng đã đăng ký.\n`;
       output += `• **Đơn hàng:** Có **${result.orders}** đơn hàng (trong đó đang xử lý **${result.active_orders}** đơn).\n`;
-      output += `• **Doanh thu:** Tổng doanh thu đạt **${result.total_order_value ? result.total_order_value.toLocaleString('vi-VN') : 0} đ**.\n`;
+      output += `• **Doanh thu:** Tổng doanh thu đạt **${formatVndFromThousands(result.total_order_value)}**.\n`;
       output += `• **Công việc:** Có **${result.pending_tasks}** việc cần làm (trong đó **${result.overdue_tasks}** việc đã quá hạn).\n`;
       output += `• **Lead tư vấn:** Hiện có **${result.active_leads}** khách hàng tiềm năng đang được chăm sóc.`;
       return output;
@@ -832,7 +739,7 @@ async function startServer() {
       if (missingDeposit.length > 0) {
         output += `\n⚠️ **Hợp đồng chưa đặt cọc:**\n`;
         missingDeposit.forEach((o: any) => {
-          output += `  - Đơn **[${o.order_code}]** KH: **${o.customer_name}** (Tổng: **${o.total_amount ? o.total_amount.toLocaleString('vi-VN') : 0} đ**)\n`;
+          output += `  - Đơn **[${o.order_code}]** KH: **${o.customer_name}** (Tổng: **${formatVndFromThousands(o.total_amount)}**)\n`;
         });
       }
       return output;
@@ -987,183 +894,7 @@ async function startServer() {
     return `Đã kiểm tra hệ thống. Kết quả: ${JSON.stringify(compactResult).slice(0, 700)}`;
   };
 
-  const answerWithDeterministicTool = async (systemPrompt: string, question: string, messages: any[], providerName?: string) => {
-    const inferred = inferAssistantToolFromQuestion(question);
-    const result = runAssistantTool(inferred.name, inferred.args);
-    let answer = '';
-    const db = LocalDatabase.get();
-    const hasMimo = !!(db.studio_settings?.mimo_api_key || process.env.MIMO_API_KEY);
-    const hasGemini = !!(db.studio_settings?.gemini_api_key || process.env.GEMINI_API_KEY);
 
-    try {
-      if (providerName === 'mimo' && hasMimo) {
-        answer = await summarizeToolResultsWithMimo(messages, inferred.name, result);
-      } else if (providerName === 'gemini' && hasGemini) {
-        answer = await summarizeToolResultsWithGemini(systemPrompt, question, inferred.name, result);
-      } else if (hasMimo) {
-        answer = await summarizeToolResultsWithMimo(messages, inferred.name, result);
-      } else if (hasGemini) {
-        answer = await summarizeToolResultsWithGemini(systemPrompt, question, inferred.name, result);
-      }
-    } catch (e) {
-      console.error('Offline summary failed, using raw output formatting:', e);
-    }
-
-    if (!answer || containsRawToolMarkup(answer)) {
-      answer = formatOfflineAnswer(inferred.name, result, inferred.args);
-    }
-
-    return {
-      answer,
-      tools_used: [inferred.name]
-    };
-  };
-
-  const answerWithMimo = async (systemPrompt: string, question: string, messages: any[]) => {
-    const first = await callMimoChat({
-      messages,
-      tools: assistantTools,
-      tool_choice: 'auto'
-    });
-    const firstMessage = first.choices?.[0]?.message || {};
-    const toolCalls = (firstMessage.tool_calls || []).slice(0, 2);
-
-    if (toolCalls.length === 0) {
-      if (containsRawToolMarkup(firstMessage.content)) {
-        return answerWithDeterministicTool(systemPrompt, question, messages, 'mimo');
-      }
-      return {
-        answer: String(firstMessage.content || 'Tôi chưa có đủ dữ liệu để trả lời.').trim(),
-        tools_used: []
-      };
-    }
-
-    const toolResults = toolCalls.map((toolCall: any) => {
-      const name = toolCall.function?.name as AssistantToolName;
-      let args: Record<string, any> = {};
-      try {
-        args = JSON.parse(toolCall.function?.arguments || '{}');
-      } catch {
-        args = {};
-      }
-      return {
-        tool_call_id: toolCall.id,
-        name,
-        result: runAssistantTool(name, args)
-      };
-    });
-
-    const second = await callMimoChat({
-      messages: [
-        ...messages,
-        firstMessage,
-        ...toolResults.map(toolResult => ({
-          role: 'tool',
-          tool_call_id: toolResult.tool_call_id,
-          name: toolResult.name,
-          content: JSON.stringify(toolResult.result).slice(0, 5000)
-        }))
-      ]
-    });
-
-    return {
-      answer: String(second.choices?.[0]?.message?.content || 'Không có kết quả phù hợp.').trim(),
-      tools_used: toolResults.map(toolResult => toolResult.name)
-    };
-  };
-
-  const answerWithGemini = async (systemPrompt: string, question: string) => {
-    const first = await callGeminiGenerate({
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents: [{ role: 'user', parts: [{ text: question }] }],
-      tools: geminiTools
-    });
-
-    const parts = first.candidates?.[0]?.content?.parts || [];
-    const functionCalls = parts
-      .filter((part: any) => part.functionCall)
-      .map((part: any) => part.functionCall)
-      .slice(0, 2);
-
-    if (functionCalls.length === 0) {
-      if (containsRawToolMarkup(getGeminiText(first))) {
-        return answerWithDeterministicTool(systemPrompt, question, [], 'gemini');
-      }
-      return {
-        answer: getGeminiText(first) || 'Tôi chưa có đủ dữ liệu để trả lời.',
-        tools_used: []
-      };
-    }
-
-    const toolResults = functionCalls.map((call: any) => {
-      const name = call.name as AssistantToolName;
-      const args = call.args || {};
-      return {
-        name,
-        result: runAssistantTool(name, args)
-      };
-    });
-
-    const second = await callGeminiGenerate({
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents: [
-        { role: 'user', parts: [{ text: question }] },
-        { role: 'model', parts: functionCalls.map((call: any) => ({ functionCall: call })) },
-        {
-          role: 'user',
-          parts: toolResults.map(toolResult => ({
-            functionResponse: {
-              name: toolResult.name,
-              response: {
-                result: toolResult.result
-              }
-            }
-          }))
-        }
-      ]
-    });
-
-    return {
-      answer: getGeminiText(second) || 'Không có kết quả phù hợp.',
-      tools_used: toolResults.map(toolResult => toolResult.name)
-    };
-  };
-
-  const answerAssistant = async (systemPrompt: string, question: string, messages: any[]) => {
-    const db = LocalDatabase.get();
-    const hasMimo = !!(db.studio_settings?.mimo_api_key || process.env.MIMO_API_KEY);
-    const hasGemini = !!(db.studio_settings?.gemini_api_key || process.env.GEMINI_API_KEY);
-
-    const providers = [
-      {
-        name: 'mimo',
-        enabled: hasMimo,
-        run: () => answerWithMimo(systemPrompt, question, messages)
-      },
-      {
-        name: 'gemini',
-        enabled: hasGemini,
-        run: () => answerWithGemini(systemPrompt, question)
-      }
-    ];
-
-    let lastError: unknown = null;
-    for (const provider of providers) {
-      if (!provider.enabled) continue;
-      try {
-        const result = await provider.run();
-        if (containsRawToolMarkup(result.answer)) {
-          return await answerWithDeterministicTool(systemPrompt, question, messages, provider.name);
-        }
-        return result;
-      } catch (err) {
-        lastError = err;
-        console.error(`AI provider ${provider.name} failed, trying next provider if available:`, err);
-      }
-    }
-
-    throw lastError || new Error('No AI provider is configured');
-  };
 
   // ----------------- RULE-BASED CHATBOT ENDPOINT -----------------
   interface ChatbotSessionContext {
@@ -1174,9 +905,22 @@ async function startServer() {
       rawCustomerName: string;
       options: any[];
     };
+    lastActivity?: number;
   }
 
   const chatbotSessions = new Map<string, ChatbotSessionContext>();
+
+  // Periodically clean up chatbot sessions older than 30 minutes
+  const SESSION_TTL = 30 * 60 * 1000; // 30 minutes
+  const cleanupInterval = setInterval(() => {
+    const now = Date.now();
+    for (const [sid, session] of chatbotSessions.entries()) {
+      if (session.lastActivity && now - session.lastActivity > SESSION_TTL) {
+        chatbotSessions.delete(sid);
+      }
+    }
+  }, 5 * 60 * 1000);
+  cleanupInterval.unref(); // Prevent blocking Node.js from exiting in tests/compiles
 
   app.post('/api/chatbot', authenticate, async (req: AuthenticatedRequest, res: Response) => {
     if (req.user?.email?.toLowerCase() !== 'viet@studio.com') {
@@ -1196,6 +940,7 @@ async function startServer() {
         session = {};
         chatbotSessions.set(sessionId, session);
       }
+      session.lastActivity = Date.now();
 
       // 1. Check if we have a pending customer clarification
       if (session.pendingClarification && session.intent && session.entities) {
@@ -1385,40 +1130,40 @@ async function startServer() {
 
     const role = db.roles.find(r => r.id === user.role_id);
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: user.id, email: user.email, sessionVersion: user.session_version || 0 },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: (process.env.JWT_EXPIRES_IN as any) || '24h' }
     );
 
     res.json({
-      user: {
-        id: user.id,
-        full_name: user.full_name,
-        email: user.email,
-        role_id: user.role_id
-      },
+      user: sanitizeUser(user),
       role,
       token
     });
   });
 
-  app.post('/api/auth/logout', (req: Request, res: Response) => {
+  app.post('/api/auth/logout', authenticate, (req: AuthenticatedRequest, res: Response) => {
+    const db = LocalDatabase.get();
+    const userIndex = db.users.findIndex(u => u.id === req.user!.id);
+    if (userIndex !== -1) {
+      db.users[userIndex].session_version = (db.users[userIndex].session_version || 0) + 1;
+      LocalDatabase.save(db);
+    }
     res.json({ success: true, message: 'Đăng xuất thành công' });
   });
 
   app.get('/api/auth/me', authenticate, (req: AuthenticatedRequest, res: Response) => {
     res.json({
-      user: {
-        id: req.user?.id,
-        full_name: req.user?.full_name,
-        email: req.user?.email,
-        role_id: req.user?.role_id
-      },
+      user: sanitizeUser(req.user!),
       role: req.role
     });
   });
 
-  app.get('/api/system/status', authenticate, async (req: AuthenticatedRequest, res: Response) => {
+  app.get('/healthz', (req: Request, res: Response) => {
+    res.json({ status: 'OK' });
+  });
+
+  app.get('/api/system/status', authenticate, requirePermission('users.manage'), async (req: AuthenticatedRequest, res: Response) => {
     const startTime = Date.now();
     let dbStatus = 'online';
     let dbLatency = 0;
@@ -1427,8 +1172,17 @@ async function startServer() {
       await prisma.$queryRaw`SELECT 1`;
       dbLatency = Date.now() - startTime;
     } catch (err) {
-      console.error('Database health check failed:', err);
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('Database health check failed:', err);
+      }
       dbStatus = 'offline';
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+      return res.json({
+        backend: 'online',
+        database: dbStatus
+      });
     }
 
     res.json({
@@ -1446,12 +1200,12 @@ async function startServer() {
   });
 
   // ----------------- USERS & ROLES ENDPOINTS -----------------
-  app.get('/api/users', authenticate, (req: AuthenticatedRequest, res: Response) => {
+  app.get('/api/users', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
     const usersWithRoles = db.users.map(u => {
       const r = db.roles.find(role => role.id === u.role_id);
       return {
-        ...u,
+        ...sanitizeUser(u),
         role_name: r ? r.display_name : 'No role'
       };
     });
@@ -1477,6 +1231,14 @@ async function startServer() {
       return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Định dạng email không hợp lệ' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Mật khẩu phải có độ dài tối thiểu 8 ký tự' });
+    }
+
     // Yield control for hashing before fetching database state to prevent race conditions
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -1492,18 +1254,27 @@ async function startServer() {
       password_hash: hashedPassword,
       role_id,
       is_active: true,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      session_version: 0
     };
 
     db.users.push(newUser);
     LocalDatabase.save(db);
 
-    res.status(201).json(newUser);
+    res.status(201).json(sanitizeUser(newUser));
   });
 
   app.put('/api/users/:id', authenticate, requirePermission('users.manage'), async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
     const { full_name, email, password, role_id, is_active } = req.body;
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Định dạng email không hợp lệ' });
+    }
+
+    if (password && password.length < 8) {
+      return res.status(400).json({ error: 'Mật khẩu phải có độ dài tối thiểu 8 ký tự' });
+    }
 
     // Yield control for hashing before fetching database state to prevent race conditions
     let hashedPassword = undefined;
@@ -1527,12 +1298,18 @@ async function startServer() {
     if (full_name) db.users[idx].full_name = full_name;
     if (hashedPassword) {
       db.users[idx].password_hash = hashedPassword;
+      db.users[idx].session_version = (db.users[idx].session_version || 0) + 1;
     }
     if (role_id) db.users[idx].role_id = role_id;
-    if (is_active !== undefined) db.users[idx].is_active = is_active;
+    if (is_active !== undefined) {
+      db.users[idx].is_active = is_active;
+      if (!is_active) {
+        db.users[idx].session_version = (db.users[idx].session_version || 0) + 1;
+      }
+    }
 
     LocalDatabase.save(db);
-    res.json(db.users[idx]);
+    res.json(sanitizeUser(db.users[idx]));
   });
 
   app.delete('/api/users/:id', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
@@ -1545,8 +1322,9 @@ async function startServer() {
 
     // Soft delete
     db.users[idx].is_active = false;
+    db.users[idx].session_version = (db.users[idx].session_version || 0) + 1;
     LocalDatabase.save(db);
-    res.json({ success: true, message: 'Đã vô hiệu hóa tài khoản thành công', user: db.users[idx] });
+    res.json({ success: true, message: 'Đã vô hiệu hóa tài khoản thành công', user: sanitizeUser(db.users[idx]) });
   });
 
   app.get('/api/roles', authenticate, (req: AuthenticatedRequest, res: Response) => {
@@ -1652,11 +1430,14 @@ async function startServer() {
 
     res.json(result);
   });
-
   app.post('/api/customers', authenticate, requirePermission('customers.edit'), (req: AuthenticatedRequest, res: Response) => {
-    const { full_name, phone, email, address, notes } = req.body;
+    const { full_name, phone, email, address, notes, birthday, wedding_date, facebook_url } = req.body;
     if (!full_name || !phone) {
       return res.status(400).json({ error: 'Thiếu họ tên hoặc số điện thoại' });
+    }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Định dạng email không hợp lệ' });
     }
 
     const db = LocalDatabase.get();
@@ -1667,6 +1448,9 @@ async function startServer() {
       email: email || null,
       address: address || null,
       notes: notes || null,
+      birthday: birthday || null,
+      wedding_date: wedding_date || null,
+      facebook_url: facebook_url || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -1687,7 +1471,11 @@ async function startServer() {
 
   app.put('/api/customers/:id', authenticate, requirePermission('customers.edit'), (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const { full_name, phone, email, address, notes } = req.body;
+    const { full_name, phone, email, address, notes, birthday, wedding_date, facebook_url } = req.body;
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Định dạng email không hợp lệ' });
+    }
 
     const db = LocalDatabase.get();
     const idx = db.customers.findIndex(c => c.id === id);
@@ -1700,6 +1488,9 @@ async function startServer() {
     if (email !== undefined) db.customers[idx].email = email;
     if (address !== undefined) db.customers[idx].address = address;
     if (notes !== undefined) db.customers[idx].notes = notes;
+    if (birthday !== undefined) db.customers[idx].birthday = birthday;
+    if (wedding_date !== undefined) db.customers[idx].wedding_date = wedding_date;
+    if (facebook_url !== undefined) db.customers[idx].facebook_url = facebook_url;
     db.customers[idx].updated_at = new Date().toISOString();
 
     LocalDatabase.save(db);
@@ -2081,6 +1872,12 @@ async function startServer() {
     const { id } = req.params;
     const { title, description, assigned_to, status, priority, due_date } = req.body;
 
+    if (status) {
+      if (!['pending', 'in_progress', 'done', 'cancelled'].includes(status)) {
+        return res.status(400).json({ error: 'Trạng thái công việc không hợp lệ' });
+      }
+    }
+
     const db = LocalDatabase.get();
     const idx = db.tasks.findIndex(t => t.id === id);
     if (idx === -1) {
@@ -2152,6 +1949,12 @@ async function startServer() {
 
     if (!comment) {
       return res.status(400).json({ error: 'Vui lòng cung cấp nội dung ghi chú cập nhật' });
+    }
+
+    if (status_changed_to) {
+      if (!['pending', 'in_progress', 'done', 'cancelled'].includes(status_changed_to)) {
+        return res.status(400).json({ error: 'Trạng thái công việc không hợp lệ' });
+      }
     }
 
     const db = LocalDatabase.get();
@@ -2445,7 +2248,7 @@ async function startServer() {
       title,
       assigned_department,
       assigned_to_user_id: assigned_to_user_id || null,
-      status: 'pending',
+      status: 'active',
       progress: 0,
       notes: notes || null,
       updated_at: new Date().toISOString()
@@ -2482,11 +2285,11 @@ async function startServer() {
 
     kr.progress = nextProgress;
     if (nextProgress === 0) {
-      kr.status = 'pending';
+      kr.status = 'active';
     } else if (nextProgress === 100) {
       kr.status = 'completed';
     } else {
-      kr.status = 'in_progress';
+      kr.status = 'active';
     }
     kr.updated_at = new Date().toISOString();
 
@@ -2823,6 +2626,12 @@ async function startServer() {
     });
   });
 
+  function maskApiKey(key: string | undefined | null): string {
+    if (!key) return '';
+    if (key.length <= 8) return '****';
+    return `${key.substring(0, 3)}...${key.substring(key.length - 4)}`;
+  }
+
   // ----------------- STUDIO SETTINGS ENDPOINTS -----------------
   app.get('/api/studio/settings', authenticate, (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
@@ -2832,13 +2641,15 @@ async function startServer() {
   app.put('/api/studio/settings', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
     const { 
-      name, phone, email, address, website, opening_hours, notes, backup_schedule,
-      mimo_api_key, mimo_api_base_url, mimo_model,
-      gemini_api_key, gemini_api_base_url, gemini_model
+      name, phone, email, address, website, opening_hours, notes, backup_schedule, anniversary_reminder_days
     } = req.body;
 
     if (!name || !phone || !email || !address) {
       return res.status(400).json({ error: 'Các trường Tên, Số điện thoại, Email và Địa chỉ không được để trống' });
+    }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Định dạng email không hợp lệ' });
     }
 
     db.studio_settings = {
@@ -2851,12 +2662,7 @@ async function startServer() {
       notes: notes || '',
       backup_schedule: backup_schedule || 'weekly',
       last_backup_time: db.studio_settings?.last_backup_time || '',
-      mimo_api_key: mimo_api_key || '',
-      mimo_api_base_url: mimo_api_base_url || '',
-      mimo_model: mimo_model || '',
-      gemini_api_key: gemini_api_key || '',
-      gemini_api_base_url: gemini_api_base_url || '',
-      gemini_model: gemini_model || ''
+      anniversary_reminder_days: anniversary_reminder_days !== undefined ? parseInt(anniversary_reminder_days, 10) : 7
     };
 
     LocalDatabase.save(db);
@@ -2890,12 +2696,96 @@ async function startServer() {
     }
   });
 
+  // Helper to sanitize DB for exports & local disk backups
+  function sanitizeDbForExportOrBackup(db: any) {
+    if (!db) return db;
+    const cloned = JSON.parse(JSON.stringify(db));
+    if (Array.isArray(cloned.users)) {
+      cloned.users = cloned.users.map((u: any) => {
+        const { password_hash, ...cleanUser } = u;
+        return cleanUser;
+      });
+    }
+    if (cloned.studio_settings) {
+      delete cloned.studio_settings.mimo_api_key;
+      delete cloned.studio_settings.mimo_api_base_url;
+      delete cloned.studio_settings.mimo_model;
+      delete cloned.studio_settings.gemini_api_key;
+      delete cloned.studio_settings.gemini_api_base_url;
+      delete cloned.studio_settings.gemini_model;
+    }
+    return cloned;
+  }
+
+  // Helper to validate and merge imported database structures
+  function validateAndMergeDbImport(importedDb: any, currentDb: any): { error?: string; cleanDb?: any } {
+    if (!importedDb || typeof importedDb !== 'object') {
+      return { error: 'Dữ liệu không hợp lệ.' };
+    }
+    if (!Array.isArray(importedDb.users)) {
+      return { error: 'Thiếu danh sách người dùng (users).' };
+    }
+    if (!Array.isArray(importedDb.roles)) {
+      return { error: 'Thiếu danh sách vai trò (roles).' };
+    }
+
+    for (const r of importedDb.roles) {
+      if (!r.id || !r.name || !r.display_name) {
+        return { error: `Vai trò không hợp lệ: thiếu thông tin bắt buộc.` };
+      }
+      if (!Array.isArray(r.permissions)) {
+        return { error: `Quyền hạn (permissions) của vai trò ${r.name} phải là một mảng.` };
+      }
+    }
+
+    for (const u of importedDb.users) {
+      if (!u.id || !u.email || !u.role_id || u.is_active === undefined) {
+        return { error: `Người dùng không hợp lệ: thiếu thông tin bắt buộc (id, email, role_id, is_active).` };
+      }
+      if (u.password_hash) {
+        if (!/^\$2[ayb]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(u.password_hash)) {
+          return { error: `Mật khẩu của người dùng ${u.email} không hợp lệ (không phải là bcrypt hash).` };
+        }
+      }
+    }
+
+    const cloned = JSON.parse(JSON.stringify(importedDb));
+
+    for (const u of cloned.users) {
+      if (!u.password_hash) {
+        const existingUser = currentDb.users.find((curU: any) => curU.id === u.id || curU.email.toLowerCase() === u.email.toLowerCase());
+        if (existingUser && existingUser.password_hash) {
+          u.password_hash = existingUser.password_hash;
+        } else {
+          const randomPass = crypto.randomBytes(16).toString('hex');
+          u.password_hash = bcrypt.hashSync(randomPass, 10);
+        }
+      }
+      if (u.session_version === undefined) {
+        u.session_version = 0;
+      }
+    }
+
+    // Force strip legacy LLM parameters from imported settings
+    if (cloned.studio_settings) {
+      delete cloned.studio_settings.mimo_api_key;
+      delete cloned.studio_settings.mimo_api_base_url;
+      delete cloned.studio_settings.mimo_model;
+      delete cloned.studio_settings.gemini_api_key;
+      delete cloned.studio_settings.gemini_api_base_url;
+      delete cloned.studio_settings.gemini_model;
+    } else {
+      cloned.studio_settings = currentDb.studio_settings;
+    }
+
+    return { cleanDb: cloned };
+  }
+
   // ----------------- DATABASE MANAGEMENT ENDPOINTS -----------------
   // Export entire database as JSON file download
   app.get('/api/database/export', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
-    const cleanUsers = db.users.map(({ password_hash, ...u }) => u);
-    const exportDb = { ...db, users: cleanUsers };
+    const exportDb = sanitizeDbForExportOrBackup(db);
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', 'attachment; filename=aura_bridal_database.json');
     res.send(JSON.stringify(exportDb, null, 2));
@@ -2904,18 +2794,16 @@ async function startServer() {
   // Import / Restore database from uploaded JSON
   app.post('/api/database/import', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const importedDb = req.body;
+    const currentDb = LocalDatabase.get();
     
-    // Minimal validation
-    if (!importedDb || !Array.isArray(importedDb.users) || !Array.isArray(importedDb.roles)) {
-      return res.status(400).json({ error: 'Định dạng file import không đúng. Phải chứa danh sách users và roles hợp lệ.' });
+    const { error, cleanDb } = validateAndMergeDbImport(importedDb, currentDb);
+    if (error) {
+      return res.status(400).json({ error });
     }
 
-    // Keep current backup log history and studio settings if they aren't provided
-    const currentDb = LocalDatabase.get();
-    if (!importedDb.backups) importedDb.backups = currentDb.backups || [];
-    if (!importedDb.studio_settings) importedDb.studio_settings = currentDb.studio_settings;
+    cleanDb.backups = currentDb.backups || [];
 
-    LocalDatabase.save(importedDb);
+    LocalDatabase.save(cleanDb);
     res.json({ success: true, message: 'Nhập dữ liệu thành công!' });
   });
 
@@ -2928,7 +2816,7 @@ async function startServer() {
   // Trigger manual or scheduled backup creation
   app.post('/api/database/backups/create', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
-    const { trigger_type } = req.body; // 'manual' or 'scheduled'
+    const { trigger_type } = req.body;
 
     try {
       const backupsDir = path.join(process.cwd(), 'backups');
@@ -2939,7 +2827,9 @@ async function startServer() {
       const backupId = 'bak-' + LocalDatabase.uuid();
       const filename = `backup_${Date.now()}_${backupId}.json`;
       const backupPath = path.join(backupsDir, filename);
-      fs.writeFileSync(backupPath, JSON.stringify(db, null, 2), 'utf-8');
+      
+      const sanitized = sanitizeDbForExportOrBackup(db);
+      fs.writeFileSync(backupPath, JSON.stringify(sanitized, null, 2), 'utf-8');
       const stats = fs.statSync(backupPath);
 
       const newBackup = {
@@ -2966,6 +2856,18 @@ async function startServer() {
     }
   });
 
+  function resolveSafeBackupPath(backupsDir: string, filename: string): string {
+    if (!/^[a-zA-Z0-9._-]+$/.test(filename) || filename.includes('..')) {
+      throw new Error('Tên file backup không hợp lệ');
+    }
+    const resolved = path.resolve(backupsDir, filename);
+    const root = path.resolve(backupsDir);
+    if (!resolved.startsWith(root + path.sep)) {
+      throw new Error('Đường dẫn backup không hợp lệ');
+    }
+    return resolved;
+  }
+
   // Restore database from specific backup ID
   app.post('/api/database/backups/restore/:id', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
@@ -2976,24 +2878,24 @@ async function startServer() {
       return res.status(404).json({ error: 'Không tìm thấy bản sao lưu được chọn' });
     }
 
-    const backupsDir = path.join(process.cwd(), 'backups');
-    const backupPath = path.join(backupsDir, backup.filename);
-
-    if (!fs.existsSync(backupPath)) {
-      return res.status(404).json({ error: 'File backup vật lý đã bị xóa hoặc không tìm thấy trên ổ đĩa' });
-    }
-
     try {
+      const backupsDir = path.join(process.cwd(), 'backups');
+      const backupPath = resolveSafeBackupPath(backupsDir, backup.filename);
+
+      if (!fs.existsSync(backupPath)) {
+        return res.status(404).json({ error: 'File backup vật lý đã bị xóa hoặc không tìm thấy trên ổ đĩa' });
+      }
+
       const backupRaw = fs.readFileSync(backupPath, 'utf-8');
       const backupData = JSON.parse(backupRaw);
 
-      if (!backupData || !Array.isArray(backupData.users) || !Array.isArray(backupData.roles)) {
-        return res.status(400).json({ error: 'File backup bị lỗi định dạng hoặc thiếu trường dữ liệu cốt lõi.' });
+      const { error, cleanDb } = validateAndMergeDbImport(backupData, db);
+      if (error) {
+        return res.status(400).json({ error });
       }
 
-      // Preserve current backup history
-      backupData.backups = db.backups || [];
-      LocalDatabase.save(backupData);
+      cleanDb.backups = db.backups || [];
+      LocalDatabase.save(cleanDb);
 
       res.json({ success: true, message: 'Khôi phục cơ sở dữ liệu thành công!' });
     } catch (err: any) {
@@ -3013,15 +2915,16 @@ async function startServer() {
     }
 
     const backup = db.backups![backupIndex];
-    const backupsDir = path.join(process.cwd(), 'backups');
-    const backupPath = path.join(backupsDir, backup.filename);
-
     try {
+      const backupsDir = path.join(process.cwd(), 'backups');
+      const backupPath = resolveSafeBackupPath(backupsDir, backup.filename);
+
       if (fs.existsSync(backupPath)) {
         fs.unlinkSync(backupPath);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to delete physical backup file:', err);
+      return res.status(400).json({ error: `Không thể xóa file backup: ${err.message}` });
     }
 
     db.backups!.splice(backupIndex, 1);
@@ -3065,6 +2968,13 @@ async function startServer() {
     const { customer_name, phone, source, interested_packages, sales_step, notes, support_needed } = req.body;
     if (!customer_name || !source) {
       return res.status(400).json({ error: 'Thiếu tên khách hàng hoặc nguồn tiếp cận' });
+    }
+
+    if (sales_step !== undefined) {
+      const step = parseInt(sales_step, 10);
+      if (isNaN(step) || !isFinite(step) || step < 1 || step > 6) {
+        return res.status(400).json({ error: 'Bước bán hàng (sales_step) phải từ 1 đến 6' });
+      }
     }
 
     const db = LocalDatabase.get();
@@ -3121,7 +3031,25 @@ async function startServer() {
       return res.status(404).json({ error: 'Không tìm thấy thông tin tư vấn' });
     }
 
+    // Permission check: if they only have leads.manage, check if lead is assigned to them
+    const hasViewAll = req.role?.permissions.includes('leads.view_all') || req.role?.permissions.includes('admin') || req.role?.id === 'role-admin';
+    if (!hasViewAll && db.leads[idx].assigned_sale_id !== req.user?.id) {
+      return res.status(403).json({ error: 'Forbidden: Bạn không có quyền chỉnh sửa thông tin tư vấn này' });
+    }
+
     const prevStatus = db.leads[idx].status;
+    let linkedCustomerId: string | undefined;
+    let customerPrefill: {
+      full_name: string;
+      phone: string | null;
+      notes: string | null;
+    } | undefined;
+    let suggestedOrder: {
+      package_name: string;
+      package_price: number;
+      total_amount: number;
+      notes: string | null;
+    } | undefined;
 
     if (customer_name !== undefined) db.leads[idx].customer_name = customer_name;
     if (phone !== undefined) db.leads[idx].phone = phone;
@@ -3135,7 +3063,15 @@ async function startServer() {
         couple: !!interested_packages.couple
       };
     }
-    if (sales_step !== undefined) db.leads[idx].sales_step = sales_step;
+
+    if (sales_step !== undefined) {
+      const step = parseInt(sales_step, 10);
+      if (isNaN(step) || !isFinite(step) || step < 1 || step > 6) {
+        return res.status(400).json({ error: 'Bước bán hàng (sales_step) phải từ 1 đến 6' });
+      }
+      db.leads[idx].sales_step = step;
+    }
+
     if (follow_up_status !== undefined) {
       db.leads[idx].follow_up_status = {
         follow_1: !!follow_up_status.follow_1,
@@ -3143,8 +3079,26 @@ async function startServer() {
         follow_3: !!follow_up_status.follow_3
       };
     }
-    if (status !== undefined) db.leads[idx].status = status;
-    if (revenue !== undefined) db.leads[idx].revenue = revenue !== null ? parseFloat(revenue) : null;
+
+    if (status !== undefined) {
+      if (!['consulting', 'won', 'lost'].includes(status)) {
+        return res.status(400).json({ error: 'Trạng thái lead không hợp lệ' });
+      }
+      db.leads[idx].status = status;
+    }
+
+    if (revenue !== undefined) {
+      if (revenue === null) {
+        db.leads[idx].revenue = null;
+      } else {
+        const val = parseFloat(revenue);
+        if (isNaN(val) || !isFinite(val)) {
+          return res.status(400).json({ error: 'Doanh thu (revenue) không hợp lệ' });
+        }
+        db.leads[idx].revenue = val;
+      }
+    }
+
     if (success_reason !== undefined) db.leads[idx].success_reason = success_reason;
     if (failure_reason !== undefined) db.leads[idx].failure_reason = failure_reason;
     if (notes !== undefined) db.leads[idx].notes = notes;
@@ -3154,24 +3108,18 @@ async function startServer() {
 
     if (status === 'won' && prevStatus !== 'won') {
       const lead = db.leads[idx];
-      let custId = '';
       const existingCust = db.customers.find(c => c.phone === lead.phone && lead.phone);
       if (existingCust) {
-        custId = existingCust.id;
+        linkedCustomerId = existingCust.id;
+        existingCust.full_name = lead.customer_name || existingCust.full_name;
+        if (lead.notes && !existingCust.notes) existingCust.notes = lead.notes;
+        existingCust.updated_at = new Date().toISOString();
       } else {
-        const newCustId = 'cust-' + LocalDatabase.uuid();
-        const newCust: Customer = {
-          id: newCustId,
+        customerPrefill = {
           full_name: lead.customer_name,
-          phone: lead.phone || 'N/A',
-          email: null,
-          address: null,
           notes: lead.notes || 'Khách hàng tự động tạo từ tư vấn CRM.',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          phone: lead.phone
         };
-        db.customers.push(newCust);
-        custId = newCustId;
       }
 
       let packageName = 'Gói Chụp Ảnh';
@@ -3181,39 +3129,12 @@ async function startServer() {
       else if (lead.interested_packages.combo) packageName = 'Gói chụp trọn gói Combo';
       else if (lead.interested_packages.couple) packageName = 'Gói chụp ảnh đôi Couple';
 
-      const shootDate = new Date();
-      shootDate.setDate(shootDate.getDate() + 30);
-      const formattedShootDate = shootDate.toISOString().split('T')[0];
-
-      const newOrderId = 'order-' + LocalDatabase.uuid();
-      const newOrder: Order = {
-        id: newOrderId,
-        order_code: LocalDatabase.generateOrderCode(),
-        customer_id: custId,
-        status: 'new',
-        shoot_date: formattedShootDate,
-        shoot_time: '09:00',
+      suggestedOrder = {
         package_name: packageName,
         package_price: lead.revenue || 0,
-        deposit_amount: 0,
         total_amount: lead.revenue || 0,
         notes: lead.notes || 'Đơn hàng tự động khởi tạo từ tư vấn CRM.',
-        created_by: req.user!.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
       };
-      db.orders.push(newOrder);
-
-      const history: OrderStatusHistory = {
-        id: 'hist-' + LocalDatabase.uuid(),
-        order_id: newOrder.id,
-        from_status: '',
-        to_status: 'new',
-        changed_by: req.user!.id,
-        note: 'Đơn hàng tự động tạo khi chốt tư vấn thành công',
-        changed_at: new Date().toISOString()
-      };
-      db.order_status_history.push(history);
 
       const notifId = 'notif-' + LocalDatabase.uuid();
       if (!db.notifications) db.notifications = [];
@@ -3221,17 +3142,26 @@ async function startServer() {
         id: notifId,
         sender_id: req.user!.id,
         receiver_id: null,
-        title: 'Hợp đồng mới từ tư vấn CRM',
-        content: `Đơn hàng ${newOrder.order_code} của khách hàng ${lead.customer_name} đã được chốt thành công qua CRM.`,
+        title: 'Lead đã chốt thành công',
+        content: `Khách hàng ${lead.customer_name} đã chốt thành công qua CRM. Vui lòng hoàn tất form hợp đồng và bổ sung Facebook/ngày kỷ niệm để chăm sóc sau này.`,
         type: 'order_update',
-        related_id: newOrderId,
+        related_id: linkedCustomerId || id,
         is_read_by: [],
         created_at: new Date().toISOString()
       });
     }
 
     LocalDatabase.save(db);
-    res.json(db.leads[idx]);
+    
+    // Return backward compatible object with dynamically attached fields
+    const updatedLeadWithMetaData = {
+      ...db.leads[idx],
+      new_order_id: undefined,
+      new_customer_id: linkedCustomerId,
+      customer_prefill: customerPrefill,
+      order_prefill: suggestedOrder
+    };
+    res.json(updatedLeadWithMetaData);
   });
 
   app.post('/api/leads/:id/feedback', authenticate, requirePermission('leads.view_all'), (req: AuthenticatedRequest, res: Response) => {
@@ -3252,6 +3182,7 @@ async function startServer() {
       id: 'fb-' + LocalDatabase.uuid(),
       user_id: req.user!.id,
       user_name: req.user!.full_name,
+      author: req.user!.full_name,
       content,
       created_at: new Date().toISOString()
     };
@@ -3330,7 +3261,11 @@ async function startServer() {
     });
   });
 
-  app.post('/api/demo/cleanup', authenticate, (req: AuthenticatedRequest, res: Response) => {
+  app.post('/api/demo/cleanup', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({ error: 'Chức năng này không khả dụng trên môi trường production.' });
+    }
+
     const db = LocalDatabase.get();
     
     // Clean up lead "Nguyễn Hoàng Nam"
@@ -3350,7 +3285,9 @@ async function startServer() {
   });
 
   // ----------------- VITE DEVELOPMENT / STATIC PROD SERVING -----------------
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV === 'test') {
+    // API-only test mode: no Vite middleware and no static catch-all.
+  } else if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
@@ -3364,12 +3301,137 @@ async function startServer() {
     });
   }
 
+  // ----------------- ANNIVERSARY NOTIFICATION SCHEDULER -----------------
+  async function scanAndGenerateAnniversaryNotifications() {
+    const db = LocalDatabase.get();
+    const settings = db.studio_settings;
+    const reminderDays = settings?.anniversary_reminder_days !== undefined ? settings.anniversary_reminder_days : 7;
+
+    const today = new Date();
+    const utcOffset = today.getTimezoneOffset() * 60000;
+    const vnTime = new Date(today.getTime() + utcOffset + (7 * 3600000));
+    
+    const todayZero = new Date(vnTime.getFullYear(), vnTime.getMonth(), vnTime.getDate());
+    const currentYear = todayZero.getFullYear();
+
+    const customers = db.customers || [];
+    let notifications = db.notifications || [];
+    let hasChanges = false;
+
+    for (const customer of customers) {
+      const fbText = customer.facebook_url ? ` | FB: ${customer.facebook_url}` : '';
+
+      // 1. Quét ngày cưới (wedding_date)
+      if (customer.wedding_date) {
+        const parts = customer.wedding_date.split('-');
+        if (parts.length === 3) {
+          const wYear = parseInt(parts[0], 10);
+          const wMonth = parseInt(parts[1], 10) - 1;
+          const wDay = parseInt(parts[2], 10);
+
+          const years = currentYear - wYear;
+          if (years > 0) {
+            const anniversaryThisYear = new Date(currentYear, wMonth, wDay);
+            const timeDiff = anniversaryThisYear.getTime() - todayZero.getTime();
+            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+            if (daysDiff >= 0 && daysDiff <= reminderDays) {
+              const reminderId = `anniversary:wedding:${customer.id}:${years}:${currentYear}`;
+              const exists = notifications.some(n => n.related_id === reminderId);
+              if (!exists) {
+                const formattedWeddingDate = `${String(wDay).padStart(2, '0')}/${String(wMonth + 1).padStart(2, '0')}/${currentYear}`;
+                
+                notifications.push({
+                  id: 'notif-' + crypto.randomUUID(),
+                  sender_id: 'system',
+                  receiver_id: null,
+                  title: `[Kỷ niệm] Sắp đến kỷ niệm ${years} năm ngày cưới của khách hàng`,
+                  content: `Khách hàng ${customer.full_name} (SĐT: ${customer.phone}${fbText}) có kỷ niệm ${years} năm ngày cưới vào ngày ${formattedWeddingDate}. Vui lòng tạo tác vụ chăm sóc cho Sale.`,
+                  type: 'anniversary' as any,
+                  related_id: reminderId,
+                  is_read_by: [],
+                  created_at: new Date().toISOString()
+                });
+                hasChanges = true;
+              }
+            }
+          }
+        }
+      }
+
+      // 2. Quét ngày sinh nhật (birthday)
+      if (customer.birthday) {
+        const parts = customer.birthday.split('-');
+        if (parts.length === 3) {
+          const bYear = parseInt(parts[0], 10);
+          const bMonth = parseInt(parts[1], 10) - 1;
+          const bDay = parseInt(parts[2], 10);
+
+          const age = currentYear - bYear;
+          if (age > 0) {
+            const birthdayThisYear = new Date(currentYear, bMonth, bDay);
+            const timeDiff = birthdayThisYear.getTime() - todayZero.getTime();
+            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+            if (daysDiff >= 0 && daysDiff <= reminderDays) {
+              const reminderId = `anniversary:birthday:${customer.id}:${age}:${currentYear}`;
+              const exists = notifications.some(n => n.related_id === reminderId);
+              if (!exists) {
+                const formattedBirthDate = `${String(bDay).padStart(2, '0')}/${String(bMonth + 1).padStart(2, '0')}/${currentYear}`;
+                
+                notifications.push({
+                  id: 'notif-' + crypto.randomUUID(),
+                  sender_id: 'system',
+                  receiver_id: null,
+                  title: `[Sinh nhật] Sắp đến ngày sinh nhật / thôi nôi của khách hàng`,
+                  content: `Khách hàng ${customer.full_name} (SĐT: ${customer.phone}${fbText}) có sinh nhật/kỷ niệm thôi nôi vào ngày ${formattedBirthDate}. Vui lòng tạo tác vụ chăm sóc cho Sale.`,
+                  type: 'anniversary' as any,
+                  related_id: reminderId,
+                  is_read_by: [],
+                  created_at: new Date().toISOString()
+                });
+                hasChanges = true;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (hasChanges) {
+      db.notifications = notifications;
+      LocalDatabase.save(db);
+      console.log(`[ANNIVERSARY] Generated anniversary notifications.`);
+    }
+  }
+
+  if (process.env.NODE_ENV !== 'test') {
+    setTimeout(() => {
+      console.log('[ANNIVERSARY] Initial scanning starting...');
+      scanAndGenerateAnniversaryNotifications().catch(err => {
+        console.error('[ANNIVERSARY] Scan error:', err);
+      });
+    }, 5000);
+
+    setInterval(() => {
+      console.log('[ANNIVERSARY] Running periodic scan...');
+      scanAndGenerateAnniversaryNotifications().catch(err => {
+        console.error('[ANNIVERSARY] Periodic scan error:', err);
+      });
+    }, 12 * 60 * 60 * 1000);
+  }
+
   const host = process.env.HOST || (fs.existsSync('/.dockerenv') ? '0.0.0.0' : '127.0.0.1');
-  app.listen(PORT as number, host, () => {
+  const server = app.listen(PORT as number, host, () => {
     console.log(`Server running on port ${PORT} (bound to ${host})`);
+  });
+  return { app, server };
+}
+
+if (process.env.NODE_ENV !== 'test') {
+  startServer().catch(err => {
+    console.error('Failed to start server:', err);
   });
 }
 
-startServer().catch(err => {
-  console.error('Failed to start server:', err);
-});
+export { startServer };

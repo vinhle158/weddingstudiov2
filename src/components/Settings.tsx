@@ -35,12 +35,7 @@ interface StudioSettings {
   notes: string;
   backup_schedule: 'daily' | 'weekly' | 'monthly' | 'none';
   last_backup_time: string;
-  mimo_api_key?: string;
-  mimo_api_base_url?: string;
-  mimo_model?: string;
-  gemini_api_key?: string;
-  gemini_api_base_url?: string;
-  gemini_model?: string;
+  anniversary_reminder_days: number;
 }
 
 interface BackupItem {
@@ -70,12 +65,7 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
     notes: '',
     backup_schedule: 'weekly',
     last_backup_time: '',
-    mimo_api_key: '',
-    mimo_api_base_url: 'https://api.xiaomimimo.com/v1',
-    mimo_model: 'mimo-v2.5-pro',
-    gemini_api_key: '',
-    gemini_api_base_url: 'https://generativelanguage.googleapis.com/v1beta',
-    gemini_model: 'gemini-2.5-flash'
+    anniversary_reminder_days: 7
   });
   
   const [loadingSettings, setLoadingSettings] = useState(true);
@@ -253,7 +243,7 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
     setBackupMsg(null);
     try {
       await apiRequest(`/api/database/backups/restore/${backup.id}`, 'POST');
-      setBackupMsg({ type: 'success', text: 'Đã khôi phục dữ liệu từ bản sao lưu thành công! Đang đồng bộ lại...' });
+      setBackupMsg({ type: 'success', text: 'Đã khôi phục dữ liệu từ bản sao lưu thành công. Đang tải lại dữ liệu...' });
       
       setTimeout(() => {
         window.location.reload();
@@ -531,6 +521,24 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
                       value={settings.opening_hours}
                       onChange={e => setSettings({ ...settings, opening_hours: e.target.value })}
                       placeholder="Ví dụ: 08:30 - 21:30"
+                      className="w-full text-sm border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 outline-hidden bg-slate-50/40"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Thông báo kỷ niệm trước (ngày)</label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                      <Calendar className="w-4 h-4 text-gold-600" />
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={30}
+                      value={settings.anniversary_reminder_days}
+                      onChange={e => setSettings({ ...settings, anniversary_reminder_days: parseInt(e.target.value, 10) || 7 })}
+                      placeholder="Mặc định: 7 ngày"
                       className="w-full text-sm border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 outline-hidden bg-slate-50/40"
                     />
                   </div>

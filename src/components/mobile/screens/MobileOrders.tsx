@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../../../lib/api';
+import { formatVndFromThousands } from '../../../lib/money';
 import BottomSheet from '../shared/BottomSheet';
 import { 
   Search, 
@@ -189,8 +190,8 @@ export default function MobileOrders({ userRole, initialSelectedOrderId, onNavig
                   </div>
                   <p className="text-[10px] text-slate-400 font-semibold">{order.package_name} · {order.shoot_date}</p>
                   <div className="flex gap-2 text-[9px] font-bold text-slate-500">
-                    <span className="text-gold-700">Giá: {price.toLocaleString('vi-VN')}đ</span>
-                    {remaining > 0 && <span className="text-rose-600">Còn lại: {remaining.toLocaleString('vi-VN')}đ</span>}
+                    <span className="text-gold-700">Giá: {formatVndFromThousands(price)}</span>
+                    {remaining > 0 && <span className="text-rose-600">Còn lại: {formatVndFromThousands(remaining)}</span>}
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -253,21 +254,21 @@ export default function MobileOrders({ userRole, initialSelectedOrderId, onNavig
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                   <DollarSign className="w-3 h-3 text-emerald-600" /> Giá gói
                 </span>
-                <p className="font-bold text-emerald-600">{selectedOrder.package_price.toLocaleString('vi-VN')} đ</p>
+                <p className="font-bold text-emerald-600">{formatVndFromThousands(selectedOrder.package_price)}</p>
               </div>
 
               <div className="space-y-1">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                   <CheckCircle className="w-3 h-3 text-gold-600" /> Đã cọc
                 </span>
-                <p className="font-bold text-slate-700">{selectedOrder.deposit_amount?.toLocaleString('vi-VN') || 0} đ</p>
+                <p className="font-bold text-slate-700">{formatVndFromThousands(selectedOrder.deposit_amount || 0)}</p>
               </div>
 
               <div className="space-y-1">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                   <AlertCircle className="w-3 h-3 text-rose-500" /> Còn lại
                 </span>
-                <p className="font-bold text-rose-600">{(selectedOrder.package_price - (selectedOrder.deposit_amount || 0)).toLocaleString('vi-VN')} đ</p>
+                <p className="font-bold text-rose-600">{formatVndFromThousands(selectedOrder.package_price - (selectedOrder.deposit_amount || 0))}</p>
               </div>
             </div>
 

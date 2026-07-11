@@ -1,0 +1,4376 @@
+{
+  "settings": {
+    "languages": [
+      "vi"
+    ],
+    "forceNER": true,
+    "tag": "nlp",
+    "threshold": 0.5,
+    "autoLoad": true,
+    "autoSave": true,
+    "modelFileName": "model.nlp",
+    "executeActionsBeforeAnswers": false,
+    "calculateSentiment": true
+  },
+  "nluManager": {
+    "settings": {
+      "tag": "nlu-manager"
+    },
+    "locales": [
+      "vi"
+    ],
+    "languageNames": {},
+    "domainManagers": {
+      "vi": {
+        "settings": {
+          "locale": "vi",
+          "trainByDomain": false,
+          "tag": "domain-manager-vi",
+          "nluByDomain": {
+            "default": {
+              "className": "NeuralNlu",
+              "settings": {}
+            }
+          },
+          "useStemDict": true
+        },
+        "stemDict": {
+          "quan,tong": {
+            "intent": "BUSINESS_OVERVIEW",
+            "domain": "default"
+          },
+          "hinh,tinh": {
+            "intent": "BUSINESS_OVERVIEW",
+            "domain": "default"
+          },
+          "quan,studio,tong": {
+            "intent": "BUSINESS_OVERVIEW",
+            "domain": "default"
+          },
+          "hoat,quan,tong,đong": {
+            "intent": "BUSINESS_OVERVIEW",
+            "domain": "default"
+          },
+          "hom,nay,quan,tong": {
+            "intent": "BUSINESS_OVERVIEW",
+            "domain": "default"
+          },
+          "hinh,hom,nay,tinh": {
+            "intent": "BUSINESS_OVERVIEW",
+            "domain": "default"
+          },
+          "bao,cao,quan,tong": {
+            "intent": "BUSINESS_OVERVIEW",
+            "domain": "default"
+          },
+          "cua,hinh,hoat,studio,tinh,đong": {
+            "intent": "BUSINESS_OVERVIEW",
+            "domain": "default"
+          },
+          "danh,hang,khach,sach": {
+            "intent": "CUSTOMER_LIST",
+            "domain": "default"
+          },
+          "hang,khach": {
+            "intent": "CUSTOMER_LIST",
+            "domain": "default"
+          },
+          "ds,hang,khach": {
+            "intent": "CUSTOMER_LIST",
+            "domain": "default"
+          },
+          "d,hang,khach,sach": {
+            "intent": "CUSTOMER_LIST",
+            "domain": "default"
+          },
+          "cuu,hang,khach,tra": {
+            "intent": "CUSTOMER_LIST",
+            "domain": "default"
+          },
+          "%customername%,hang,khach,tim": {
+            "intent": "CUSTOMER_LIST",
+            "domain": "default"
+          },
+          "%customername%,cuu,hang,khach,thong,tin,tra": {
+            "intent": "CUSTOMER_LIST",
+            "domain": "default"
+          },
+          "%customername%,ai,hang,khach,la": {
+            "intent": "CUSTOMER_LIST",
+            "domain": "default"
+          },
+          "%customername%,cho,cua,thong,tin,toi": {
+            "intent": "CUSTOMER_LIST",
+            "domain": "default"
+          },
+          "%customername%,hang,khach,thong,tin": {
+            "intent": "CUSTOMER_LIST",
+            "domain": "default"
+          },
+          "%customername%,hang,ho,khach,so": {
+            "intent": "CUSTOMER_LIST",
+            "domain": "default"
+          },
+          "%customername%,cua,ho,so,xem": {
+            "intent": "CUSTOMER_LIST",
+            "domain": "default"
+          },
+          "lead": {
+            "intent": "LEAD_LIST",
+            "domain": "default"
+          },
+          "crm": {
+            "intent": "LEAD_LIST",
+            "domain": "default"
+          },
+          "tu,van": {
+            "intent": "LEAD_LIST",
+            "domain": "default"
+          },
+          "cham,soc": {
+            "intent": "LEAD_LIST",
+            "domain": "default"
+          },
+          "ds,lead": {
+            "intent": "LEAD_LIST",
+            "domain": "default"
+          },
+          "hang,khach,nang,tiem": {
+            "intent": "LEAD_LIST",
+            "domain": "default"
+          },
+          "danh,lead,sach": {
+            "intent": "LEAD_LIST",
+            "domain": "default"
+          },
+          "can,cham,lead,soc": {
+            "intent": "LEAD_LIST",
+            "domain": "default"
+          },
+          "danh,hang,sach,đon": {
+            "intent": "ORDER_LIST",
+            "domain": "default"
+          },
+          "danh,hop,sach,đong": {
+            "intent": "ORDER_LIST",
+            "domain": "default"
+          },
+          "hang,ky,đa,đon": {
+            "intent": "ORDER_LIST",
+            "domain": "default"
+          },
+          "chot,hop,đa,đong": {
+            "intent": "ORDER_LIST",
+            "domain": "default"
+          },
+          "hop,studio,đong": {
+            "intent": "ORDER_LIST",
+            "domain": "default"
+          },
+          "lich": {
+            "intent": "SCHEDULE_RANGE",
+            "domain": "default"
+          },
+          "chup,lich": {
+            "intent": "SCHEDULE_RANGE",
+            "domain": "default"
+          },
+          "chup": {
+            "intent": "SCHEDULE_RANGE",
+            "domain": "default"
+          },
+          "chup,lich,sap,toi": {
+            "intent": "SCHEDULE_RANGE",
+            "domain": "default"
+          },
+          "chup,hom,lich,nay": {
+            "intent": "SCHEDULE_RANGE",
+            "domain": "default"
+          },
+          "chup,lich,mai,ngay": {
+            "intent": "SCHEDULE_RANGE",
+            "domain": "default"
+          },
+          "chup,lich,xem": {
+            "intent": "SCHEDULE_RANGE",
+            "domain": "default"
+          },
+          "anh,chup,hoach,ke": {
+            "intent": "SCHEDULE_RANGE",
+            "domain": "default"
+          },
+          "cong,viec": {
+            "intent": "TASK_LIST",
+            "domain": "default"
+          },
+          "task": {
+            "intent": "TASK_LIST",
+            "domain": "default"
+          },
+          "cong,danh,sach,viec": {
+            "intent": "TASK_LIST",
+            "domain": "default"
+          },
+          "can,cong,lam,viec": {
+            "intent": "TASK_LIST",
+            "domain": "default"
+          },
+          "can,ly,nhiem,vu,xu": {
+            "intent": "TASK_LIST",
+            "domain": "default"
+          },
+          "cong,tien,viec,đo": {
+            "intent": "TASK_LIST",
+            "domain": "default"
+          },
+          "bao,canh": {
+            "intent": "OPERATIONAL_ALERTS",
+            "domain": "default"
+          },
+          "bao,canh,hanh,van": {
+            "intent": "OPERATIONAL_ALERTS",
+            "domain": "default"
+          },
+          "bat,thuong": {
+            "intent": "OPERATIONAL_ALERTS",
+            "domain": "default"
+          },
+          "bao,canh,o,p": {
+            "intent": "OPERATIONAL_ALERTS",
+            "domain": "default"
+          },
+          "bao,canh,he,thong": {
+            "intent": "OPERATIONAL_ALERTS",
+            "domain": "default"
+          },
+          "cac,hanh,van,đe": {
+            "intent": "OPERATIONAL_ALERTS",
+            "domain": "default"
+          },
+          "nhan,vien": {
+            "intent": "STAFF_WORKLOAD",
+            "domain": "default"
+          },
+          "cong,khoi,luong,viec": {
+            "intent": "STAFF_WORKLOAD",
+            "domain": "default"
+          },
+          "ai,ban": {
+            "intent": "STAFF_WORKLOAD",
+            "domain": "default"
+          },
+          "ai,ranh": {
+            "intent": "STAFF_WORKLOAD",
+            "domain": "default"
+          },
+          "ai,ban,nhat": {
+            "intent": "STAFF_WORKLOAD",
+            "domain": "default"
+          },
+          "cong,khoi,luong,nhan,su,viec": {
+            "intent": "STAFF_WORKLOAD",
+            "domain": "default"
+          },
+          "cong,cua,khoi,luong,nhan,su,viec": {
+            "intent": "STAFF_WORKLOAD",
+            "domain": "default"
+          },
+          "ai,ban,nay,nhat,tuan": {
+            "intent": "STAFF_WORKLOAD",
+            "domain": "default"
+          },
+          "okr": {
+            "intent": "OKR_LIST",
+            "domain": "default"
+          },
+          "muc,tieu": {
+            "intent": "OKR_LIST",
+            "domain": "default"
+          },
+          "chot,ket,qua,then": {
+            "intent": "OKR_LIST",
+            "domain": "default"
+          },
+          "okr,tien,đo": {
+            "intent": "OKR_LIST",
+            "domain": "default"
+          },
+          "hoan,le,thanh,ti": {
+            "intent": "OKR_LIST",
+            "domain": "default"
+          },
+          "muc,tien,tieu,đo": {
+            "intent": "OKR_LIST",
+            "domain": "default"
+          },
+          "cua,ket,okr,qua,studio": {
+            "intent": "OKR_LIST",
+            "domain": "default"
+          },
+          "cong,do,ly,thanh": {
+            "intent": "LEAD_SUCCESS_REASONS",
+            "domain": "default"
+          },
+          "chot,cong,thanh": {
+            "intent": "LEAD_SUCCESS_REASONS",
+            "domain": "default"
+          },
+          "cong,do,ly,ma,thanh": {
+            "intent": "LEAD_SUCCESS_REASONS",
+            "domain": "default"
+          },
+          "chot,cong,do,ly,thanh,đon": {
+            "intent": "LEAD_SUCCESS_REASONS",
+            "domain": "default"
+          },
+          "bai,do,ly,that": {
+            "intent": "LEAD_FAILURE_REASONS",
+            "domain": "default"
+          },
+          "bai,sao,tai,that": {
+            "intent": "LEAD_FAILURE_REASONS",
+            "domain": "default"
+          },
+          "choi,do,khach,ly,tu": {
+            "intent": "LEAD_FAILURE_REASONS",
+            "domain": "default"
+          },
+          "choi,hang,khach,sao,tai,tu": {
+            "intent": "LEAD_FAILURE_REASONS",
+            "domain": "default"
+          },
+          "choi,khach,tu": {
+            "intent": "LEAD_FAILURE_REASONS",
+            "domain": "default"
+          },
+          "choi,hang,khach,tu": {
+            "intent": "LEAD_FAILURE_REASONS",
+            "domain": "default"
+          },
+          "can,ho,lead,tro": {
+            "intent": "LEAD_SUPPORT_REQUESTS",
+            "domain": "default"
+          },
+          "cau,giup,tro,yeu": {
+            "intent": "LEAD_SUPPORT_REQUESTS",
+            "domain": "default"
+          },
+          "can,ho,sales,tro": {
+            "intent": "LEAD_SUPPORT_REQUESTS",
+            "domain": "default"
+          },
+          "can,hang,ho,khach,nao,tro": {
+            "intent": "LEAD_SUPPORT_REQUESTS",
+            "domain": "default"
+          },
+          "can,hang,ho,khach,nao,tro,tu,van": {
+            "intent": "LEAD_SUPPORT_REQUESTS",
+            "domain": "default"
+          },
+          "can,ho,tro,tu,van": {
+            "intent": "LEAD_SUPPORT_REQUESTS",
+            "domain": "default"
+          },
+          "can,ho,tro": {
+            "intent": "LEAD_SUPPORT_REQUESTS",
+            "domain": "default"
+          },
+          "danh,nhan,sach,vien": {
+            "intent": "STAFF_LIST",
+            "domain": "default"
+          },
+          "danh,nhan,sach,su": {
+            "intent": "STAFF_LIST",
+            "domain": "default"
+          },
+          "nhan,su,tro,vai": {
+            "intent": "STAFF_LIST",
+            "domain": "default"
+          },
+          "khoan,nhan,su,tai": {
+            "intent": "STAFF_LIST",
+            "domain": "default"
+          },
+          "%customername%,cua,hop,nao,thai,the,trang,đong": {
+            "intent": "CONTRACT_STATUS",
+            "domain": "default"
+          },
+          "%customername%,hop,kiem,thai,tra,trang,đong": {
+            "intent": "CONTRACT_STATUS",
+            "domain": "default"
+          },
+          "%customername%,cua,hop,thai,trang,đong": {
+            "intent": "CONTRACT_STATUS",
+            "domain": "default"
+          },
+          "%customername%,hop,đong": {
+            "intent": "CONTRACT_STATUS",
+            "domain": "default"
+          },
+          "%customername%,hang,thai,trang,đon": {
+            "intent": "CONTRACT_STATUS",
+            "domain": "default"
+          },
+          "%customername%,cua,cuoi,hop,đong": {
+            "intent": "CONTRACT_STATUS",
+            "domain": "default"
+          },
+          "%customername%,cua,hang,khach,nao,the,đon": {
+            "intent": "CONTRACT_STATUS",
+            "domain": "default"
+          },
+          "%customername%,cua,hop,kiem,tra,đong": {
+            "intent": "CONTRACT_STATUS",
+            "domain": "default"
+          },
+          "doanh,so": {
+            "intent": "thong_ke_doanh_so",
+            "domain": "default"
+          },
+          "%month%,%year%,doanh,nam,so,thang": {
+            "intent": "thong_ke_doanh_so",
+            "domain": "default"
+          },
+          "%quarter%,%year%,doanh,nam,quy,so": {
+            "intent": "thong_ke_doanh_so",
+            "domain": "default"
+          },
+          "%year%,doanh,nam,so": {
+            "intent": "thong_ke_doanh_so",
+            "domain": "default"
+          },
+          "%month%,%year%,doanh,nam,thang,thu": {
+            "intent": "thong_ke_doanh_so",
+            "domain": "default"
+          },
+          "%quarter%,%year%,doanh,nam,quy,thu": {
+            "intent": "thong_ke_doanh_so",
+            "domain": "default"
+          },
+          "%year%,doanh,nam,thu": {
+            "intent": "thong_ke_doanh_so",
+            "domain": "default"
+          },
+          "doanh,ke,nay,thang,thong,thu": {
+            "intent": "thong_ke_doanh_so",
+            "domain": "default"
+          },
+          "doanh,nay,so,thang": {
+            "intent": "thong_ke_doanh_so",
+            "domain": "default"
+          },
+          "doanh,so,thang,truoc": {
+            "intent": "thong_ke_doanh_so",
+            "domain": "default"
+          },
+          "doanh,nay,quy,so": {
+            "intent": "thong_ke_doanh_so",
+            "domain": "default"
+          },
+          "doanh,nam,nay,so": {
+            "intent": "thong_ke_doanh_so",
+            "domain": "default"
+          },
+          "doanh,nam,ngoai,so": {
+            "intent": "thong_ke_doanh_so",
+            "domain": "default"
+          }
+        },
+        "intentDict": {
+          "BUSINESS_OVERVIEW": "default",
+          "CUSTOMER_LIST": "default",
+          "LEAD_LIST": "default",
+          "ORDER_LIST": "default",
+          "SCHEDULE_RANGE": "default",
+          "TASK_LIST": "default",
+          "OPERATIONAL_ALERTS": "default",
+          "STAFF_WORKLOAD": "default",
+          "OKR_LIST": "default",
+          "LEAD_SUCCESS_REASONS": "default",
+          "LEAD_FAILURE_REASONS": "default",
+          "LEAD_SUPPORT_REQUESTS": "default",
+          "STAFF_LIST": "default",
+          "CONTRACT_STATUS": "default",
+          "thong_ke_doanh_so": "default"
+        },
+        "sentences": [
+          {
+            "domain": "default",
+            "utterance": "tổng quan",
+            "intent": "BUSINESS_OVERVIEW"
+          },
+          {
+            "domain": "default",
+            "utterance": "tình hình",
+            "intent": "BUSINESS_OVERVIEW"
+          },
+          {
+            "domain": "default",
+            "utterance": "tổng quan studio",
+            "intent": "BUSINESS_OVERVIEW"
+          },
+          {
+            "domain": "default",
+            "utterance": "tổng quan hoạt động",
+            "intent": "BUSINESS_OVERVIEW"
+          },
+          {
+            "domain": "default",
+            "utterance": "tổng quan hôm nay",
+            "intent": "BUSINESS_OVERVIEW"
+          },
+          {
+            "domain": "default",
+            "utterance": "tình hình hôm nay",
+            "intent": "BUSINESS_OVERVIEW"
+          },
+          {
+            "domain": "default",
+            "utterance": "báo cáo tổng quan",
+            "intent": "BUSINESS_OVERVIEW"
+          },
+          {
+            "domain": "default",
+            "utterance": "tình hình hoạt động của studio",
+            "intent": "BUSINESS_OVERVIEW"
+          },
+          {
+            "domain": "default",
+            "utterance": "danh sách khách hàng",
+            "intent": "CUSTOMER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "khách hàng",
+            "intent": "CUSTOMER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "ds khách hàng",
+            "intent": "CUSTOMER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "d sách khách hàng",
+            "intent": "CUSTOMER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "tra cứu khách hàng",
+            "intent": "CUSTOMER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "tìm khách hàng %customerName%",
+            "intent": "CUSTOMER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "tra cứu thông tin khách hàng %customerName%",
+            "intent": "CUSTOMER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "khách hàng %customerName% là ai",
+            "intent": "CUSTOMER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "cho tôi thông tin của %customerName%",
+            "intent": "CUSTOMER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "thông tin khách hàng %customerName%",
+            "intent": "CUSTOMER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "hồ sơ khách hàng %customerName%",
+            "intent": "CUSTOMER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "xem hồ sơ của %customerName%",
+            "intent": "CUSTOMER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "lead",
+            "intent": "LEAD_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "crm",
+            "intent": "LEAD_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "tư vấn",
+            "intent": "LEAD_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "chăm sóc",
+            "intent": "LEAD_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "ds lead",
+            "intent": "LEAD_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "khách hàng tiềm năng",
+            "intent": "LEAD_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "danh sách lead",
+            "intent": "LEAD_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "lead cần chăm sóc",
+            "intent": "LEAD_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "danh sách đơn hàng",
+            "intent": "ORDER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "danh sách hợp đồng",
+            "intent": "ORDER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "đơn hàng đã ký",
+            "intent": "ORDER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "hợp đồng đã chốt",
+            "intent": "ORDER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "hợp đồng studio",
+            "intent": "ORDER_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "lịch",
+            "intent": "SCHEDULE_RANGE"
+          },
+          {
+            "domain": "default",
+            "utterance": "lịch chụp",
+            "intent": "SCHEDULE_RANGE"
+          },
+          {
+            "domain": "default",
+            "utterance": "chụp",
+            "intent": "SCHEDULE_RANGE"
+          },
+          {
+            "domain": "default",
+            "utterance": "lịch chụp sắp tới",
+            "intent": "SCHEDULE_RANGE"
+          },
+          {
+            "domain": "default",
+            "utterance": "lịch chụp hôm nay",
+            "intent": "SCHEDULE_RANGE"
+          },
+          {
+            "domain": "default",
+            "utterance": "lịch chụp ngày mai",
+            "intent": "SCHEDULE_RANGE"
+          },
+          {
+            "domain": "default",
+            "utterance": "xem lịch chụp",
+            "intent": "SCHEDULE_RANGE"
+          },
+          {
+            "domain": "default",
+            "utterance": "kế hoạch chụp ảnh",
+            "intent": "SCHEDULE_RANGE"
+          },
+          {
+            "domain": "default",
+            "utterance": "công việc",
+            "intent": "TASK_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "task",
+            "intent": "TASK_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "danh sách công việc",
+            "intent": "TASK_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "công việc cần làm",
+            "intent": "TASK_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "nhiệm vụ cần xử lý",
+            "intent": "TASK_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "tiến độ công việc",
+            "intent": "TASK_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "cảnh báo",
+            "intent": "OPERATIONAL_ALERTS"
+          },
+          {
+            "domain": "default",
+            "utterance": "cảnh báo vận hành",
+            "intent": "OPERATIONAL_ALERTS"
+          },
+          {
+            "domain": "default",
+            "utterance": "bất thường",
+            "intent": "OPERATIONAL_ALERTS"
+          },
+          {
+            "domain": "default",
+            "utterance": "cảnh báo o p",
+            "intent": "OPERATIONAL_ALERTS"
+          },
+          {
+            "domain": "default",
+            "utterance": "cảnh báo hệ thống",
+            "intent": "OPERATIONAL_ALERTS"
+          },
+          {
+            "domain": "default",
+            "utterance": "các vấn đề vận hành",
+            "intent": "OPERATIONAL_ALERTS"
+          },
+          {
+            "domain": "default",
+            "utterance": "nhân viên",
+            "intent": "STAFF_WORKLOAD"
+          },
+          {
+            "domain": "default",
+            "utterance": "khối lượng công việc",
+            "intent": "STAFF_WORKLOAD"
+          },
+          {
+            "domain": "default",
+            "utterance": "ai bận",
+            "intent": "STAFF_WORKLOAD"
+          },
+          {
+            "domain": "default",
+            "utterance": "ai rảnh",
+            "intent": "STAFF_WORKLOAD"
+          },
+          {
+            "domain": "default",
+            "utterance": "ai bận nhất",
+            "intent": "STAFF_WORKLOAD"
+          },
+          {
+            "domain": "default",
+            "utterance": "khối lượng công việc nhân sự",
+            "intent": "STAFF_WORKLOAD"
+          },
+          {
+            "domain": "default",
+            "utterance": "khối lượng công việc của nhân sự",
+            "intent": "STAFF_WORKLOAD"
+          },
+          {
+            "domain": "default",
+            "utterance": "ai bận nhất tuần này",
+            "intent": "STAFF_WORKLOAD"
+          },
+          {
+            "domain": "default",
+            "utterance": "okr",
+            "intent": "OKR_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "mục tiêu",
+            "intent": "OKR_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "kết quả then chốt",
+            "intent": "OKR_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "tiến độ okr",
+            "intent": "OKR_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "tỉ lệ hoàn thành",
+            "intent": "OKR_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "tiến độ mục tiêu",
+            "intent": "OKR_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "kết quả okr của studio",
+            "intent": "OKR_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "lý do thành công",
+            "intent": "LEAD_SUCCESS_REASONS"
+          },
+          {
+            "domain": "default",
+            "utterance": "chốt thành công",
+            "intent": "LEAD_SUCCESS_REASONS"
+          },
+          {
+            "domain": "default",
+            "utterance": "mã lý do thành công",
+            "intent": "LEAD_SUCCESS_REASONS"
+          },
+          {
+            "domain": "default",
+            "utterance": "lý do chốt đơn thành công",
+            "intent": "LEAD_SUCCESS_REASONS"
+          },
+          {
+            "domain": "default",
+            "utterance": "lý do thất bại",
+            "intent": "LEAD_FAILURE_REASONS"
+          },
+          {
+            "domain": "default",
+            "utterance": "tại sao thất bại",
+            "intent": "LEAD_FAILURE_REASONS"
+          },
+          {
+            "domain": "default",
+            "utterance": "lý do khách từ chối",
+            "intent": "LEAD_FAILURE_REASONS"
+          },
+          {
+            "domain": "default",
+            "utterance": "tại sao khách hàng từ chối",
+            "intent": "LEAD_FAILURE_REASONS"
+          },
+          {
+            "domain": "default",
+            "utterance": "khách từ chối",
+            "intent": "LEAD_FAILURE_REASONS"
+          },
+          {
+            "domain": "default",
+            "utterance": "khách hàng từ chối",
+            "intent": "LEAD_FAILURE_REASONS"
+          },
+          {
+            "domain": "default",
+            "utterance": "lead cần hỗ trợ",
+            "intent": "LEAD_SUPPORT_REQUESTS"
+          },
+          {
+            "domain": "default",
+            "utterance": "yêu cầu trợ giúp",
+            "intent": "LEAD_SUPPORT_REQUESTS"
+          },
+          {
+            "domain": "default",
+            "utterance": "sales cần hỗ trợ",
+            "intent": "LEAD_SUPPORT_REQUESTS"
+          },
+          {
+            "domain": "default",
+            "utterance": "khách hàng nào cần hỗ trợ",
+            "intent": "LEAD_SUPPORT_REQUESTS"
+          },
+          {
+            "domain": "default",
+            "utterance": "khách hàng nào cần hỗ trợ tư vấn",
+            "intent": "LEAD_SUPPORT_REQUESTS"
+          },
+          {
+            "domain": "default",
+            "utterance": "cần hỗ trợ tư vấn",
+            "intent": "LEAD_SUPPORT_REQUESTS"
+          },
+          {
+            "domain": "default",
+            "utterance": "cần hỗ trợ",
+            "intent": "LEAD_SUPPORT_REQUESTS"
+          },
+          {
+            "domain": "default",
+            "utterance": "danh sách nhân viên",
+            "intent": "STAFF_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "danh sách nhân sự",
+            "intent": "STAFF_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "vai trò nhân sự",
+            "intent": "STAFF_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "tài khoản nhân sự",
+            "intent": "STAFF_LIST"
+          },
+          {
+            "domain": "default",
+            "utterance": "hợp đồng của %customerName% trạng thái thế nào",
+            "intent": "CONTRACT_STATUS"
+          },
+          {
+            "domain": "default",
+            "utterance": "kiểm tra trạng thái hợp đồng %customerName%",
+            "intent": "CONTRACT_STATUS"
+          },
+          {
+            "domain": "default",
+            "utterance": "trạng thái hợp đồng của %customerName%",
+            "intent": "CONTRACT_STATUS"
+          },
+          {
+            "domain": "default",
+            "utterance": "hợp đồng %customerName%",
+            "intent": "CONTRACT_STATUS"
+          },
+          {
+            "domain": "default",
+            "utterance": "trạng thái đơn hàng %customerName%",
+            "intent": "CONTRACT_STATUS"
+          },
+          {
+            "domain": "default",
+            "utterance": "hợp đồng cưới của %customerName%",
+            "intent": "CONTRACT_STATUS"
+          },
+          {
+            "domain": "default",
+            "utterance": "đơn hàng của khách %customerName% thế nào",
+            "intent": "CONTRACT_STATUS"
+          },
+          {
+            "domain": "default",
+            "utterance": "kiểm tra hợp đồng của %customerName%",
+            "intent": "CONTRACT_STATUS"
+          },
+          {
+            "domain": "default",
+            "utterance": "doanh số",
+            "intent": "thong_ke_doanh_so"
+          },
+          {
+            "domain": "default",
+            "utterance": "doanh số tháng %month% năm %year%",
+            "intent": "thong_ke_doanh_so"
+          },
+          {
+            "domain": "default",
+            "utterance": "doanh số quý %quarter% năm %year%",
+            "intent": "thong_ke_doanh_so"
+          },
+          {
+            "domain": "default",
+            "utterance": "doanh số năm %year%",
+            "intent": "thong_ke_doanh_so"
+          },
+          {
+            "domain": "default",
+            "utterance": "doanh thu tháng %month% năm %year%",
+            "intent": "thong_ke_doanh_so"
+          },
+          {
+            "domain": "default",
+            "utterance": "doanh thu quý %quarter% năm %year%",
+            "intent": "thong_ke_doanh_so"
+          },
+          {
+            "domain": "default",
+            "utterance": "doanh thu năm %year%",
+            "intent": "thong_ke_doanh_so"
+          },
+          {
+            "domain": "default",
+            "utterance": "thống kê doanh thu tháng này",
+            "intent": "thong_ke_doanh_so"
+          },
+          {
+            "domain": "default",
+            "utterance": "doanh số tháng này",
+            "intent": "thong_ke_doanh_so"
+          },
+          {
+            "domain": "default",
+            "utterance": "doanh số tháng trước",
+            "intent": "thong_ke_doanh_so"
+          },
+          {
+            "domain": "default",
+            "utterance": "doanh số quý này",
+            "intent": "thong_ke_doanh_so"
+          },
+          {
+            "domain": "default",
+            "utterance": "doanh số năm nay",
+            "intent": "thong_ke_doanh_so"
+          },
+          {
+            "domain": "default",
+            "utterance": "doanh số năm ngoái",
+            "intent": "thong_ke_doanh_so"
+          }
+        ],
+        "domains": {
+          "master_domain": {
+            "settings": {
+              "locale": "vi",
+              "tag": "nlu-vi",
+              "keepStopwords": true,
+              "nonefeatureValue": 1,
+              "nonedeltaMultiplier": 1.2,
+              "spellCheck": false,
+              "spellCheckDistance": 1,
+              "filterZeros": true,
+              "log": true
+            },
+            "features": {
+              "tong": 1,
+              "quan": 1,
+              "tinh": 1,
+              "hinh": 1,
+              "studio": 1,
+              "hoat": 1,
+              "đong": 1,
+              "hom": 1,
+              "nay": 1,
+              "bao": 1,
+              "cao": 1,
+              "cua": 1,
+              "danh": 1,
+              "sach": 1,
+              "khach": 1,
+              "hang": 1,
+              "ds": 1,
+              "d": 1,
+              "tra": 1,
+              "cuu": 1,
+              "tim": 1,
+              "%customername%": 1,
+              "thong": 1,
+              "tin": 1,
+              "la": 1,
+              "ai": 1,
+              "cho": 1,
+              "toi": 1,
+              "ho": 1,
+              "so": 1,
+              "xem": 1,
+              "lead": 1,
+              "crm": 1,
+              "tu": 1,
+              "van": 1,
+              "cham": 1,
+              "soc": 1,
+              "tiem": 1,
+              "nang": 1,
+              "can": 1,
+              "đon": 1,
+              "hop": 1,
+              "đa": 1,
+              "ky": 1,
+              "chot": 1,
+              "lich": 1,
+              "chup": 1,
+              "sap": 1,
+              "ngay": 1,
+              "mai": 1,
+              "ke": 1,
+              "hoach": 1,
+              "anh": 1,
+              "cong": 1,
+              "viec": 1,
+              "task": 1,
+              "lam": 1,
+              "nhiem": 1,
+              "vu": 1,
+              "xu": 1,
+              "ly": 1,
+              "tien": 1,
+              "đo": 1,
+              "canh": 1,
+              "hanh": 1,
+              "bat": 1,
+              "thuong": 1,
+              "o": 1,
+              "p": 1,
+              "he": 1,
+              "cac": 1,
+              "đe": 1,
+              "nhan": 1,
+              "vien": 1,
+              "khoi": 1,
+              "luong": 1,
+              "ban": 1,
+              "ranh": 1,
+              "nhat": 1,
+              "su": 1,
+              "tuan": 1,
+              "okr": 1,
+              "muc": 1,
+              "tieu": 1,
+              "ket": 1,
+              "qua": 1,
+              "then": 1,
+              "ti": 1,
+              "le": 1,
+              "hoan": 1,
+              "thanh": 1,
+              "do": 1,
+              "ma": 1,
+              "that": 1,
+              "bai": 1,
+              "tai": 1,
+              "sao": 1,
+              "choi": 1,
+              "tro": 1,
+              "yeu": 1,
+              "cau": 1,
+              "giup": 1,
+              "sales": 1,
+              "nao": 1,
+              "vai": 1,
+              "khoan": 1,
+              "trang": 1,
+              "thai": 1,
+              "the": 1,
+              "kiem": 1,
+              "cuoi": 1,
+              "doanh": 1,
+              "thang": 1,
+              "%month%": 1,
+              "nam": 1,
+              "%year%": 1,
+              "quy": 1,
+              "%quarter%": 1,
+              "thu": 1,
+              "truoc": 1,
+              "ngoai": 1
+            },
+            "intents": {
+              "BUSINESS_OVERVIEW": 1,
+              "CUSTOMER_LIST": 1,
+              "LEAD_LIST": 1,
+              "ORDER_LIST": 1,
+              "SCHEDULE_RANGE": 1,
+              "TASK_LIST": 1,
+              "OPERATIONAL_ALERTS": 1,
+              "STAFF_WORKLOAD": 1,
+              "OKR_LIST": 1,
+              "LEAD_SUCCESS_REASONS": 1,
+              "LEAD_FAILURE_REASONS": 1,
+              "LEAD_SUPPORT_REQUESTS": 1,
+              "STAFF_LIST": 1,
+              "CONTRACT_STATUS": 1,
+              "thong_ke_doanh_so": 1
+            },
+            "intentFeatures": {
+              "BUSINESS_OVERVIEW": {
+                "tong": 1,
+                "quan": 1,
+                "tinh": 1,
+                "hinh": 1,
+                "studio": 1,
+                "hoat": 1,
+                "đong": 1,
+                "hom": 1,
+                "nay": 1,
+                "bao": 1,
+                "cao": 1,
+                "cua": 1
+              },
+              "CUSTOMER_LIST": {
+                "danh": 1,
+                "sach": 1,
+                "khach": 1,
+                "hang": 1,
+                "ds": 1,
+                "d": 1,
+                "tra": 1,
+                "cuu": 1,
+                "tim": 1,
+                "%customername%": 1,
+                "thong": 1,
+                "tin": 1,
+                "la": 1,
+                "ai": 1,
+                "cho": 1,
+                "toi": 1,
+                "cua": 1,
+                "ho": 1,
+                "so": 1,
+                "xem": 1
+              },
+              "LEAD_LIST": {
+                "lead": 1,
+                "crm": 1,
+                "tu": 1,
+                "van": 1,
+                "cham": 1,
+                "soc": 1,
+                "ds": 1,
+                "khach": 1,
+                "hang": 1,
+                "tiem": 1,
+                "nang": 1,
+                "danh": 1,
+                "sach": 1,
+                "can": 1
+              },
+              "ORDER_LIST": {
+                "danh": 1,
+                "sach": 1,
+                "đon": 1,
+                "hang": 1,
+                "hop": 1,
+                "đong": 1,
+                "đa": 1,
+                "ky": 1,
+                "chot": 1,
+                "studio": 1
+              },
+              "SCHEDULE_RANGE": {
+                "lich": 1,
+                "chup": 1,
+                "sap": 1,
+                "toi": 1,
+                "hom": 1,
+                "nay": 1,
+                "ngay": 1,
+                "mai": 1,
+                "xem": 1,
+                "ke": 1,
+                "hoach": 1,
+                "anh": 1
+              },
+              "TASK_LIST": {
+                "cong": 1,
+                "viec": 1,
+                "task": 1,
+                "danh": 1,
+                "sach": 1,
+                "can": 1,
+                "lam": 1,
+                "nhiem": 1,
+                "vu": 1,
+                "xu": 1,
+                "ly": 1,
+                "tien": 1,
+                "đo": 1
+              },
+              "OPERATIONAL_ALERTS": {
+                "canh": 1,
+                "bao": 1,
+                "van": 1,
+                "hanh": 1,
+                "bat": 1,
+                "thuong": 1,
+                "o": 1,
+                "p": 1,
+                "he": 1,
+                "thong": 1,
+                "cac": 1,
+                "đe": 1
+              },
+              "STAFF_WORKLOAD": {
+                "nhan": 1,
+                "vien": 1,
+                "khoi": 1,
+                "luong": 1,
+                "cong": 1,
+                "viec": 1,
+                "ai": 1,
+                "ban": 1,
+                "ranh": 1,
+                "nhat": 1,
+                "su": 1,
+                "cua": 1,
+                "tuan": 1,
+                "nay": 1
+              },
+              "OKR_LIST": {
+                "okr": 1,
+                "muc": 1,
+                "tieu": 1,
+                "ket": 1,
+                "qua": 1,
+                "then": 1,
+                "chot": 1,
+                "tien": 1,
+                "đo": 1,
+                "ti": 1,
+                "le": 1,
+                "hoan": 1,
+                "thanh": 1,
+                "cua": 1,
+                "studio": 1
+              },
+              "LEAD_SUCCESS_REASONS": {
+                "ly": 1,
+                "do": 1,
+                "thanh": 1,
+                "cong": 1,
+                "chot": 1,
+                "ma": 1,
+                "đon": 1
+              },
+              "LEAD_FAILURE_REASONS": {
+                "ly": 1,
+                "do": 1,
+                "that": 1,
+                "bai": 1,
+                "tai": 1,
+                "sao": 1,
+                "khach": 1,
+                "tu": 1,
+                "choi": 1,
+                "hang": 1
+              },
+              "LEAD_SUPPORT_REQUESTS": {
+                "lead": 1,
+                "can": 1,
+                "ho": 1,
+                "tro": 1,
+                "yeu": 1,
+                "cau": 1,
+                "giup": 1,
+                "sales": 1,
+                "khach": 1,
+                "hang": 1,
+                "nao": 1,
+                "tu": 1,
+                "van": 1
+              },
+              "STAFF_LIST": {
+                "danh": 1,
+                "sach": 1,
+                "nhan": 1,
+                "vien": 1,
+                "su": 1,
+                "vai": 1,
+                "tro": 1,
+                "tai": 1,
+                "khoan": 1
+              },
+              "CONTRACT_STATUS": {
+                "hop": 1,
+                "đong": 1,
+                "cua": 1,
+                "%customername%": 1,
+                "trang": 1,
+                "thai": 1,
+                "the": 1,
+                "nao": 1,
+                "kiem": 1,
+                "tra": 1,
+                "đon": 1,
+                "hang": 1,
+                "cuoi": 1,
+                "khach": 1
+              },
+              "thong_ke_doanh_so": {
+                "doanh": 1,
+                "so": 1,
+                "thang": 1,
+                "%month%": 1,
+                "nam": 1,
+                "%year%": 1,
+                "quy": 1,
+                "%quarter%": 1,
+                "thu": 1,
+                "thong": 1,
+                "ke": 1,
+                "nay": 1,
+                "truoc": 1,
+                "ngoai": 1
+              }
+            },
+            "featuresToIntent": {
+              "tong": [
+                "BUSINESS_OVERVIEW"
+              ],
+              "quan": [
+                "BUSINESS_OVERVIEW"
+              ],
+              "tinh": [
+                "BUSINESS_OVERVIEW"
+              ],
+              "hinh": [
+                "BUSINESS_OVERVIEW"
+              ],
+              "studio": [
+                "BUSINESS_OVERVIEW",
+                "ORDER_LIST",
+                "OKR_LIST"
+              ],
+              "hoat": [
+                "BUSINESS_OVERVIEW"
+              ],
+              "đong": [
+                "BUSINESS_OVERVIEW",
+                "ORDER_LIST",
+                "CONTRACT_STATUS"
+              ],
+              "hom": [
+                "BUSINESS_OVERVIEW",
+                "SCHEDULE_RANGE"
+              ],
+              "nay": [
+                "BUSINESS_OVERVIEW",
+                "SCHEDULE_RANGE",
+                "STAFF_WORKLOAD",
+                "thong_ke_doanh_so"
+              ],
+              "bao": [
+                "BUSINESS_OVERVIEW",
+                "OPERATIONAL_ALERTS"
+              ],
+              "cao": [
+                "BUSINESS_OVERVIEW"
+              ],
+              "cua": [
+                "BUSINESS_OVERVIEW",
+                "CUSTOMER_LIST",
+                "STAFF_WORKLOAD",
+                "OKR_LIST",
+                "CONTRACT_STATUS"
+              ],
+              "danh": [
+                "CUSTOMER_LIST",
+                "LEAD_LIST",
+                "ORDER_LIST",
+                "TASK_LIST",
+                "STAFF_LIST"
+              ],
+              "sach": [
+                "CUSTOMER_LIST",
+                "LEAD_LIST",
+                "ORDER_LIST",
+                "TASK_LIST",
+                "STAFF_LIST"
+              ],
+              "khach": [
+                "CUSTOMER_LIST",
+                "LEAD_LIST",
+                "LEAD_FAILURE_REASONS",
+                "LEAD_SUPPORT_REQUESTS",
+                "CONTRACT_STATUS"
+              ],
+              "hang": [
+                "CUSTOMER_LIST",
+                "LEAD_LIST",
+                "ORDER_LIST",
+                "LEAD_FAILURE_REASONS",
+                "LEAD_SUPPORT_REQUESTS",
+                "CONTRACT_STATUS"
+              ],
+              "ds": [
+                "CUSTOMER_LIST",
+                "LEAD_LIST"
+              ],
+              "d": [
+                "CUSTOMER_LIST"
+              ],
+              "tra": [
+                "CUSTOMER_LIST",
+                "CONTRACT_STATUS"
+              ],
+              "cuu": [
+                "CUSTOMER_LIST"
+              ],
+              "tim": [
+                "CUSTOMER_LIST"
+              ],
+              "%customername%": [
+                "CUSTOMER_LIST",
+                "CONTRACT_STATUS"
+              ],
+              "thong": [
+                "CUSTOMER_LIST",
+                "OPERATIONAL_ALERTS",
+                "thong_ke_doanh_so"
+              ],
+              "tin": [
+                "CUSTOMER_LIST"
+              ],
+              "la": [
+                "CUSTOMER_LIST"
+              ],
+              "ai": [
+                "CUSTOMER_LIST",
+                "STAFF_WORKLOAD"
+              ],
+              "cho": [
+                "CUSTOMER_LIST"
+              ],
+              "toi": [
+                "CUSTOMER_LIST",
+                "SCHEDULE_RANGE"
+              ],
+              "ho": [
+                "CUSTOMER_LIST",
+                "LEAD_SUPPORT_REQUESTS"
+              ],
+              "so": [
+                "CUSTOMER_LIST",
+                "thong_ke_doanh_so"
+              ],
+              "xem": [
+                "CUSTOMER_LIST",
+                "SCHEDULE_RANGE"
+              ],
+              "lead": [
+                "LEAD_LIST",
+                "LEAD_SUPPORT_REQUESTS"
+              ],
+              "crm": [
+                "LEAD_LIST"
+              ],
+              "tu": [
+                "LEAD_LIST",
+                "LEAD_FAILURE_REASONS",
+                "LEAD_SUPPORT_REQUESTS"
+              ],
+              "van": [
+                "LEAD_LIST",
+                "OPERATIONAL_ALERTS",
+                "LEAD_SUPPORT_REQUESTS"
+              ],
+              "cham": [
+                "LEAD_LIST"
+              ],
+              "soc": [
+                "LEAD_LIST"
+              ],
+              "tiem": [
+                "LEAD_LIST"
+              ],
+              "nang": [
+                "LEAD_LIST"
+              ],
+              "can": [
+                "LEAD_LIST",
+                "TASK_LIST",
+                "LEAD_SUPPORT_REQUESTS"
+              ],
+              "đon": [
+                "ORDER_LIST",
+                "LEAD_SUCCESS_REASONS",
+                "CONTRACT_STATUS"
+              ],
+              "hop": [
+                "ORDER_LIST",
+                "CONTRACT_STATUS"
+              ],
+              "đa": [
+                "ORDER_LIST"
+              ],
+              "ky": [
+                "ORDER_LIST"
+              ],
+              "chot": [
+                "ORDER_LIST",
+                "OKR_LIST",
+                "LEAD_SUCCESS_REASONS"
+              ],
+              "lich": [
+                "SCHEDULE_RANGE"
+              ],
+              "chup": [
+                "SCHEDULE_RANGE"
+              ],
+              "sap": [
+                "SCHEDULE_RANGE"
+              ],
+              "ngay": [
+                "SCHEDULE_RANGE"
+              ],
+              "mai": [
+                "SCHEDULE_RANGE"
+              ],
+              "ke": [
+                "SCHEDULE_RANGE",
+                "thong_ke_doanh_so"
+              ],
+              "hoach": [
+                "SCHEDULE_RANGE"
+              ],
+              "anh": [
+                "SCHEDULE_RANGE"
+              ],
+              "cong": [
+                "TASK_LIST",
+                "STAFF_WORKLOAD",
+                "LEAD_SUCCESS_REASONS"
+              ],
+              "viec": [
+                "TASK_LIST",
+                "STAFF_WORKLOAD"
+              ],
+              "task": [
+                "TASK_LIST"
+              ],
+              "lam": [
+                "TASK_LIST"
+              ],
+              "nhiem": [
+                "TASK_LIST"
+              ],
+              "vu": [
+                "TASK_LIST"
+              ],
+              "xu": [
+                "TASK_LIST"
+              ],
+              "ly": [
+                "TASK_LIST",
+                "LEAD_SUCCESS_REASONS",
+                "LEAD_FAILURE_REASONS"
+              ],
+              "tien": [
+                "TASK_LIST",
+                "OKR_LIST"
+              ],
+              "đo": [
+                "TASK_LIST",
+                "OKR_LIST"
+              ],
+              "canh": [
+                "OPERATIONAL_ALERTS"
+              ],
+              "hanh": [
+                "OPERATIONAL_ALERTS"
+              ],
+              "bat": [
+                "OPERATIONAL_ALERTS"
+              ],
+              "thuong": [
+                "OPERATIONAL_ALERTS"
+              ],
+              "o": [
+                "OPERATIONAL_ALERTS"
+              ],
+              "p": [
+                "OPERATIONAL_ALERTS"
+              ],
+              "he": [
+                "OPERATIONAL_ALERTS"
+              ],
+              "cac": [
+                "OPERATIONAL_ALERTS"
+              ],
+              "đe": [
+                "OPERATIONAL_ALERTS"
+              ],
+              "nhan": [
+                "STAFF_WORKLOAD",
+                "STAFF_LIST"
+              ],
+              "vien": [
+                "STAFF_WORKLOAD",
+                "STAFF_LIST"
+              ],
+              "khoi": [
+                "STAFF_WORKLOAD"
+              ],
+              "luong": [
+                "STAFF_WORKLOAD"
+              ],
+              "ban": [
+                "STAFF_WORKLOAD"
+              ],
+              "ranh": [
+                "STAFF_WORKLOAD"
+              ],
+              "nhat": [
+                "STAFF_WORKLOAD"
+              ],
+              "su": [
+                "STAFF_WORKLOAD",
+                "STAFF_LIST"
+              ],
+              "tuan": [
+                "STAFF_WORKLOAD"
+              ],
+              "okr": [
+                "OKR_LIST"
+              ],
+              "muc": [
+                "OKR_LIST"
+              ],
+              "tieu": [
+                "OKR_LIST"
+              ],
+              "ket": [
+                "OKR_LIST"
+              ],
+              "qua": [
+                "OKR_LIST"
+              ],
+              "then": [
+                "OKR_LIST"
+              ],
+              "ti": [
+                "OKR_LIST"
+              ],
+              "le": [
+                "OKR_LIST"
+              ],
+              "hoan": [
+                "OKR_LIST"
+              ],
+              "thanh": [
+                "OKR_LIST",
+                "LEAD_SUCCESS_REASONS"
+              ],
+              "do": [
+                "LEAD_SUCCESS_REASONS",
+                "LEAD_FAILURE_REASONS"
+              ],
+              "ma": [
+                "LEAD_SUCCESS_REASONS"
+              ],
+              "that": [
+                "LEAD_FAILURE_REASONS"
+              ],
+              "bai": [
+                "LEAD_FAILURE_REASONS"
+              ],
+              "tai": [
+                "LEAD_FAILURE_REASONS",
+                "STAFF_LIST"
+              ],
+              "sao": [
+                "LEAD_FAILURE_REASONS"
+              ],
+              "choi": [
+                "LEAD_FAILURE_REASONS"
+              ],
+              "tro": [
+                "LEAD_SUPPORT_REQUESTS",
+                "STAFF_LIST"
+              ],
+              "yeu": [
+                "LEAD_SUPPORT_REQUESTS"
+              ],
+              "cau": [
+                "LEAD_SUPPORT_REQUESTS"
+              ],
+              "giup": [
+                "LEAD_SUPPORT_REQUESTS"
+              ],
+              "sales": [
+                "LEAD_SUPPORT_REQUESTS"
+              ],
+              "nao": [
+                "LEAD_SUPPORT_REQUESTS",
+                "CONTRACT_STATUS"
+              ],
+              "vai": [
+                "STAFF_LIST"
+              ],
+              "khoan": [
+                "STAFF_LIST"
+              ],
+              "trang": [
+                "CONTRACT_STATUS"
+              ],
+              "thai": [
+                "CONTRACT_STATUS"
+              ],
+              "the": [
+                "CONTRACT_STATUS"
+              ],
+              "kiem": [
+                "CONTRACT_STATUS"
+              ],
+              "cuoi": [
+                "CONTRACT_STATUS"
+              ],
+              "doanh": [
+                "thong_ke_doanh_so"
+              ],
+              "thang": [
+                "thong_ke_doanh_so"
+              ],
+              "%month%": [
+                "thong_ke_doanh_so"
+              ],
+              "nam": [
+                "thong_ke_doanh_so"
+              ],
+              "%year%": [
+                "thong_ke_doanh_so"
+              ],
+              "quy": [
+                "thong_ke_doanh_so"
+              ],
+              "%quarter%": [
+                "thong_ke_doanh_so"
+              ],
+              "thu": [
+                "thong_ke_doanh_so"
+              ],
+              "truoc": [
+                "thong_ke_doanh_so"
+              ],
+              "ngoai": [
+                "thong_ke_doanh_so"
+              ]
+            },
+            "neuralNetwork": {
+              "settings": {
+                "locale": "vi",
+                "tag": "nlu-vi",
+                "keepStopwords": true,
+                "nonefeatureValue": 1,
+                "nonedeltaMultiplier": 1.2,
+                "spellCheck": false,
+                "spellCheckDistance": 1,
+                "filterZeros": true,
+                "log": true
+              },
+              "features": [
+                "tong",
+                "quan",
+                "tinh",
+                "hinh",
+                "studio",
+                "hoat",
+                "đong",
+                "hom",
+                "nay",
+                "bao",
+                "cao",
+                "cua",
+                "danh",
+                "sach",
+                "khach",
+                "hang",
+                "ds",
+                "d",
+                "tra",
+                "cuu",
+                "tim",
+                "%customername%",
+                "thong",
+                "tin",
+                "la",
+                "ai",
+                "cho",
+                "toi",
+                "ho",
+                "so",
+                "xem",
+                "lead",
+                "crm",
+                "tu",
+                "van",
+                "cham",
+                "soc",
+                "tiem",
+                "nang",
+                "can",
+                "đon",
+                "hop",
+                "đa",
+                "ky",
+                "chot",
+                "lich",
+                "chup",
+                "sap",
+                "ngay",
+                "mai",
+                "ke",
+                "hoach",
+                "anh",
+                "cong",
+                "viec",
+                "task",
+                "lam",
+                "nhiem",
+                "vu",
+                "xu",
+                "ly",
+                "tien",
+                "đo",
+                "canh",
+                "hanh",
+                "bat",
+                "thuong",
+                "o",
+                "p",
+                "he",
+                "cac",
+                "đe",
+                "nhan",
+                "vien",
+                "khoi",
+                "luong",
+                "ban",
+                "ranh",
+                "nhat",
+                "su",
+                "tuan",
+                "okr",
+                "muc",
+                "tieu",
+                "ket",
+                "qua",
+                "then",
+                "ti",
+                "le",
+                "hoan",
+                "thanh",
+                "do",
+                "ma",
+                "that",
+                "bai",
+                "tai",
+                "sao",
+                "choi",
+                "tro",
+                "yeu",
+                "cau",
+                "giup",
+                "sales",
+                "nao",
+                "vai",
+                "khoan",
+                "trang",
+                "thai",
+                "the",
+                "kiem",
+                "cuoi",
+                "doanh",
+                "thang",
+                "%month%",
+                "nam",
+                "%year%",
+                "quy",
+                "%quarter%",
+                "thu",
+                "truoc",
+                "ngoai"
+              ],
+              "intents": [
+                "BUSINESS_OVERVIEW",
+                "CUSTOMER_LIST",
+                "LEAD_LIST",
+                "ORDER_LIST",
+                "SCHEDULE_RANGE",
+                "TASK_LIST",
+                "OPERATIONAL_ALERTS",
+                "STAFF_WORKLOAD",
+                "OKR_LIST",
+                "LEAD_SUCCESS_REASONS",
+                "LEAD_FAILURE_REASONS",
+                "LEAD_SUPPORT_REQUESTS",
+                "STAFF_LIST",
+                "CONTRACT_STATUS",
+                "thong_ke_doanh_so"
+              ],
+              "perceptrons": [
+                [
+                  6.74253511428833,
+                  6.74253511428833,
+                  6.795853137969971,
+                  6.795853137969971,
+                  0.18381409347057343,
+                  0.8867208361625671,
+                  -0.7120989561080933,
+                  0.4367554783821106,
+                  -0.3753294348716736,
+                  -0.3261885344982147,
+                  0.44980737566947937,
+                  -0.3951743245124817,
+                  -0.5267354249954224,
+                  -0.6669440865516663,
+                  -1.1006628274917603,
+                  -1.1551581621170044,
+                  -0.3059130907058716,
+                  -0.07023488730192184,
+                  -0.11512672156095505,
+                  -0.11512672156095505,
+                  -0.04483075439929962,
+                  -0.6839589476585388,
+                  -0.48044446110725403,
+                  -0.22728551924228668,
+                  -0.021187350153923035,
+                  -0.5678789019584656,
+                  -0.18101909756660461,
+                  -0.2634657025337219,
+                  -0.211933434009552,
+                  -0.6290997862815857,
+                  -0.20074427127838135,
+                  -0.7157320380210876,
+                  -0.685467541217804,
+                  -0.2425978183746338,
+                  -0.46999692916870117,
+                  -0.3716622591018677,
+                  -0.3716622591018677,
+                  0,
+                  0,
+                  -0.29665127396583557,
+                  -0.028815774247050285,
+                  -1.5643805265426636,
+                  -0.34246647357940674,
+                  -0.024890897795557976,
+                  -0.36283013224601746,
+                  -1.2404718399047852,
+                  -1.2733451128005981,
+                  -0.03611641377210617,
+                  -0.01452620979398489,
+                  -0.01452620979398489,
+                  -0.15806758403778076,
+                  -0.039435990154743195,
+                  -0.039435990154743195,
+                  -0.34303656220436096,
+                  -0.34303656220436096,
+                  -0.6853387951850891,
+                  -0.05730566754937172,
+                  -0.09364452213048935,
+                  -0.09364452213048935,
+                  -0.09364452213048935,
+                  -0.19665881991386414,
+                  -0.1392039805650711,
+                  -0.1392039805650711,
+                  -0.7713426947593689,
+                  -0.17040616273880005,
+                  -0.34299910068511963,
+                  -0.34299910068511963,
+                  -0.14636239409446716,
+                  -0.14636239409446716,
+                  -0.05411691218614578,
+                  -0.0445999801158905,
+                  -0.0445999801158905,
+                  -0.3938988149166107,
+                  -0.29207873344421387,
+                  -0.046946264803409576,
+                  -0.046946264803409576,
+                  -0.37644192576408386,
+                  -0.11807781457901001,
+                  -0.29593217372894287,
+                  -0.10173331946134567,
+                  -0.24951837956905365,
+                  -0.6852142214775085,
+                  -0.34294018149375916,
+                  -0.34294018149375916,
+                  -0.43289536237716675,
+                  -0.43289536237716675,
+                  -0.0234037134796381,
+                  -0.17153078317642212,
+                  -0.17153078317642212,
+                  -0.17153078317642212,
+                  -0.17153078317642212,
+                  -0.08223001658916473,
+                  0,
+                  -0.20365338027477264,
+                  -0.20365338027477264,
+                  -0.15744425356388092,
+                  -0.12141083180904388,
+                  0,
+                  -0.19911089539527893,
+                  -0.1623300462961197,
+                  -0.1623300462961197,
+                  -0.1623300462961197,
+                  -0.000024322294848388992,
+                  -0.01805569790303707,
+                  -0.02798733115196228,
+                  -0.035946737974882126,
+                  -0.01805569790303707,
+                  -0.01805569790303707,
+                  -0.01805569790303707,
+                  0,
+                  -0.0007722543086856604,
+                  -0.5662707686424255,
+                  -0.2826746702194214,
+                  -0.011888543143868446,
+                  -0.11728650331497192,
+                  -0.03455756977200508,
+                  -0.12206768989562988,
+                  -0.007432739250361919,
+                  -0.13235774636268616,
+                  0,
+                  0,
+                  0.6862578667983388
+                ],
+                [
+                  -0.09334799647331238,
+                  -0.09334799647331238,
+                  -0.48157504200935364,
+                  -0.48157504200935364,
+                  -1.9433112144470215,
+                  -0.48157504200935364,
+                  -2.78995418548584,
+                  -0.027348199859261513,
+                  -0.327625036239624,
+                  -0.4117145538330078,
+                  0,
+                  5.998176574707031,
+                  0.2725403606891632,
+                  0.46014347672462463,
+                  8.156973838806152,
+                  5.261656284332275,
+                  0.7905104756355286,
+                  0.19223889708518982,
+                  -0.24172283709049225,
+                  0.6615305542945862,
+                  1.1450068950653076,
+                  -0.5325648784637451,
+                  0.3040620684623718,
+                  0.6124855875968933,
+                  0.9715738296508789,
+                  0.18617825210094452,
+                  4.060781478881836,
+                  3.6773393154144287,
+                  -0.0066245440393686295,
+                  1.3967044353485107,
+                  7.032809257507324,
+                  -2.7200589179992676,
+                  -0.3726506233215332,
+                  -7.010300636291504,
+                  -0.448421835899353,
+                  -0.37402892112731934,
+                  -0.37402892112731934,
+                  -6.8032732009887695,
+                  -6.8032732009887695,
+                  -3.2944495677948,
+                  -7.626150131225586,
+                  -2.308320999145508,
+                  -0.6228541731834412,
+                  -0.519952118396759,
+                  -0.08002782613039017,
+                  -3.5658648014068604,
+                  -3.604214668273926,
+                  -0.37215325236320496,
+                  -0.019953975453972816,
+                  -0.019953975453972816,
+                  -0.04590596631169319,
+                  -0.025685742497444153,
+                  -0.025685742497444153,
+                  -1.3861125707626343,
+                  -1.3861125707626343,
+                  -0.18523070216178894,
+                  -0.028506139293313026,
+                  -0.031792011111974716,
+                  -0.031792011111974716,
+                  -0.031792011111974716,
+                  -0.4348539710044861,
+                  -0.07152879238128662,
+                  -0.07152879238128662,
+                  -0.4117145538330078,
+                  -0.05325724184513092,
+                  -0.09938035905361176,
+                  -0.09938035905361176,
+                  -0.02384599670767784,
+                  -0.02384599670767784,
+                  -0.25024718046188354,
+                  -0.016728736460208893,
+                  -0.016728736460208893,
+                  -1.7662737369537354,
+                  -0.8155890703201294,
+                  -0.35228732228279114,
+                  -0.35228732228279114,
+                  -0.39257052540779114,
+                  -0.39163511991500854,
+                  -0.09341249614953995,
+                  -0.949810266494751,
+                  -0.018501469865441322,
+                  -1.440330147743225,
+                  -0.09845983982086182,
+                  -0.09845983982086182,
+                  -1.4019086360931396,
+                  -1.4019086360931396,
+                  -0.014932150952517986,
+                  -0.050700921565294266,
+                  -0.050700921565294266,
+                  -0.050700921565294266,
+                  -0.050700921565294266,
+                  -0.3752439618110657,
+                  0,
+                  -0.026186086237430573,
+                  -0.026186086237430573,
+                  -1.2346984148025513,
+                  -1.2346984148025513,
+                  -6.570495128631592,
+                  -3.0694758892059326,
+                  0,
+                  0,
+                  0,
+                  0,
+                  -7.252498626708984,
+                  0,
+                  0,
+                  -0.8585227131843567,
+                  -0.8585227131843567,
+                  -4.18085241317749,
+                  -0.9026406407356262,
+                  -0.6151686906814575,
+                  -1.6784336566925049,
+                  -0.372276246547699,
+                  -0.06457418203353882,
+                  -0.39121678471565247,
+                  -0.2749161422252655,
+                  -0.19513662159442902,
+                  -0.07394307106733322,
+                  -0.007377351634204388,
+                  -0.1565365195274353,
+                  -0.09967218339443207,
+                  0.1999433317708387
+                ],
+                [
+                  -1.500657320022583,
+                  -1.500657320022583,
+                  -1.500449776649475,
+                  -1.500449776649475,
+                  -0.5324084162712097,
+                  0,
+                  -1.7115833759307861,
+                  -0.2950119376182556,
+                  -0.3999202251434326,
+                  -2.4659605026245117,
+                  0,
+                  -0.5348590016365051,
+                  0.19942176342010498,
+                  0.11367374658584595,
+                  -2.6513781547546387,
+                  -1.1666277647018433,
+                  0.35134756565093994,
+                  -0.07420585304498672,
+                  -0.04448525607585907,
+                  -0.04448525607585907,
+                  -0.006666440516710281,
+                  -0.4419940710067749,
+                  -0.5423957109451294,
+                  -0.4309355914592743,
+                  0,
+                  -2.0058646202087402,
+                  -0.4309355914592743,
+                  -0.6258921027183533,
+                  -3.4204282760620117,
+                  -1.335365891456604,
+                  -0.06318504363298416,
+                  10.972660064697266,
+                  11.28325080871582,
+                  5.065049171447754,
+                  6.2029547691345215,
+                  5.55207633972168,
+                  5.55207633972168,
+                  7.541012763977051,
+                  7.541012763977051,
+                  -10.692048072814941,
+                  -2.2599053382873535,
+                  -1.7115833759307861,
+                  -0.7227301597595215,
+                  -0.42424389719963074,
+                  -0.9085191488265991,
+                  -2.9978344440460205,
+                  -2.996784210205078,
+                  -0.13876654207706451,
+                  -0.08202576637268066,
+                  -0.08202576637268066,
+                  -0.2945041358470917,
+                  -0.2945041358470917,
+                  -0.2945041358470917,
+                  -1.7138882875442505,
+                  -1.703500747680664,
+                  -2.995544672012329,
+                  -0.14779525995254517,
+                  -0.3109499514102936,
+                  -0.3109499514102936,
+                  -0.3109499514102936,
+                  -1.1054458618164062,
+                  -0.5084368586540222,
+                  -0.5084368586540222,
+                  -2.4659605026245117,
+                  -4.283619403839111,
+                  -1.503162145614624,
+                  -1.503162145614624,
+                  -0.12846779823303223,
+                  -0.12846779823303223,
+                  -0.09227780997753143,
+                  -2.465526580810547,
+                  -2.465526580810547,
+                  -2.2743918895721436,
+                  -1.1388148069381714,
+                  -0.01060575246810913,
+                  -0.01060575246810913,
+                  -1.003179907798767,
+                  -1.0022467374801636,
+                  -0.3048790693283081,
+                  -1.1355056762695312,
+                  -0.07836996763944626,
+                  -2.992877244949341,
+                  -1.5022001266479492,
+                  -1.5022001266479492,
+                  -0.7347117066383362,
+                  -0.7347117066383362,
+                  -0.6307882070541382,
+                  -0.7495441436767578,
+                  -0.7495441436767578,
+                  -0.7495441436767578,
+                  -0.7599319219589233,
+                  -0.7073231339454651,
+                  0,
+                  -0.5985307097434998,
+                  -0.5985307097434998,
+                  -0.9060824513435364,
+                  -0.9060824513435364,
+                  -5.421473503112793,
+                  -3.443793773651123,
+                  -0.016071902588009834,
+                  -0.016071902588009834,
+                  -0.016071902588009834,
+                  -0.011897476390004158,
+                  -0.32711681723594666,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  -1.6689776182174683,
+                  -0.2431042343378067,
+                  -0.10325945168733597,
+                  -0.5182390213012695,
+                  -0.4888996183872223,
+                  -0.1022121012210846,
+                  -0.09923257678747177,
+                  -0.3331347703933716,
+                  -0.12538772821426392,
+                  -0.024776289239525795,
+                  3.0105056431530497
+                ],
+                [
+                  -1.4898264408111572,
+                  -1.4898264408111572,
+                  -1.266127109527588,
+                  -1.266127109527588,
+                  5.127463340759277,
+                  -1.9114279747009277,
+                  4.685492992401123,
+                  -0.0476689487695694,
+                  -0.1168438121676445,
+                  -0.3663089871406555,
+                  0,
+                  -3.2255501747131348,
+                  2.8246586322784424,
+                  2.358445644378662,
+                  -6.210389137268066,
+                  3.1738245487213135,
+                  -0.00204646703787148,
+                  -0.43505552411079407,
+                  -0.7327364683151245,
+                  0,
+                  0,
+                  -9.148489952087402,
+                  -0.04680825024843216,
+                  0,
+                  0,
+                  -0.3465123176574707,
+                  0,
+                  -0.0603448860347271,
+                  -0.22285866737365723,
+                  0,
+                  -0.02745400369167328,
+                  -3.0810632705688477,
+                  0,
+                  -0.5281127691268921,
+                  -0.22691264748573303,
+                  0,
+                  0,
+                  0,
+                  0,
+                  -0.4335748553276062,
+                  8.030680656433105,
+                  6.597015857696533,
+                  4.039748191833496,
+                  1.2055329084396362,
+                  1.089247226715088,
+                  -0.6676434874534607,
+                  -0.7709928154945374,
+                  -0.0603448860347271,
+                  -0.036596670746803284,
+                  -0.036596670746803284,
+                  -0.07910552620887756,
+                  -0.07910552620887756,
+                  -0.07910552620887756,
+                  -2.58957839012146,
+                  -1.1002001762390137,
+                  -0.19127477705478668,
+                  -0.040073461830616,
+                  -0.09229722619056702,
+                  -0.09229722619056702,
+                  -0.09229722619056702,
+                  -1.4921921491622925,
+                  -0.15554608404636383,
+                  -0.15554608404636383,
+                  -0.3663089871406555,
+                  -0.1765429526567459,
+                  -0.1391250491142273,
+                  -0.1391250491142273,
+                  -0.05924053490161896,
+                  -0.05924053490161896,
+                  -0.04680825024843216,
+                  -0.07922319322824478,
+                  -0.07922319322824478,
+                  -2.1540372371673584,
+                  -1.087967038154602,
+                  -0.006085938774049282,
+                  -0.006085938774049282,
+                  -0.23031741380691528,
+                  -0.0766410157084465,
+                  -0.11182238906621933,
+                  -1.0370529890060425,
+                  -0.03342314809560776,
+                  -0.26853471994400024,
+                  -0.15365198254585266,
+                  -0.15365198254585266,
+                  -0.3550099730491638,
+                  -0.3550099730491638,
+                  -0.2631281912326813,
+                  -0.05998615920543671,
+                  -0.05998615920543671,
+                  -0.05998615920543671,
+                  -1.5303303003311157,
+                  -1.3623384237289429,
+                  0,
+                  -0.06382346153259277,
+                  -0.06382346153259277,
+                  -0.24129681289196014,
+                  -0.24129681289196014,
+                  -0.4820444583892822,
+                  -0.26873937249183655,
+                  -0.02974560111761093,
+                  -0.02974560111761093,
+                  -0.02974560111761093,
+                  -0.006101176142692566,
+                  -0.6499818563461304,
+                  0,
+                  0,
+                  -1.5472259521484375,
+                  -1.5472259521484375,
+                  -0.33919936418533325,
+                  -0.7327364683151245,
+                  -0.7860926389694214,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  -2.1415981516286613
+                ],
+                [
+                  -1.6167218685150146,
+                  -1.6167218685150146,
+                  -1.6142467260360718,
+                  -1.6142467260360718,
+                  -0.756420910358429,
+                  -0.015099373646080494,
+                  -1.2656846046447754,
+                  -1.5890265703201294,
+                  -2.1634366512298584,
+                  -1.6556252241134644,
+                  0,
+                  -0.3305893838405609,
+                  -0.4927561581134796,
+                  -0.4927561581134796,
+                  -1.4861690998077393,
+                  -1.7674531936645508,
+                  -0.3102269470691681,
+                  0,
+                  -0.09028033912181854,
+                  -0.03296753391623497,
+                  0,
+                  -0.8221373558044434,
+                  -0.5343593955039978,
+                  -0.12068789452314377,
+                  0,
+                  -2.2242770195007324,
+                  -0.12068789452314377,
+                  -1.9512503147125244,
+                  -0.6856209635734558,
+                  -1.3460596799850464,
+                  -3.7411348819732666,
+                  -3.087346076965332,
+                  -3.0768048763275146,
+                  -1.482196569442749,
+                  -1.743881106376648,
+                  -1.5977134704589844,
+                  -1.5977134704589844,
+                  -0.03538002446293831,
+                  -0.03538002446293831,
+                  -1.2546170949935913,
+                  -0.5514850616455078,
+                  -1.2423256635665894,
+                  -0.47764918208122253,
+                  -0.47727829217910767,
+                  -0.8162634372711182,
+                  7.244744777679443,
+                  7.349917411804199,
+                  -1.8039928674697876,
+                  -1.8758012056350708,
+                  -1.8758012056350708,
+                  0.9820846319198608,
+                  1.2753461599349976,
+                  1.2753461599349976,
+                  -1.6903315782546997,
+                  -1.6369357109069824,
+                  -3.1929452419281006,
+                  -0.08187820762395859,
+                  -0.410693883895874,
+                  -0.410693883895874,
+                  -0.410693883895874,
+                  -0.9192455410957336,
+                  -0.2946736812591553,
+                  -0.2946736812591553,
+                  -1.6556252241134644,
+                  -0.6574975848197937,
+                  -1.6531872749328613,
+                  -1.6531872749328613,
+                  -0.10422183573246002,
+                  -0.10422183573246002,
+                  -0.051338762044906616,
+                  -0.49122393131256104,
+                  -0.49122393131256104,
+                  -1.8986656665802002,
+                  -1.420451045036316,
+                  -0.04857688397169113,
+                  -0.04857688397169113,
+                  -1.1139589548110962,
+                  -1.1039191484451294,
+                  -0.23341655731201172,
+                  -0.4710422158241272,
+                  -0.100594662129879,
+                  -3.159048080444336,
+                  -1.6397122144699097,
+                  -1.6397122144699097,
+                  -0.8684021234512329,
+                  -0.8684021234512329,
+                  -0.784859836101532,
+                  -0.8205319046974182,
+                  -0.8205319046974182,
+                  -0.8205319046974182,
+                  -0.8739270567893982,
+                  -0.5060928463935852,
+                  -0.001181490602903068,
+                  -0.9673595428466797,
+                  -0.9673595428466797,
+                  -0.8019059896469116,
+                  -0.609269380569458,
+                  -0.39632201194763184,
+                  -1.3860218524932861,
+                  -0.6526085734367371,
+                  -0.6526085734367371,
+                  -0.6526085734367371,
+                  -0.08588922768831253,
+                  -0.029795801267027855,
+                  -0.03503347560763359,
+                  -0.19012321531772614,
+                  -0.16041705012321472,
+                  -0.16041705012321472,
+                  -0.02974167838692665,
+                  -0.0405774861574173,
+                  -0.009796863421797752,
+                  -1.93034827709198,
+                  -0.4081498980522156,
+                  -0.04553193598985672,
+                  -0.42293891310691833,
+                  -0.399071604013443,
+                  -0.0923711284995079,
+                  -0.0417533814907074,
+                  -0.5863540768623352,
+                  0,
+                  0,
+                  3.360117455623903
+                ],
+                [
+                  -0.6340134739875793,
+                  -0.6340134739875793,
+                  -0.6339850425720215,
+                  -0.6339850425720215,
+                  -0.1592140793800354,
+                  -0.0023293897975236177,
+                  -1.1262338161468506,
+                  -0.10351841896772385,
+                  -0.17868055403232574,
+                  -0.7919064164161682,
+                  0,
+                  -0.6166806221008301,
+                  0.09133056551218033,
+                  0.04853760823607445,
+                  -0.9196905493736267,
+                  -1.4713188409805298,
+                  0,
+                  -0.02888846956193447,
+                  -0.014775722287595272,
+                  0,
+                  0,
+                  -0.11969263851642609,
+                  -0.23476487398147583,
+                  -0.08808058500289917,
+                  0,
+                  -0.8611106872558594,
+                  -0.08808058500289917,
+                  -0.12149693071842194,
+                  -1.6089602708816528,
+                  -0.5643407106399536,
+                  -0.022134045138955116,
+                  -2.2064244747161865,
+                  -1.2656885385513306,
+                  -0.44350293278694153,
+                  -0.8242234587669373,
+                  -0.6822157502174377,
+                  -0.6822157502174377,
+                  0,
+                  0,
+                  0.7691442370414734,
+                  -0.7934046387672424,
+                  -1.1218719482421875,
+                  0,
+                  0,
+                  -1.6814535856246948,
+                  -1.2652969360351562,
+                  -1.2649976015090942,
+                  -0.029510237276554108,
+                  -0.02324710600078106,
+                  -0.02324710600078106,
+                  -0.12456484138965607,
+                  -0.11785446852445602,
+                  -0.11785446852445602,
+                  4.465020656585693,
+                  8.422500610351562,
+                  13.01191520690918,
+                  -0.6267418265342712,
+                  3.7373900413513184,
+                  3.7373900413513184,
+                  3.7373900413513184,
+                  1.0270706415176392,
+                  0.06998524069786072,
+                  0.06998524069786072,
+                  -0.7919064164161682,
+                  -0.4176214039325714,
+                  -0.6350640058517456,
+                  -0.6350640058517456,
+                  -0.12564317882061005,
+                  -0.12564317882061005,
+                  -0.09941437095403671,
+                  -0.218593567609787,
+                  -0.218593567609787,
+                  -1.9424508810043335,
+                  -0.4095764458179474,
+                  -7.070910453796387,
+                  -7.070910453796387,
+                  -0.43859127163887024,
+                  -0.40783005952835083,
+                  -0.182543084025383,
+                  -1.4872788190841675,
+                  -0.04039962962269783,
+                  -2.138394832611084,
+                  -1.1247093677520752,
+                  -1.1247093677520752,
+                  -0.157912015914917,
+                  -0.157912015914917,
+                  -0.12259837985038757,
+                  -0.06510563939809799,
+                  -0.06510563939809799,
+                  -0.06510563939809799,
+                  -4.0483927726745605,
+                  -2.7105226516723633,
+                  -0.5704470872879028,
+                  -0.33447742462158203,
+                  -0.33447742462158203,
+                  -0.29999858140945435,
+                  -0.29999858140945435,
+                  -0.0697721391916275,
+                  -1.6254854202270508,
+                  -0.0082626948133111,
+                  -0.0082626948133111,
+                  -0.0082626948133111,
+                  -0.4516291320323944,
+                  -0.1620541214942932,
+                  0,
+                  0,
+                  -0.014775722287595272,
+                  -0.014775722287595272,
+                  0,
+                  -0.014775722287595272,
+                  0,
+                  -0.7040911912918091,
+                  -0.11813206970691681,
+                  -0.04371819272637367,
+                  -0.2180297076702118,
+                  -0.2072894424200058,
+                  -0.049901146441698074,
+                  -0.04438682645559311,
+                  -0.13968665897846222,
+                  -0.052323367446660995,
+                  -0.00956688728183508,
+                  1.2692577755139327
+                ],
+                [
+                  -2.2468349933624268,
+                  -2.2468349933624268,
+                  -0.5813101530075073,
+                  -0.5813101530075073,
+                  -0.297801673412323,
+                  -0.010442211292684078,
+                  -0.4425732493400574,
+                  -0.10119063407182693,
+                  -0.45564940571784973,
+                  5.388881206512451,
+                  -2.045682191848755,
+                  -0.538555920124054,
+                  -0.16527797281742096,
+                  -0.16527797281742096,
+                  -0.5655471682548523,
+                  -0.6106548309326172,
+                  -0.19416166841983795,
+                  0,
+                  -0.11428450047969818,
+                  -0.03674183413386345,
+                  0,
+                  -0.6639857292175293,
+                  -0.11905729025602341,
+                  -0.3361791968345642,
+                  0,
+                  -0.902802586555481,
+                  -0.2650854289531708,
+                  -0.29086005687713623,
+                  -0.7103753685951233,
+                  -0.42350053787231445,
+                  -0.03118414618074894,
+                  -1.155401349067688,
+                  -1.154740810394287,
+                  -2.2218382358551025,
+                  -0.7647151947021484,
+                  -0.5803574323654175,
+                  -0.5803574323654175,
+                  0,
+                  0,
+                  -0.768877387046814,
+                  -0.2224539965391159,
+                  -0.42168888449668884,
+                  -0.16512323915958405,
+                  -0.16512323915958405,
+                  -0.3314675986766815,
+                  -1.1535427570343018,
+                  -1.15288245677948,
+                  -0.02028217911720276,
+                  -0.03338903561234474,
+                  -0.03338903561234474,
+                  -0.2851875424385071,
+                  -0.05084850266575813,
+                  -0.05084850266575813,
+                  -0.7007239460945129,
+                  -0.4584965407848358,
+                  -1.1519434452056885,
+                  0,
+                  -0.00025855167768895626,
+                  -0.00025855167768895626,
+                  -0.00025855167768895626,
+                  -0.3961513340473175,
+                  -0.3338480591773987,
+                  -0.3338480591773987,
+                  7.435923099517822,
+                  1.1720125675201416,
+                  6.559945583343506,
+                  6.559945583343506,
+                  0.16339917480945587,
+                  0.16339917480945587,
+                  0.4533953368663788,
+                  6.3260273933410645,
+                  6.3260273933410645,
+                  -0.7266344428062439,
+                  -0.4412723183631897,
+                  -0.3775046765804291,
+                  -0.3775046765804291,
+                  -0.5545149445533752,
+                  -0.30203089118003845,
+                  -0.2354714721441269,
+                  -0.2684330940246582,
+                  -0.05463717505335808,
+                  -1.158375859260559,
+                  -0.5818158984184265,
+                  -0.5818158984184265,
+                  -0.3342776894569397,
+                  -0.3342776894569397,
+                  -0.20962144434452057,
+                  -0.2385968118906021,
+                  -0.2385968118906021,
+                  -0.2385968118906021,
+                  -0.48999524116516113,
+                  -0.35856711864471436,
+                  -0.024628467857837677,
+                  -0.34467756748199463,
+                  -0.34467756748199463,
+                  -0.2865670323371887,
+                  -0.25554725527763367,
+                  -0.26457276940345764,
+                  -0.8956929445266724,
+                  -0.13727504014968872,
+                  -0.13727504014968872,
+                  -0.13727504014968872,
+                  -0.05356455221772194,
+                  -0.18887819349765778,
+                  0,
+                  -0.013316268101334572,
+                  -0.17318549752235413,
+                  -0.17318549752235413,
+                  -0.027642710134387016,
+                  -0.05468108505010605,
+                  -0.009997407905757427,
+                  -0.7399510145187378,
+                  -0.3428605794906616,
+                  -0.08287200331687927,
+                  -0.24408821761608124,
+                  -0.23414330184459686,
+                  -0.0654662474989891,
+                  -0.0654662474989891,
+                  -0.3109552562236786,
+                  -0.011723531410098076,
+                  -0.004067194182425737,
+                  1.1667366606958662
+                ],
+                [
+                  -0.46951213479042053,
+                  -0.46951213479042053,
+                  -0.4694858193397522,
+                  -0.4694858193397522,
+                  -0.2785005569458008,
+                  -0.019424356520175934,
+                  -0.3426169157028198,
+                  -0.32872793078422546,
+                  -0.3463015556335449,
+                  -0.4909422695636749,
+                  -0.03371572867035866,
+                  -0.12166238576173782,
+                  -7.110616207122803,
+                  -7.110616207122803,
+                  -2.475180149078369,
+                  -2.288655996322632,
+                  -0.1571095734834671,
+                  0,
+                  -0.05749991163611412,
+                  0,
+                  0,
+                  -2.341987133026123,
+                  -0.11886951327323914,
+                  -0.001091074664145708,
+                  -2.0384979248046875,
+                  8.20569133758545,
+                  -0.001091074664145708,
+                  -0.027949431911110878,
+                  -0.3335029184818268,
+                  -0.4162484407424927,
+                  -0.008777240291237831,
+                  -0.9367830157279968,
+                  -0.9364941120147705,
+                  -0.56843101978302,
+                  -0.3704564571380615,
+                  -0.4692414104938507,
+                  -0.4692414104938507,
+                  0,
+                  0,
+                  -1.161779522895813,
+                  -0.10644494742155075,
+                  -0.3177800178527832,
+                  0,
+                  0,
+                  -0.7896133065223694,
+                  -0.9360422492027283,
+                  -0.9357621073722839,
+                  -0.025903668254613876,
+                  -0.01309414766728878,
+                  -0.01309414766728878,
+                  -0.16107319295406342,
+                  -0.052147962152957916,
+                  -0.052147962152957916,
+                  -1.042883276939392,
+                  0.13791871070861816,
+                  -0.9328890442848206,
+                  -0.8125837445259094,
+                  0,
+                  0,
+                  0,
+                  -0.802910327911377,
+                  -0.9497102499008179,
+                  -0.9497102499008179,
+                  -0.4450901746749878,
+                  -0.2025342732667923,
+                  -0.4679712951183319,
+                  -0.4679712951183319,
+                  -0.06140220910310745,
+                  -0.06140220910310745,
+                  -0.008007748983800411,
+                  -0.18202821910381317,
+                  -0.18202821910381317,
+                  4.483845233917236,
+                  8.810684204101562,
+                  7.088540077209473,
+                  7.088540077209473,
+                  5.104671001434326,
+                  5.139790058135986,
+                  0.05807855725288391,
+                  -4.327702522277832,
+                  0.31743577122688293,
+                  -0.9413179159164429,
+                  -0.5331389904022217,
+                  -0.5331389904022217,
+                  -0.4269465506076813,
+                  -0.4269465506076813,
+                  -0.2040499448776245,
+                  -0.17857147753238678,
+                  -0.17857147753238678,
+                  -0.17857147753238678,
+                  -1.3807334899902344,
+                  -0.802910327911377,
+                  -0.1252354085445404,
+                  -0.198538139462471,
+                  -0.198538139462471,
+                  -1.547471046447754,
+                  -0.2604191303253174,
+                  -0.33529409766197205,
+                  -1.6742020845413208,
+                  -0.15366454422473907,
+                  -0.15366454422473907,
+                  -0.15366454422473907,
+                  -0.04783887788653374,
+                  -0.07474004477262497,
+                  -1.139929175376892,
+                  -1.200378179550171,
+                  -0.17094257473945618,
+                  -0.17094257473945618,
+                  -0.047656647861003876,
+                  -0.05749991163611412,
+                  -0.03182055056095123,
+                  -0.5959981083869934,
+                  -0.2514953315258026,
+                  -0.06622494012117386,
+                  -0.21825464069843292,
+                  -0.17918461561203003,
+                  -0.13043154776096344,
+                  -0.04906317591667175,
+                  -0.1566600501537323,
+                  0,
+                  0,
+                  0.940101270463632
+                ],
+                [
+                  -0.8778085112571716,
+                  -0.8778085112571716,
+                  -0.8449493646621704,
+                  -0.8449493646621704,
+                  -2.7583723068237305,
+                  -0.20813342928886414,
+                  -1.5747672319412231,
+                  -0.20143599808216095,
+                  -0.36064064502716064,
+                  -0.884331226348877,
+                  -0.06324528902769089,
+                  -3.0098259449005127,
+                  -0.47499918937683105,
+                  -0.47499918937683105,
+                  -0.946241557598114,
+                  -0.7436363697052002,
+                  -0.3426065444946289,
+                  0,
+                  -0.1682964712381363,
+                  -0.018410414457321167,
+                  0,
+                  -0.8989890217781067,
+                  -0.31025785207748413,
+                  -0.17638975381851196,
+                  0,
+                  -1.1261838674545288,
+                  -0.17638975381851196,
+                  -0.26044991612434387,
+                  -0.5578293800354004,
+                  -0.7176613807678223,
+                  -0.042571306228637695,
+                  -1.6886167526245117,
+                  -1.6883374452590942,
+                  -0.976262092590332,
+                  -0.7135075926780701,
+                  -0.8448165655136108,
+                  -0.8448165655136108,
+                  -0.0015684660756960511,
+                  -0.0015684660756960511,
+                  -0.6057314276695251,
+                  -0.42686429619789124,
+                  -1.305220127105713,
+                  -0.6987701654434204,
+                  -0.0851634293794632,
+                  1.8895660638809204,
+                  -1.6879159212112427,
+                  -1.6876654624938965,
+                  -0.055449310690164566,
+                  -0.05223602429032326,
+                  -0.05223602429032326,
+                  -0.23615895211696625,
+                  -0.1463613659143448,
+                  -0.1463613659143448,
+                  -4.4805684089660645,
+                  -1.4240694046020508,
+                  -1.68730890750885,
+                  0,
+                  -0.0022029865067452192,
+                  -0.0022029865067452192,
+                  -0.0022029865067452192,
+                  -1.0772347450256348,
+                  0.006683249492198229,
+                  0.006683249492198229,
+                  -0.8047985434532166,
+                  -0.3715090751647949,
+                  -0.8445463180541992,
+                  -0.8445463180541992,
+                  -0.11918174475431442,
+                  -0.11918174475431442,
+                  -0.02093881368637085,
+                  -0.3022499978542328,
+                  -0.3022499978542328,
+                  -1.082560658454895,
+                  -0.6064836978912354,
+                  0,
+                  0,
+                  -0.5631595849990845,
+                  -0.5629912614822388,
+                  -0.139380544424057,
+                  -0.439100444316864,
+                  -0.0010205311700701714,
+                  12.580306053161621,
+                  6.293391227722168,
+                  6.293391227722168,
+                  2.8937301635742188,
+                  2.8937301635742188,
+                  4.914063453674316,
+                  3.897395133972168,
+                  3.897395133972168,
+                  3.897395133972168,
+                  0.9022735953330994,
+                  -1.027753233909607,
+                  -0.10934655368328094,
+                  -0.4309869408607483,
+                  -0.4309869408607483,
+                  -0.648227870464325,
+                  -0.44383567571640015,
+                  -0.5676379203796387,
+                  -1.0202293395996094,
+                  -0.29504066705703735,
+                  -0.29504066705703735,
+                  -0.29504066705703735,
+                  -0.12246201932430267,
+                  -0.22099724411964417,
+                  -0.07299581915140152,
+                  -0.12812009453773499,
+                  -0.37923821806907654,
+                  -0.37923821806907654,
+                  -0.17542628943920135,
+                  -0.12352035194635391,
+                  -0.08431410789489746,
+                  -0.9723129868507385,
+                  -0.33324918150901794,
+                  -0.14863981306552887,
+                  -0.4337575137615204,
+                  -0.42092177271842957,
+                  -0.14910750091075897,
+                  -0.11516506969928741,
+                  -0.23439037799835205,
+                  -0.03716226667165756,
+                  -0.004257809370756149,
+                  1.6902452652164512
+                ],
+                [
+                  -0.12565934658050537,
+                  -0.12565934658050537,
+                  -0.06238649785518646,
+                  -0.06238649785518646,
+                  -0.02965548262000084,
+                  -0.013649454340338707,
+                  -0.6616645455360413,
+                  -0.04582371562719345,
+                  -0.0871463418006897,
+                  -0.010416834615170956,
+                  -0.010416834615170956,
+                  -0.14777806401252747,
+                  -0.5547373294830322,
+                  -0.5547373294830322,
+                  -0.8837292194366455,
+                  -0.2479538917541504,
+                  -0.01275596208870411,
+                  0,
+                  -0.026062773540616035,
+                  0,
+                  0,
+                  -0.26802852749824524,
+                  -0.02109472081065178,
+                  -0.002249036217108369,
+                  0,
+                  0,
+                  -0.002249036217108369,
+                  -0.011019420810043812,
+                  -0.18790733814239502,
+                  -0.18340516090393066,
+                  -0.004221851006150246,
+                  -0.1475747674703598,
+                  -0.030684150755405426,
+                  -0.8508270978927612,
+                  -0.006354452110826969,
+                  -0.03310823068022728,
+                  -0.03310823068022728,
+                  0,
+                  0,
+                  -0.7388127446174622,
+                  -2.585970640182495,
+                  -0.6431296467781067,
+                  -0.5368576645851135,
+                  -0.061271198093891144,
+                  2.658853054046631,
+                  -0.0715155154466629,
+                  -0.07922299206256866,
+                  -0.007645866367965937,
+                  -0.005276767536997795,
+                  -0.005276767536997795,
+                  -0.024590808898210526,
+                  -0.005745123140513897,
+                  -0.005745123140513897,
+                  5.242568492889404,
+                  -4.239269733428955,
+                  -0.004603698384016752,
+                  -0.34859350323677063,
+                  -0.12840178608894348,
+                  -0.12840178608894348,
+                  -0.12840178608894348,
+                  1.2258310317993164,
+                  -0.4538886845111847,
+                  -0.4538886845111847,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  -0.30800506472587585,
+                  -0.039584122598171234,
+                  -0.4265773594379425,
+                  -0.4265773594379425,
+                  0,
+                  0,
+                  0,
+                  -0.22945532202720642,
+                  0,
+                  0,
+                  0,
+                  0,
+                  -0.606960654258728,
+                  -0.606960654258728,
+                  -0.606960654258728,
+                  -2.121166229248047,
+                  -2.121166229248047,
+                  -2.121166229248047,
+                  7.361156940460205,
+                  1.3902697563171387,
+                  0.08262374252080917,
+                  -1.2328096628189087,
+                  -1.2328096628189087,
+                  -0.1319207102060318,
+                  -0.08654770255088806,
+                  -0.8406504392623901,
+                  -0.30510470271110535,
+                  -0.04202032834291458,
+                  -0.04202032834291458,
+                  -0.04202032834291458,
+                  -0.03368265926837921,
+                  -0.07852045446634293,
+                  -0.01992521435022354,
+                  -0.023348785936832428,
+                  -0.15956266224384308,
+                  -0.15956266224384308,
+                  -0.06536474078893661,
+                  -0.026062773540616035,
+                  -0.006252187769860029,
+                  -0.2546839714050293,
+                  -0.10136376321315765,
+                  -0.04812902584671974,
+                  -0.142085000872612,
+                  -0.142085000872612,
+                  -0.04646499827504158,
+                  -0.03494039550423622,
+                  -0.05170281231403351,
+                  -0.00331826857291162,
+                  0,
+                  -0.9926132609318417
+                ],
+                [
+                  -0.34533143043518066,
+                  -0.34533143043518066,
+                  -0.2084924876689911,
+                  -0.2084924876689911,
+                  -0.063949353992939,
+                  -0.02402537502348423,
+                  -0.31781309843063354,
+                  -0.10212396085262299,
+                  -0.20209874212741852,
+                  -0.08011182397603989,
+                  -0.03382379561662674,
+                  -0.3345864713191986,
+                  -0.6061549186706543,
+                  -0.8730832934379578,
+                  0.814782977104187,
+                  -0.2079552859067917,
+                  -0.8213046193122864,
+                  -0.18663492798805237,
+                  -0.48756760358810425,
+                  -0.39616644382476807,
+                  -0.0915868803858757,
+                  -0.8522337079048157,
+                  -0.07119812071323395,
+                  -0.010173392482101917,
+                  -0.03505199775099754,
+                  -0.08677908778190613,
+                  0,
+                  -0.009512071497738361,
+                  -1.3976249694824219,
+                  -0.3446521461009979,
+                  -0.0057764905504882336,
+                  -0.2124440222978592,
+                  -0.08336856961250305,
+                  4.838518142700195,
+                  -4.338828086853027,
+                  -0.032159749418497086,
+                  -0.032159749418497086,
+                  -0.4135682284832001,
+                  -0.4135682284832001,
+                  -1.57864248752594,
+                  -0.603965163230896,
+                  -0.27450335025787354,
+                  0,
+                  0,
+                  -0.23573018610477448,
+                  -0.09205832332372665,
+                  -0.09957745671272278,
+                  -0.009512071497738361,
+                  -0.007493559271097183,
+                  -0.007493559271097183,
+                  -0.056507956236600876,
+                  -0.0055312211625278,
+                  -0.0055312211625278,
+                  -1.7040120363235474,
+                  -0.004619233775883913,
+                  -0.028770174831151962,
+                  0,
+                  -0.0922546461224556,
+                  -0.0922546461224556,
+                  -0.0922546461224556,
+                  -0.04948129132390022,
+                  -0.026007870212197304,
+                  -0.026007870212197304,
+                  -0.027800478041172028,
+                  0,
+                  -0.0185322817414999,
+                  -0.0185322817414999,
+                  -0.005600137170404196,
+                  -0.005600137170404196,
+                  -0.0020668518263846636,
+                  0,
+                  0,
+                  -0.9486286044120789,
+                  -0.10322419553995132,
+                  -0.0008020965033210814,
+                  -0.0008020965033210814,
+                  -0.02397567592561245,
+                  -0.01062100101262331,
+                  -0.00763305276632309,
+                  -0.8015402555465698,
+                  0,
+                  -0.03375428915023804,
+                  -0.028102831915020943,
+                  -0.028102831915020943,
+                  -0.005422243848443031,
+                  -0.005422243848443031,
+                  -0.005422243848443031,
+                  -0.0008042111876420677,
+                  -0.0008042111876420677,
+                  -0.0008042111876420677,
+                  -1.6993509531021118,
+                  0.0711526870727539,
+                  -0.5196664333343506,
+                  7.334151744842529,
+                  7.334151744842529,
+                  -0.3239753842353821,
+                  0.4643149971961975,
+                  9.178360939025879,
+                  -1.569756269454956,
+                  -0.08637212216854095,
+                  -0.08637212216854095,
+                  -0.08637212216854095,
+                  -0.06923417747020721,
+                  -1.2891297340393066,
+                  0,
+                  -0.6993975639343262,
+                  -0.2344733029603958,
+                  -0.2344733029603958,
+                  -0.2518509328365326,
+                  -0.04570125788450241,
+                  -0.01212695986032486,
+                  -0.4911039471626282,
+                  -0.19103755056858063,
+                  -0.08418084681034088,
+                  -0.24566201865673065,
+                  -0.23826749622821808,
+                  -0.08544901758432388,
+                  -0.06339715421199799,
+                  -0.12790431082248688,
+                  -0.013313797302544117,
+                  -0.0018707882845774293,
+                  -0.4797304836060748
+                ],
+                [
+                  -0.24350735545158386,
+                  -0.24350735545158386,
+                  -0.12608183920383453,
+                  -0.12608183920383453,
+                  -0.03814445808529854,
+                  -0.014986525289714336,
+                  -0.4273236393928528,
+                  -0.06628835201263428,
+                  -0.14513902366161346,
+                  -0.07611171156167984,
+                  -0.020778968930244446,
+                  -0.8176364302635193,
+                  -0.3856651186943054,
+                  -0.526255190372467,
+                  -0.4945738911628723,
+                  -0.5525302290916443,
+                  -0.18364155292510986,
+                  -0.05738960579037666,
+                  -0.12670563161373138,
+                  -0.05723040550947189,
+                  -0.017101967707276344,
+                  -1.9375160932540894,
+                  -0.024658923968672752,
+                  0,
+                  -0.005040918476879597,
+                  -0.005040918476879597,
+                  0,
+                  -0.0008090398623608053,
+                  4.925398826599121,
+                  -1.4029994010925293,
+                  -0.2455088496208191,
+                  0.030030351132154465,
+                  -0.021048501133918762,
+                  0.008268702775239944,
+                  0.00868176855146885,
+                  -1.3499486446380615,
+                  -1.3499486446380615,
+                  -0.01276880968362093,
+                  -0.01276880968362093,
+                  3.106135606765747,
+                  -0.25200313329696655,
+                  -0.3923170268535614,
+                  0,
+                  0,
+                  0,
+                  -0.005949495360255241,
+                  -0.005692457314580679,
+                  -0.0008090398623608053,
+                  -0.000639287056401372,
+                  -0.000639287056401372,
+                  -0.024658923968672752,
+                  0,
+                  0,
+                  -0.8562030792236328,
+                  -0.8562030792236328,
+                  -0.0009379287948831916,
+                  -0.8542452454566956,
+                  -0.6355317831039429,
+                  -0.6355317831039429,
+                  -0.6355317831039429,
+                  -0.6693777441978455,
+                  0,
+                  0,
+                  -0.03974851220846176,
+                  -0.09599743038415909,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  -0.038698673248291016,
+                  -0.038698673248291016,
+                  -2.281818151473999,
+                  -0.09401730448007584,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  -2.093783378601074,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  -0.01659976691007614,
+                  0,
+                  0,
+                  0,
+                  -0.07352565228939056,
+                  -0.014592650346457958,
+                  -0.10237697511911392,
+                  6.773819923400879,
+                  2.6839702129364014,
+                  2.6839702129364014,
+                  2.6839702129364014,
+                  0.03194131702184677,
+                  1.0606416463851929,
+                  -1.858729600906372,
+                  -0.03928866982460022,
+                  -0.38679519295692444,
+                  -0.38679519295692444,
+                  -0.3233548104763031,
+                  -0.04631681740283966,
+                  -0.0069501204416155815,
+                  -0.4998677372932434,
+                  -0.19894643127918243,
+                  -0.09446273744106293,
+                  -0.2788699269294739,
+                  -0.2788699269294739,
+                  -0.09119676053524017,
+                  -0.06857744604349136,
+                  -0.1014769896864891,
+                  -0.006512756925076246,
+                  0,
+                  -0.5385250076357493
+                ],
+                [
+                  -0.3304173946380615,
+                  -0.3304173946380615,
+                  -0.19345299899578094,
+                  -0.19345299899578094,
+                  -0.07694968581199646,
+                  -0.02694305218756199,
+                  -3.0580878257751465,
+                  -0.0986056700348854,
+                  -0.1790965050458908,
+                  -0.08193577826023102,
+                  -0.03500949218869209,
+                  -0.8832716345787048,
+                  5.993022918701172,
+                  5.812622547149658,
+                  -2.084172010421753,
+                  -4.077125549316406,
+                  -0.0664094015955925,
+                  -0.1127476841211319,
+                  -0.04974209517240524,
+                  0,
+                  0,
+                  -0.44161444902420044,
+                  -0.03855062648653984,
+                  0,
+                  0,
+                  -0.005868874955922365,
+                  0,
+                  -0.009566799737513065,
+                  -0.3330075740814209,
+                  -0.36857154965400696,
+                  -0.005805745720863342,
+                  -6.026319980621338,
+                  -0.09308177977800369,
+                  -0.14260464906692505,
+                  -0.16328056156635284,
+                  -0.0982033833861351,
+                  -0.0982033833861351,
+                  0,
+                  0,
+                  -0.366868793964386,
+                  -2.0401058197021484,
+                  -3.0214171409606934,
+                  0,
+                  0,
+                  0,
+                  -0.10453090071678162,
+                  -0.11731889843940735,
+                  -0.009566799737513065,
+                  -0.007559492718428373,
+                  -0.007559492718428373,
+                  -0.05465196445584297,
+                  -0.011824997141957283,
+                  -0.011824997141957283,
+                  -3.0310795307159424,
+                  -3.0310795307159424,
+                  -0.023941047489643097,
+                  0,
+                  -0.010525199584662914,
+                  -0.010525199584662914,
+                  -0.010525199584662914,
+                  -0.010525199584662914,
+                  0,
+                  0,
+                  -0.032815854996442795,
+                  -0.01289392914623022,
+                  -0.015016217716038227,
+                  -0.015016217716038227,
+                  -0.006205132231116295,
+                  -0.006205132231116295,
+                  -0.0018417983083054423,
+                  -0.006181654054671526,
+                  -0.006181654054671526,
+                  5.2411322593688965,
+                  1.6455801725387573,
+                  -2.2211010456085205,
+                  -2.2211010456085205,
+                  -0.0034251005854457617,
+                  -0.0013784237671643496,
+                  -0.0011682695476338267,
+                  3.559398651123047,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  -0.21663899719715118,
+                  -0.21663899719715118,
+                  5.323024272918701,
+                  -0.21663899719715118,
+                  0,
+                  5.155872344970703,
+                  -0.21110700070858002,
+                  -0.21110700070858002,
+                  -0.21110700070858002,
+                  -0.1143839955329895,
+                  -0.12529996037483215,
+                  5.738877296447754,
+                  5.556878089904785,
+                  -0.2816256582736969,
+                  -0.2816256582736969,
+                  -0.12529996037483215,
+                  -0.04974209517240524,
+                  -0.013924107886850834,
+                  -0.5060483813285828,
+                  -0.19744281470775604,
+                  -0.0937487855553627,
+                  -0.2767622470855713,
+                  -0.2767622470855713,
+                  -0.09050749242305756,
+                  -0.06805913895368576,
+                  -0.10071003437042236,
+                  -0.006463534198701382,
+                  0,
+                  -5.596224309150151
+                ],
+                [
+                  -0.7233105301856995,
+                  -0.7233105301856995,
+                  -0.8231673836708069,
+                  -0.8231673836708069,
+                  -4.55540657043457,
+                  -1.063106894493103,
+                  2.772705554962158,
+                  -0.07906795293092728,
+                  -0.21242175996303558,
+                  -0.011944498866796494,
+                  -0.011944498866796494,
+                  0.09009204059839249,
+                  -2.4652352333068848,
+                  -2.610929012298584,
+                  -1.137497901916504,
+                  -1.0137748718261719,
+                  -0.09018119424581528,
+                  -0.07284711301326752,
+                  -0.35853657126426697,
+                  -0.7626394629478455,
+                  -5.213461875915527,
+                  9.562104225158691,
+                  -2.6612391471862793,
+                  -2.577831268310547,
+                  -2.6226186752319336,
+                  -2.6226186752319336,
+                  -1.4303312301635742,
+                  -1.4303312301635742,
+                  -2.3622100353240967,
+                  -3.005204677581787,
+                  -2.152611494064331,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  8.2047700881958,
+                  3.962249517440796,
+                  -3.2993295192718506,
+                  -1.7797420024871826,
+                  -2.411832571029663,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  -0.04170365259051323,
+                  0,
+                  0,
+                  -0.9702919721603394,
+                  -0.06491827964782715,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  -0.8922449350357056,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  -0.06491827964782715,
+                  0,
+                  -0.06491827964782715,
+                  -0.06491827964782715,
+                  0,
+                  0,
+                  0,
+                  -0.06491827964782715,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  -0.8922449350357056,
+                  -0.8922449350357056,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0.252277672290802,
+                  0,
+                  0,
+                  -0.07937873154878616,
+                  -0.07937873154878616,
+                  0.252277672290802,
+                  0.5553181767463684,
+                  0.0863581970334053,
+                  -0.8453860282897949,
+                  -0.3364620804786682,
+                  -0.15975721180438995,
+                  -0.4716303050518036,
+                  -0.4716303050518036,
+                  -0.15423372387886047,
+                  -0.11597950756549835,
+                  -0.17161987721920013,
+                  -0.011014501564204693,
+                  0,
+                  -2.131757036796674
+                ],
+                [
+                  -0.7575232982635498,
+                  -0.7575232982635498,
+                  -0.6009572148323059,
+                  -0.6009572148323059,
+                  -0.2430802434682846,
+                  -0.1589624583721161,
+                  -0.33355867862701416,
+                  -0.7556908130645752,
+                  -0.037242624908685684,
+                  -0.3573087453842163,
+                  -0.034977417439222336,
+                  -1.0510799884796143,
+                  -0.21485136449337006,
+                  -0.29853537678718567,
+                  -1.050751805305481,
+                  -1.0716742277145386,
+                  -0.15835730731487274,
+                  -0.042000092566013336,
+                  -0.08126252144575119,
+                  -0.08126252144575119,
+                  -0.026824142783880234,
+                  -1.514054775238037,
+                  -0.09436257183551788,
+                  -0.17122302949428558,
+                  -0.010616275481879711,
+                  -0.49305781722068787,
+                  -0.0743369609117508,
+                  -0.13200467824935913,
+                  -1.213390827178955,
+                  4.1589741706848145,
+                  -0.8067286014556885,
+                  -0.42685678601264954,
+                  -0.4266490042209625,
+                  -0.1751086264848709,
+                  -0.2535094916820526,
+                  -0.21418900787830353,
+                  -0.21418900787830353,
+                  0,
+                  0,
+                  -0.14859697222709656,
+                  -0.0008672120748087764,
+                  -0.09448876976966858,
+                  -0.0411393903195858,
+                  -0.0008672120748087764,
+                  -0.1480739414691925,
+                  -0.43400755524635315,
+                  -0.6302924752235413,
+                  -0.02049924246966839,
+                  -0.012024501338601112,
+                  -0.012024501338601112,
+                  0.1052311435341835,
+                  -0.2013355791568756,
+                  -0.2013355791568756,
+                  -0.21890224516391754,
+                  -0.20941510796546936,
+                  -0.42622607946395874,
+                  -0.019151482731103897,
+                  -0.055482976138591766,
+                  -0.055482976138591766,
+                  -0.055482976138591766,
+                  -0.11623899638652802,
+                  -0.07122283428907394,
+                  -0.07122283428907394,
+                  -0.2873624861240387,
+                  -0.0783299058675766,
+                  -0.2140500247478485,
+                  -0.2140500247478485,
+                  -0.019465066492557526,
+                  -0.019465066492557526,
+                  -0.1831563264131546,
+                  -0.04858942702412605,
+                  -0.04858942702412605,
+                  -0.24170145392417908,
+                  -0.18645381927490234,
+                  -0.014674200676381588,
+                  -0.014674200676381588,
+                  -0.4311581254005432,
+                  -0.02718236669898033,
+                  -0.390031635761261,
+                  -0.055172622203826904,
+                  -0.3668600022792816,
+                  -0.42583683133125305,
+                  -0.21390067040920258,
+                  -0.21390067040920258,
+                  -0.0934809148311615,
+                  -0.0934809148311615,
+                  -0.0934809148311615,
+                  -0.10475054383277893,
+                  -0.10475054383277893,
+                  -0.10475054383277893,
+                  -0.1142376959323883,
+                  -0.060183167457580566,
+                  -0.0009155028965324163,
+                  -0.1261124163866043,
+                  -0.1261124163866043,
+                  -0.1027788519859314,
+                  -0.07368113100528717,
+                  0,
+                  -0.12270151078701019,
+                  -0.10190868377685547,
+                  -0.10190868377685547,
+                  -0.10190868377685547,
+                  0,
+                  0,
+                  -0.017303476110100746,
+                  -0.02907150238752365,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  9.515804290771484,
+                  0.20818676054477692,
+                  -0.2816164195537567,
+                  0.13982820510864258,
+                  0.09256361424922943,
+                  0.29230040311813354,
+                  -0.3800724148750305,
+                  4.143777847290039,
+                  -0.013664019294083118,
+                  0.07744526863098145,
+                  0.43015068385898175
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    "intentDomains": {},
+    "extraSentences": [
+      [
+        "vi",
+        "tổng quan"
+      ],
+      [
+        "vi",
+        "tình hình"
+      ],
+      [
+        "vi",
+        "tổng quan studio"
+      ],
+      [
+        "vi",
+        "tổng quan hoạt động"
+      ],
+      [
+        "vi",
+        "tổng quan hôm nay"
+      ],
+      [
+        "vi",
+        "tình hình hôm nay"
+      ],
+      [
+        "vi",
+        "báo cáo tổng quan"
+      ],
+      [
+        "vi",
+        "tình hình hoạt động của studio"
+      ],
+      [
+        "vi",
+        "danh sách khách hàng"
+      ],
+      [
+        "vi",
+        "khách hàng"
+      ],
+      [
+        "vi",
+        "ds khách hàng"
+      ],
+      [
+        "vi",
+        "d sách khách hàng"
+      ],
+      [
+        "vi",
+        "tra cứu khách hàng"
+      ],
+      [
+        "vi",
+        "tìm khách hàng %customerName%"
+      ],
+      [
+        "vi",
+        "tra cứu thông tin khách hàng %customerName%"
+      ],
+      [
+        "vi",
+        "khách hàng %customerName% là ai"
+      ],
+      [
+        "vi",
+        "cho tôi thông tin của %customerName%"
+      ],
+      [
+        "vi",
+        "thông tin khách hàng %customerName%"
+      ],
+      [
+        "vi",
+        "hồ sơ khách hàng %customerName%"
+      ],
+      [
+        "vi",
+        "xem hồ sơ của %customerName%"
+      ],
+      [
+        "vi",
+        "lead"
+      ],
+      [
+        "vi",
+        "crm"
+      ],
+      [
+        "vi",
+        "tư vấn"
+      ],
+      [
+        "vi",
+        "chăm sóc"
+      ],
+      [
+        "vi",
+        "ds lead"
+      ],
+      [
+        "vi",
+        "khách hàng tiềm năng"
+      ],
+      [
+        "vi",
+        "danh sách lead"
+      ],
+      [
+        "vi",
+        "lead cần chăm sóc"
+      ],
+      [
+        "vi",
+        "danh sách đơn hàng"
+      ],
+      [
+        "vi",
+        "danh sách hợp đồng"
+      ],
+      [
+        "vi",
+        "đơn hàng đã ký"
+      ],
+      [
+        "vi",
+        "hợp đồng đã chốt"
+      ],
+      [
+        "vi",
+        "hợp đồng studio"
+      ],
+      [
+        "vi",
+        "lịch"
+      ],
+      [
+        "vi",
+        "lịch chụp"
+      ],
+      [
+        "vi",
+        "chụp"
+      ],
+      [
+        "vi",
+        "lịch chụp sắp tới"
+      ],
+      [
+        "vi",
+        "lịch chụp hôm nay"
+      ],
+      [
+        "vi",
+        "lịch chụp ngày mai"
+      ],
+      [
+        "vi",
+        "xem lịch chụp"
+      ],
+      [
+        "vi",
+        "kế hoạch chụp ảnh"
+      ],
+      [
+        "vi",
+        "công việc"
+      ],
+      [
+        "vi",
+        "task"
+      ],
+      [
+        "vi",
+        "danh sách công việc"
+      ],
+      [
+        "vi",
+        "công việc cần làm"
+      ],
+      [
+        "vi",
+        "nhiệm vụ cần xử lý"
+      ],
+      [
+        "vi",
+        "tiến độ công việc"
+      ],
+      [
+        "vi",
+        "cảnh báo"
+      ],
+      [
+        "vi",
+        "cảnh báo vận hành"
+      ],
+      [
+        "vi",
+        "bất thường"
+      ],
+      [
+        "vi",
+        "cảnh báo o p"
+      ],
+      [
+        "vi",
+        "cảnh báo hệ thống"
+      ],
+      [
+        "vi",
+        "các vấn đề vận hành"
+      ],
+      [
+        "vi",
+        "nhân viên"
+      ],
+      [
+        "vi",
+        "khối lượng công việc"
+      ],
+      [
+        "vi",
+        "ai bận"
+      ],
+      [
+        "vi",
+        "ai rảnh"
+      ],
+      [
+        "vi",
+        "ai bận nhất"
+      ],
+      [
+        "vi",
+        "khối lượng công việc nhân sự"
+      ],
+      [
+        "vi",
+        "khối lượng công việc của nhân sự"
+      ],
+      [
+        "vi",
+        "ai bận nhất tuần này"
+      ],
+      [
+        "vi",
+        "okr"
+      ],
+      [
+        "vi",
+        "mục tiêu"
+      ],
+      [
+        "vi",
+        "kết quả then chốt"
+      ],
+      [
+        "vi",
+        "tiến độ okr"
+      ],
+      [
+        "vi",
+        "tỉ lệ hoàn thành"
+      ],
+      [
+        "vi",
+        "tiến độ mục tiêu"
+      ],
+      [
+        "vi",
+        "kết quả okr của studio"
+      ],
+      [
+        "vi",
+        "lý do thành công"
+      ],
+      [
+        "vi",
+        "chốt thành công"
+      ],
+      [
+        "vi",
+        "mã lý do thành công"
+      ],
+      [
+        "vi",
+        "lý do chốt đơn thành công"
+      ],
+      [
+        "vi",
+        "lý do thất bại"
+      ],
+      [
+        "vi",
+        "tại sao thất bại"
+      ],
+      [
+        "vi",
+        "lý do khách từ chối"
+      ],
+      [
+        "vi",
+        "tại sao khách hàng từ chối"
+      ],
+      [
+        "vi",
+        "khách từ chối"
+      ],
+      [
+        "vi",
+        "khách hàng từ chối"
+      ],
+      [
+        "vi",
+        "lead cần hỗ trợ"
+      ],
+      [
+        "vi",
+        "yêu cầu trợ giúp"
+      ],
+      [
+        "vi",
+        "sales cần hỗ trợ"
+      ],
+      [
+        "vi",
+        "khách hàng nào cần hỗ trợ"
+      ],
+      [
+        "vi",
+        "khách hàng nào cần hỗ trợ tư vấn"
+      ],
+      [
+        "vi",
+        "cần hỗ trợ tư vấn"
+      ],
+      [
+        "vi",
+        "cần hỗ trợ"
+      ],
+      [
+        "vi",
+        "danh sách nhân viên"
+      ],
+      [
+        "vi",
+        "danh sách nhân sự"
+      ],
+      [
+        "vi",
+        "vai trò nhân sự"
+      ],
+      [
+        "vi",
+        "tài khoản nhân sự"
+      ],
+      [
+        "vi",
+        "hợp đồng của %customerName% trạng thái thế nào"
+      ],
+      [
+        "vi",
+        "kiểm tra trạng thái hợp đồng %customerName%"
+      ],
+      [
+        "vi",
+        "trạng thái hợp đồng của %customerName%"
+      ],
+      [
+        "vi",
+        "hợp đồng %customerName%"
+      ],
+      [
+        "vi",
+        "trạng thái đơn hàng %customerName%"
+      ],
+      [
+        "vi",
+        "hợp đồng cưới của %customerName%"
+      ],
+      [
+        "vi",
+        "đơn hàng của khách %customerName% thế nào"
+      ],
+      [
+        "vi",
+        "kiểm tra hợp đồng của %customerName%"
+      ],
+      [
+        "vi",
+        "doanh số"
+      ],
+      [
+        "vi",
+        "doanh số tháng %month% năm %year%"
+      ],
+      [
+        "vi",
+        "doanh số quý %quarter% năm %year%"
+      ],
+      [
+        "vi",
+        "doanh số năm %year%"
+      ],
+      [
+        "vi",
+        "doanh thu tháng %month% năm %year%"
+      ],
+      [
+        "vi",
+        "doanh thu quý %quarter% năm %year%"
+      ],
+      [
+        "vi",
+        "doanh thu năm %year%"
+      ],
+      [
+        "vi",
+        "thống kê doanh thu tháng này"
+      ],
+      [
+        "vi",
+        "doanh số tháng này"
+      ],
+      [
+        "vi",
+        "doanh số tháng trước"
+      ],
+      [
+        "vi",
+        "doanh số quý này"
+      ],
+      [
+        "vi",
+        "doanh số năm nay"
+      ],
+      [
+        "vi",
+        "doanh số năm ngoái"
+      ]
+    ]
+  },
+  "ner": {
+    "settings": {
+      "tag": "ner",
+      "entityPreffix": "%",
+      "entitySuffix": "%"
+    },
+    "rules": {}
+  },
+  "nlgManager": {
+    "settings": {
+      "tag": "nlg-manager"
+    },
+    "responses": {}
+  },
+  "actionManager": {
+    "settings": {
+      "tag": "action-manager"
+    },
+    "actions": {}
+  },
+  "slotManager": {
+    "CUSTOMER_LIST": {
+      "customerName": {
+        "intent": "CUSTOMER_LIST",
+        "entity": "customerName",
+        "mandatory": false,
+        "locales": {}
+      }
+    },
+    "CONTRACT_STATUS": {
+      "customerName": {
+        "intent": "CONTRACT_STATUS",
+        "entity": "customerName",
+        "mandatory": false,
+        "locales": {}
+      }
+    },
+    "thong_ke_doanh_so": {
+      "month": {
+        "intent": "thong_ke_doanh_so",
+        "entity": "month",
+        "mandatory": false,
+        "locales": {}
+      },
+      "year": {
+        "intent": "thong_ke_doanh_so",
+        "entity": "year",
+        "mandatory": false,
+        "locales": {}
+      },
+      "quarter": {
+        "intent": "thong_ke_doanh_so",
+        "entity": "quarter",
+        "mandatory": false,
+        "locales": {}
+      }
+    }
+  }
+}

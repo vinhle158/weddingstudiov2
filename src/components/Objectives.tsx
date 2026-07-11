@@ -1517,12 +1517,12 @@ export default function Objectives({ userRole }: ObjectivesProps) {
                   <span className="inline-flex items-center space-x-1.5 text-[10px] font-extrabold uppercase tracking-widest text-gold-600">
                     <Network className="w-3.5 h-3.5" /> Sơ đồ Tư duy hoạt động (Mindmap)
                   </span>
-                  <h3 className="text-base font-extrabold text-slate-900 font-display">
-                    Mindmap phân rã đầu việc hệ thống
-                  </h3>
-                  <p className="text-gray-500 text-xs">
-                    Cấu trúc cây sơ đồ tư duy cho phép đóng mở (collapse/expand) linh hoạt từng cụm bộ phận, giúp kiểm soát hàng trăm đầu việc nhỏ một cách hoàn hảo mà không lo rối mắt hay quá tải.
-                  </p>
+	                  <h3 className="text-base font-extrabold text-slate-900 font-display">
+	                    Sơ đồ mục tiêu và đầu việc
+	                  </h3>
+	                  <p className="text-gray-500 text-xs">
+	                    Theo dõi mục tiêu theo từng bộ phận, người phụ trách và nhóm việc liên quan.
+	                  </p>
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -1711,10 +1711,10 @@ export default function Objectives({ userRole }: ObjectivesProps) {
 
               {/* Instructions footer */}
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex items-start space-x-2.5">
-                <HelpCircle className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                <div className="text-[11px] text-slate-500">
-                  <span className="font-bold text-slate-700">Đặc tính thu gọn:</span> Bạn có thể nhấp nút <strong className="text-slate-800">[X / Thu gọn]</strong> ở góc mỗi ô phòng ban để ẩn danh sách việc con, hoặc nhấp lại <strong className="text-slate-800">[+]</strong> để mở ra. Điều này vô cùng hữu dụng khi số lượng mục tiêu lớn lên, cho phép nhà quản trị kiểm soát tập trung nhanh chóng.
-                </div>
+	                <HelpCircle className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+	                <div className="text-[11px] text-slate-500">
+	                  <span className="font-bold text-slate-700">Theo dõi nhanh:</span> Mỗi phòng ban hiển thị các đầu việc chính, trạng thái và tiến độ để quản lý dễ nắm điểm nghẽn.
+	                </div>
               </div>
 
             </div>
