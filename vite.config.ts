@@ -31,10 +31,10 @@ export default defineConfig(() => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâ€”file watching is disabled to prevent flickering during agent edits.
+      // Có thể tắt HMR bằng biến DISABLE_HMR khi môi trường chỉnh sửa không hỗ trợ theo dõi file ổn định.
+      // Khi HMR bị tắt, không theo dõi thay đổi file để tránh tải lại giao diện ngoài ý muốn.
       hmr: process.env.DISABLE_HMR !== 'true',
-      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
+      // Tắt file watcher cùng HMR để giảm CPU trong môi trường tự động hóa.
       watch: process.env.DISABLE_HMR === 'true' ? null : {
         ignored: ['**/db.json', '**/backups/**']
       },

@@ -15,7 +15,7 @@ let LocalDatabase: any;
 let serverInstance: any;
 let appInstance: any;
 
-// Seed mock database state
+// Chuẩn bị dữ liệu seed cho database giả lập.
 const mockDb = {
   roles: [
     {
@@ -117,18 +117,18 @@ const mockDb = {
 };
 
 before(async () => {
-  // Dynamically import db_service to make sure process.env.NODE_ENV is set first
+  // Import động db_service sau khi NODE_ENV đã được thiết lập.
   const dbModule = await import('../src/db_service');
   LocalDatabase = dbModule.LocalDatabase;
 
-  // Mock LocalDatabase.initialize to avoid connecting to PostgreSQL
+  // Giả lập LocalDatabase.initialize để test không kết nối PostgreSQL thật.
   LocalDatabase.initialize = async () => {
     console.log('Mocked LocalDatabase.initialize() called');
   };
 
   LocalDatabase.save(mockDb as any);
 
-  // Dynamically import server to start it
+  // Import động server sau khi môi trường test đã sẵn sàng.
   const { startServer } = await import('../server');
   const res = await startServer();
   appInstance = res.app;
@@ -147,7 +147,7 @@ after(async () => {
 
 const BASE_URL = 'http://127.0.0.1:3011';
 
-// Helper to generate JWT token for testing
+// Hàm tạo JWT phục vụ kiểm thử.
 function generateToken(userId: string, email: string, sessionVersion = 0) {
   return jwt.sign(
     { userId, email, sessionVersion },
@@ -446,7 +446,7 @@ describe('Studio V2 Security Hardening Regression Tests', () => {
   test('11. Backup restore and delete reject path traversal and invalid filenames', async () => {
     const adminToken = generateToken('user-admin', 'viet@studio.com', 0);
     
-    // Inject a malicious backup entry
+    // Chèn một mục backup độc hại để kiểm tra bảo vệ đường dẫn.
     const db = LocalDatabase.get();
     db.backups = [
       {
@@ -468,7 +468,7 @@ describe('Studio V2 Security Hardening Regression Tests', () => {
     ];
     LocalDatabase.save(db);
 
-    // Try to restore traversal filename
+    // Thử khôi phục file có đường dẫn traversal.
     const restoreRes1 = await fetch(`${BASE_URL}/api/database/backups/restore/malicious-backup-1`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${adminToken}` }
@@ -477,7 +477,7 @@ describe('Studio V2 Security Hardening Regression Tests', () => {
     const restoreData1 = await restoreRes1.json() as any;
     assert.match(restoreData1.error, /Tên file backup không hợp lệ|Lỗi khôi phục/);
 
-    // Try to delete traversal filename
+    // Thử xóa file có đường dẫn traversal.
     const deleteRes1 = await fetch(`${BASE_URL}/api/database/backups/malicious-backup-1`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${adminToken}` }
@@ -486,7 +486,7 @@ describe('Studio V2 Security Hardening Regression Tests', () => {
     const deleteData1 = await deleteRes1.json() as any;
     assert.match(deleteData1.error, /Tên file backup không hợp lệ/);
 
-    // Try to delete path with invalid subfolder characters
+    // Thử xóa đường dẫn có ký tự thư mục con không hợp lệ.
     const deleteRes2 = await fetch(`${BASE_URL}/api/database/backups/malicious-backup-2`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${adminToken}` }
@@ -495,7 +495,7 @@ describe('Studio V2 Security Hardening Regression Tests', () => {
     const deleteData2 = await deleteRes2.json() as any;
     assert.match(deleteData2.error, /Tên file backup không hợp lệ/);
 
-    // Clean up
+    // Dọn dữ liệu test.
     const cleanDb = LocalDatabase.get();
     cleanDb.backups = [];
     LocalDatabase.save(cleanDb);

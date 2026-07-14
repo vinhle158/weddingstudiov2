@@ -6,7 +6,7 @@
   --font-display: "Playfair Display", "Georgia", serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
-  /* Genuine studio premium champagne/gold palette */
+  /* Bảng màu champagne và vàng cao cấp của Studio. */
   --color-gold-50: #fdfcf7;
   --color-gold-100: #f6f3e5;
   --color-gold-200: #eadfae;
@@ -30,5 +30,4 @@ body {
 h1, .font-display {
   font-family: var(--font-display);
 }
-
 

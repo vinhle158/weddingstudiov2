@@ -58,22 +58,22 @@ export default function Tasks({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filters
+  // Bộ lọc danh sách công việc.
   const [filterStatus, setFilterStatus] = useState('');
   const [filterPriority, setFilterPriority] = useState('');
   const [filterStaff, setFilterStaff] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Selected Task details
+  // Chi tiết công việc đang chọn.
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  // Form states
+  // State biểu mẫu chỉnh sửa.
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [staffUsers, setStaffUsers] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
 
-  // Task creation state
+  // State tạo công việc mới.
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDesc, setTaskDesc] = useState('');
   const [taskOrderId, setTaskOrderId] = useState('');
@@ -82,11 +82,11 @@ export default function Tasks({
   const [taskDueDate, setTaskDueDate] = useState('');
   const [createError, setCreateError] = useState<string | null>(null);
 
-  // Searchable order linking state
+  // State tìm và liên kết đơn hàng.
   const [orderSearch, setOrderSearch] = useState('');
   const [isOrderDropdownOpen, setIsOrderDropdownOpen] = useState(false);
 
-  // Add Comment/Update log state
+  // State thêm bình luận hoặc nhật ký cập nhật.
   const [commentText, setCommentText] = useState('');
   const [commentStatusChange, setCommentStatusChange] = useState('');
   const [commentError, setCommentError] = useState<string | null>(null);
@@ -143,7 +143,7 @@ export default function Tasks({
       setTaskOrderId(initialOpenCreateWithTemplate.orderId || '');
       setTaskAssignedTo('');
       setTaskPriority('normal');
-      // Set default due date to 7 days from now, or let user set it. In this case, we can leave it empty or pre-populate.
+      // Có thể đặt hạn mặc định sau bảy ngày; hiện để trống để người dùng chủ động chọn.
       setTaskDueDate('');
       setOrderSearch('');
       setIsCreateOpen(true);

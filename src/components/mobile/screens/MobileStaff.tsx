@@ -12,11 +12,11 @@ export default function MobileStaff({ userRole }: MobileStaffProps) {
   const [roles, setRoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Selected User
+  // Tài khoản đang chọn.
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // Edit fields
+  // Các trường chỉnh sửa tài khoản.
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

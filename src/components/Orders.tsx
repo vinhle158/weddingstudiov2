@@ -54,31 +54,31 @@ export default function Orders({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filters
+  // Bộ lọc danh sách đơn hàng.
   const [filterStatus, setFilterStatus] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const [filterStaff, setFilterStaff] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Selected Order details
+  // Chi tiết đơn hàng đang chọn.
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [orderDetailLoading, setOrderDetailLoading] = useState(false);
 
-  // Dropdowns for form
+  // Dữ liệu cho các dropdown trong biểu mẫu.
   const [customers, setCustomers] = useState<any[]>([]);
   const [customersLoaded, setCustomersLoaded] = useState(false);
   const [staffUsers, setStaffUsers] = useState<any[]>([]);
-  // Modals
+  // State các hộp thoại.
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
-  // Order status transition form state
+  // State biểu mẫu chuyển trạng thái đơn hàng.
   const [newStatus, setNewStatus] = useState('');
   const [statusNote, setStatusNote] = useState('');
   const [statusError, setStatusError] = useState<string | null>(null);
 
-  // New Order form state (including inline customer)
+  // State tạo đơn mới, bao gồm khách hàng tạo nhanh.
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [formCustomerId, setFormCustomerId] = useState('');
   const [custName, setCustName] = useState('');
@@ -99,11 +99,11 @@ export default function Orders({
   const [orderNotes, setOrderNotes] = useState('');
   const [createError, setCreateError] = useState<string | null>(null);
 
-  // Searchable customer select state
+  // State tìm kiếm và chọn khách hàng.
   const [customerSearch, setCustomerSearch] = useState('');
   const [isCustDropdownOpen, setIsCustDropdownOpen] = useState(false);
 
-  // Internal Task form state
+  // State biểu mẫu giao việc nội bộ.
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDesc, setTaskDesc] = useState('');
   const [taskAssignedTo, setTaskAssignedTo] = useState('');
@@ -111,7 +111,7 @@ export default function Orders({
   const [taskDueDate, setTaskDueDate] = useState('');
   const [taskError, setTaskError] = useState<string | null>(null);
 
-  // Edit Order modal states
+  // State hộp thoại chỉnh sửa đơn hàng.
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editOrderId, setEditOrderId] = useState('');
   const [editShootDate, setEditShootDate] = useState('');
@@ -304,7 +304,7 @@ export default function Orders({
       let finalCustomerId = formCustomerId;
       const formattedFacebookUrl = normalizeFacebookUrl(custFacebookUrl);
 
-      // Create inline customer if requested
+      // Tạo nhanh khách hàng nếu người dùng đã chọn tùy chọn này.
       if (isNewCustomer) {
         if (!custName || !custPhone) {
           setCreateError('Họ tên và SĐT của khách hàng mới là bắt buộc');
@@ -404,7 +404,7 @@ export default function Orders({
     }
   };
 
-  // Status transition form handling
+  // Xử lý biểu mẫu chuyển trạng thái.
   const handleOpenStatusModal = () => {
     if (!selectedOrder) return;
     setNewStatus(selectedOrder.status);
@@ -434,7 +434,7 @@ export default function Orders({
     }
   };
 
-  // Internal Task assignment form handling
+  // Xử lý biểu mẫu phân công nội bộ.
   const handleOpenTaskModal = () => {
     if (!selectedOrder) return;
     setTaskError(null);

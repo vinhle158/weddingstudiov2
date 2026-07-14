@@ -72,14 +72,14 @@ export default function MobileLeads({ userRole, userId }: MobileLeadsProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Tabs: kanban, list, analytics
+  // Các tab Kanban, danh sách và phân tích.
   const [activeSubTab, setActiveSubTab] = useState<'kanban' | 'list' | 'analytics'>('kanban');
 
-  // Search & filter
+  // Tìm kiếm và bộ lọc.
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSource, setSelectedSource] = useState('all');
 
-  // Collapsed accordion state for Kanban steps (1-6)
+  // State thu gọn của sáu bước Kanban.
   const [expandedSteps, setExpandedSteps] = useState<Record<number, boolean>>({
     1: true,
     2: false,
@@ -89,12 +89,12 @@ export default function MobileLeads({ userRole, userId }: MobileLeadsProps) {
     6: false
   });
 
-  // Modal / BottomSheet state
+  // State modal và BottomSheet.
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  // Form states
+  // State biểu mẫu tạo lead.
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newSource, setNewSource] = useState('PAGE THE WILL');
@@ -107,7 +107,7 @@ export default function MobileLeads({ userRole, userId }: MobileLeadsProps) {
   });
   const [newNotes, setNewNotes] = useState('');
 
-  // Edit fields
+  // Các trường chỉnh sửa lead.
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editSource, setEditSource] = useState('');
@@ -160,7 +160,7 @@ export default function MobileLeads({ userRole, userId }: MobileLeadsProps) {
 
       await apiRequest('/api/leads', 'POST', payload);
       setIsCreateOpen(false);
-      // Reset
+      // Đặt lại biểu mẫu.
       setNewName('');
       setNewPhone('');
       setNewNotes('');
@@ -250,7 +250,7 @@ export default function MobileLeads({ userRole, userId }: MobileLeadsProps) {
 
   const filteredLeads = getFilteredLeads();
 
-  // Helper values for analytics
+  // Dữ liệu tính toán cho màn hình phân tích.
   const sourcesCount = leads.reduce((acc: Record<string, number>, curr) => {
     acc[curr.source] = (acc[curr.source] || 0) + 1;
     return acc;
@@ -317,7 +317,7 @@ export default function MobileLeads({ userRole, userId }: MobileLeadsProps) {
           <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-gold-500"></div>
         </div>
       ) : activeSubTab === 'kanban' ? (
-        /* Accordion Steps Kanban for Mobile */
+        /* Các bước Kanban dạng thu gọn trên mobile. */
         <div className="space-y-2">
           {stepNames.map(step => {
             const stepLeads = filteredLeads.filter(l => l.sales_step === step.num && l.status === 'consulting');
@@ -370,7 +370,7 @@ export default function MobileLeads({ userRole, userId }: MobileLeadsProps) {
           })}
         </div>
       ) : activeSubTab === 'list' ? (
-        /* Straight vertical scroll list */
+        /* Danh sách cuộn dọc liên tục. */
         <div className="space-y-2">
           {filteredLeads.length === 0 ? (
             <div className="bg-white p-6 rounded-xl text-center text-slate-400 text-xs border">
@@ -404,7 +404,7 @@ export default function MobileLeads({ userRole, userId }: MobileLeadsProps) {
           )}
         </div>
       ) : (
-        /* Analytics View */
+        /* Màn hình phân tích. */
         <div className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs space-y-6">
           <div>
             <h4 className="text-xs font-bold text-slate-700 mb-3 flex items-center gap-1">

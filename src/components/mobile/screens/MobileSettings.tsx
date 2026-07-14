@@ -17,7 +17,7 @@ export default function MobileSettings({ user, role, onLogout, studioSettings }:
   const [hours, setHours] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // Local settings
+  // State cấu hình trên mobile.
   const [notifEnabled, setNotifEnabled] = useState(() => {
     return localStorage.getItem('mobile_notif_enabled') !== 'false';
   });

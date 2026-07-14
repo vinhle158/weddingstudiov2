@@ -45,7 +45,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Login form states
+  // State của biểu mẫu đăng nhập.
   const [email, setEmail] = useState(() => localStorage.getItem('remembered_email') || '');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem('remembered_email'));
@@ -53,7 +53,7 @@ export default function App() {
   const [loginLoading, setLoginLoading] = useState(false);
 
 
-  // Navigation states
+  // State điều hướng giữa các phân hệ.
   const [activeTab, setActiveTab] = useState('dashboard');
   const [navigationArg, setNavigationArg] = useState<any>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -78,7 +78,7 @@ export default function App() {
     }
   }, [isAuthenticated]);
 
-  // Check current session on load
+  // Kiểm tra phiên hiện tại khi ứng dụng được tải.
   useEffect(() => {
     const checkSession = async () => {
       const token = localStorage.getItem('studio_token');
@@ -109,7 +109,7 @@ export default function App() {
   const [knownNotifIds, setKnownNotifIds] = useState<Set<string>>(new Set());
   const [isFirstNotifLoad, setIsFirstNotifLoad] = useState(true);
 
-  // Poll for unread notifications and show toast alert
+  // Thăm dò thông báo chưa đọc và hiển thị toast khi có mục mới.
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -201,7 +201,7 @@ export default function App() {
     try {
       await apiRequest('/api/auth/logout', 'POST');
     } catch (e) {
-      // ignore
+      // Bỏ qua lỗi phát âm thanh vì đây không phải chức năng bắt buộc.
     }
     localStorage.removeItem('studio_token');
     setUser(null);
@@ -228,7 +228,7 @@ export default function App() {
     handleNavigate('notifications', { selectNotificationId: notificationId });
   };
 
-  // Clear navigation args on subsequent tab switches (to avoid repeating modal openings)
+  // Xóa tham số điều hướng khi đổi tab để modal không tự mở lặp lại.
   useEffect(() => {
     const timer = setTimeout(() => {
       setNavigationArg(null);
@@ -252,7 +252,7 @@ export default function App() {
     );
   }
 
-  // LOGIN SCREEN
+  // Màn hình đăng nhập.
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#faf9f6] flex items-center justify-center p-4 overflow-hidden">
@@ -360,7 +360,7 @@ export default function App() {
     );
   }
 
-  // MAIN LAYOUT
+  // Bố cục chính sau khi đăng nhập.
   const isManager = role?.id === 'role-admin' || role?.id === 'role-manager';
 
   const menuItems = [
@@ -466,7 +466,7 @@ export default function App() {
     );
   };
 
-  // 1. MOBILE VIEWPORT SIMULATION RENDER (iPhone Frame on desktop, normal full bleed on mobile)
+  // 1. Mô phỏng viewport mobile trong khung iPhone trên desktop; thiết bị thật dùng toàn màn hình.
   if (viewMode === 'mobile') {
     return (
       <div className="min-h-screen bg-[#faf9f6] flex flex-col font-sans">
@@ -534,7 +534,7 @@ export default function App() {
               {/* Mobile Main Body Area */}
               <div className="flex-1 overflow-y-auto p-4 pb-20 scrollbar-none bg-[#faf9f6]" id="mobile-viewport-scroller">
                 {activeTab === 'mobile-menu' ? (
-                  /* Mobile system launcher menu */
+                  /* Menu mở nhanh các phân hệ trên mobile. */
                   <div className="space-y-5 animate-fade-in">
                     <div className="bg-gradient-to-r from-gold-500/10 to-gold-600/15 p-4 rounded-2xl border border-gold-200/20 text-slate-800">
 	                      <p className="text-[9px] uppercase font-bold text-gold-800 tracking-widest mb-1 font-mono">Bảng điều phối</p>
@@ -705,7 +705,7 @@ export default function App() {
     );
   }
 
-  // 2. PC VIEWPORT RENDER
+  // 2. Giao diện dành cho desktop.
   return (
     <div className="min-h-screen bg-[#faf9f6] flex flex-col font-sans overflow-hidden">
       <div id="demo-camera-viewport" className="flex-1 flex flex-col md:flex-row min-h-0 w-full h-full origin-center">

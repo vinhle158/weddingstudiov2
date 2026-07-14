@@ -124,7 +124,7 @@ async function queryBusinessOverview(todayStr: string): Promise<QueryResult> {
 }
 
 async function queryCustomerList(entities: ExtractedEntities): Promise<QueryResult> {
-  // If specific name is requested, query details
+  // Khi có tên cụ thể, truy vấn hồ sơ chi tiết.
   if (entities.customerName) {
     const resolveRes = await resolveCustomer(entities.customerName);
     if (resolveRes.needsClarification) {
@@ -137,7 +137,7 @@ async function queryCustomerList(entities: ExtractedEntities): Promise<QueryResu
     }
 
     const customer = resolveRes.customer;
-    // P0-1: Guard check before accessing customer properties
+    // P0-1: Kiểm tra khách hàng tồn tại trước khi đọc thuộc tính.
     if (!customer) {
       return {
         intent: 'CUSTOMER_LIST',
@@ -155,8 +155,8 @@ async function queryCustomerList(entities: ExtractedEntities): Promise<QueryResu
       }
     }) as any[];
 
-    // Fetch related active tasks
-    // P3-3: Customer profile only queries contact info, leads & tasks (no detailed contracts overlap)
+    // Tải các công việc đang hoạt động có liên quan.
+    // P3-3: Hồ sơ khách hàng chỉ lấy liên hệ, lead và task để không trùng phần chi tiết hợp đồng.
     const orders = await prisma.order.findMany({
       where: { customer_id: customer.id }
     });
@@ -173,7 +173,7 @@ async function queryCustomerList(entities: ExtractedEntities): Promise<QueryResu
     };
   }
 
-  // General list of customers
+  // Danh sách khách hàng tổng quát.
   const customers = await prisma.customer.findMany({
     take: entities.limit || 5,
     orderBy: { created_at: 'desc' }
@@ -290,7 +290,7 @@ async function queryOperationalAlerts(todayStr: string, entities: ExtractedEntit
     t.assigned_to_name = users.find(u => u.id === t.assigned_to)?.full_name || 'N/A';
   });
 
-  // active orders
+  // Các đơn hàng đang hoạt động.
   const activeOrders = await prisma.order.findMany({
     where: { status: { notIn: ['cancelled', 'delivered'] } }
   }) as any[];
@@ -307,7 +307,7 @@ async function queryOperationalAlerts(todayStr: string, entities: ExtractedEntit
     o.customer_name = customers.find(c => c.id === o.customer_id)?.full_name || 'Unknown';
   });
 
-  // Missing deposits
+  // Các đơn còn thiếu tiền đặt cọc.
   const missingDeposits = await prisma.order.findMany({
     where: {
       status: { notIn: ['cancelled', 'delivered'] },
@@ -462,7 +462,7 @@ async function queryContractStatus(entities: ExtractedEntities): Promise<QueryRe
   }
 
   const customer = resolveRes.customer;
-  // P0-1: Guard check before accessing customer properties
+  // P0-1: Kiểm tra khách hàng tồn tại trước khi đọc thuộc tính.
   if (!customer) {
     return {
       intent: 'CONTRACT_STATUS',

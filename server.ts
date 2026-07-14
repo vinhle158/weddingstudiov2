@@ -92,7 +92,7 @@ function isLeapYear(year: number): boolean {
 }
 
 function annualOccurrence(year: number, month: number, day: number): CalendarDate {
-  // Business rule: customers born on 29/02 are reminded on 28/02 in non-leap years.
+  // Quy ước nghiệp vụ: sinh nhật 29/02 được nhắc vào 28/02 trong năm không nhuận.
   if (month === 2 && day === 29 && !isLeapYear(year)) return { year, month, day: 28 };
   return { year, month, day };
 }
@@ -187,7 +187,7 @@ export async function scanAndGenerateAnniversaryNotifications(now = new Date()):
   return generated.length;
 }
 
-// Extend Express Request type to include authenticated user
+// Mở rộng Express Request để mang theo người dùng đã xác thực.
 interface AuthenticatedRequest extends Request {
   user?: User;
   role?: Role;
@@ -196,8 +196,8 @@ interface AuthenticatedRequest extends Request {
 async function startServer() {
   const app = express();
 
-  // Trust only proxy ranges explicitly configured by the deployment.
-  // Production traffic reaches Express through Cloudflare Tunnel and Docker's private bridge.
+  // Chỉ tin cậy các dải proxy được cấu hình rõ trong môi trường triển khai.
+  // Lưu lượng production đi qua Cloudflare Tunnel và bridge nội bộ của Docker trước khi tới Express.
   const trustProxy = process.env.TRUST_PROXY?.trim();
   if (trustProxy) {
     app.set('trust proxy', trustProxy);
@@ -212,7 +212,7 @@ async function startServer() {
     },
   });
   
-  // Initialize the database connection and cache
+  // Khởi tạo kết nối database và bộ nhớ đệm.
   await LocalDatabase.initialize();
 
   const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -242,7 +242,7 @@ async function startServer() {
   }));
   app.use(express.json({ limit: '8mb' }));
 
-  // Setup login rate limiter
+  // Giới hạn tần suất đăng nhập để giảm nguy cơ dò mật khẩu.
   const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 5, // Limit each IP to 5 requests per windowMs
@@ -252,7 +252,7 @@ async function startServer() {
   });
 
 
-  // ----------------- AUTHENTICATION MIDDLEWARE -----------------
+  // Middleware xác thực.
   const resolveAuthenticatedUser = (token: string): { user: User; role?: Role } => {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; sessionVersion?: number };
     const db = LocalDatabase.get();
@@ -301,7 +301,7 @@ async function startServer() {
     socket.join(`chat:user:${userId}`);
   });
 
-  // Helper to check standard permission keys
+  // Middleware kiểm tra permission chuẩn của hệ thống.
   const requirePermission = (permission: string) => {
     return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
       if (!req.role) {
@@ -786,19 +786,19 @@ async function startServer() {
   const inferAssistantToolFromQuestion = (question: string): { name: AssistantToolName; args: Record<string, any> } => {
     const normalized = normalizeSearch(question);
     
-    // 1. Phone number check (6+ digits)
+    // 1. Nhận diện số điện thoại có ít nhất sáu chữ số.
     const cleanPhone = normalized.replace(/[^\d]/g, '');
     if (cleanPhone.length >= 6) {
       return { name: 'search_customers', args: { query: cleanPhone, limit: 5 } };
     }
     
-    // 2. Order code check (e.g. OD123 or ORD-456)
+    // 2. Nhận diện mã đơn như OD123 hoặc ORD-456.
     const orderCodeMatch = normalized.match(/(od|ord)\s*\d+/i);
     if (orderCodeMatch) {
       return { name: 'search_orders', args: { query: orderCodeMatch[0].toUpperCase(), limit: 5 } };
     }
 
-    // 3. Specific date check (e.g. 15/7, 15-07-2026)
+    // 3. Nhận diện ngày cụ thể như 15/7 hoặc 15-07-2026.
     const dateMatch = normalized.match(/(\d{1,2})[\/\-](\d{1,2})([\/\-](\d{4}))?/);
     if (dateMatch) {
       const day = parseInt(dateMatch[1]);
@@ -845,7 +845,7 @@ async function startServer() {
       return { name: 'search_orders', args: { query: queryVal, limit: 5 } };
     }
     
-    // Default fallback for any query text
+    // Phương án mặc định khi câu hỏi không khớp intent cụ thể.
     const isGreeting = ['chào', 'chao', 'hello', 'hi', 'xin chao', 'bắt đầu', 'bat dau'].some(w => normalized.includes(w));
     if (normalized && normalized.length > 2 && !isGreeting) {
       return { name: 'search_customers', args: { query: question, limit: 5 } };
@@ -972,11 +972,11 @@ async function startServer() {
 
     if (name === 'search_customers') {
       if (!Array.isArray(result) || result.length === 0) {
-        // Fallback multi-index search
+        // Tìm kiếm dự phòng trên nhiều chỉ mục.
         const db = LocalDatabase.get();
         const query = normalizeSearch(args?.query || '');
 
-        // 1. Search leads (CRM) first
+        // 1. Ưu tiên tìm lead trong CRM.
         const leads = (db.leads || [])
           .map(l => {
             const assignee = db.users.find(u => u.id === l.assigned_sale_id);
@@ -1006,7 +1006,7 @@ async function startServer() {
           return output;
         }
         
-        // 2. Search orders
+        // 2. Tìm đơn hàng.
         const orders = db.orders
           .map(o => {
             const customer = db.customers.find(c => c.id === o.customer_id);
@@ -1033,7 +1033,7 @@ async function startServer() {
           return output;
         }
 
-        // 3. Search tasks
+        // 3. Tìm công việc.
         const tasks = db.tasks
           .map(t => {
             const assignee = db.users.find(u => u.id === t.assigned_to);
@@ -1081,7 +1081,7 @@ async function startServer() {
 
 
 
-  // ----------------- RULE-BASED CHATBOT ENDPOINT -----------------
+  // Endpoint chatbot dựa trên bộ quy tắc xác định.
   interface ChatbotSessionContext {
     intent?: any;
     entities?: any;
@@ -1095,7 +1095,7 @@ async function startServer() {
 
   const chatbotSessions = new Map<string, ChatbotSessionContext>();
 
-  // Periodically clean up chatbot sessions older than 30 minutes
+  // Dọn phiên chatbot cũ hơn 30 phút theo chu kỳ.
   const SESSION_TTL = 30 * 60 * 1000; // 30 minutes
   const cleanupInterval = setInterval(() => {
     const now = Date.now();
@@ -1127,7 +1127,7 @@ async function startServer() {
       }
       session.lastActivity = Date.now();
 
-      // 1. Check if we have a pending customer clarification
+      // 1. Kiểm tra yêu cầu làm rõ khách hàng đang chờ xử lý.
       if (session.pendingClarification && session.intent && session.entities) {
         const options = session.pendingClarification.options;
         const numChoice = parseInt(message, 10);
@@ -1136,7 +1136,7 @@ async function startServer() {
         if (!isNaN(numChoice) && numChoice >= 1 && numChoice <= options.length) {
           selectedCustomer = options[numChoice - 1];
         } else {
-          // Try fuzzy matching message directly against options
+          // Thử so khớp gần đúng câu trả lời với các lựa chọn hiện có.
           const match = options.find((o: any) => 
             o.full_name.toLowerCase().includes(message.toLowerCase()) || 
             message.toLowerCase().includes(o.full_name.toLowerCase())
@@ -1147,19 +1147,19 @@ async function startServer() {
         }
 
         if (selectedCustomer) {
-          // Resolved successfully! Update entities and execute query
+          // Đã làm rõ thành công: cập nhật thực thể rồi thực thi truy vấn.
           session.entities.customerName = selectedCustomer.full_name;
           const intent = session.intent;
           const entities = session.entities;
           
-          // Clear pending clarification state
+          // Xóa trạng thái đang chờ người dùng làm rõ.
           delete session.pendingClarification;
           
           const data = await buildAndExecuteQuery(intent, entities);
           const reply = renderResponse(intent, data);
           return res.json({ reply, intent, data, sessionId });
         } else {
-          // If not matching, treat it as a new customer name first to see if they entered a completely different name
+          // Nếu không khớp lựa chọn cũ, thử coi nội dung là tên khách hàng mới.
           const resolveRes = await resolveCustomer(message);
           if (!resolveRes.needsClarification && resolveRes.customer) {
             session.entities.customerName = resolveRes.customer.full_name;
@@ -1194,10 +1194,10 @@ async function startServer() {
         }
       }
 
-      // 2. Normal flow: Classify intent
+      // 2. Luồng thông thường: phân loại intent.
       let { intent, score } = await classifyIntent(message);
 
-      // Preemptive/Override logic for customer names (P2-2 Cách A)
+      // Ưu tiên nhận diện lại tên khách hàng theo quy tắc P2-2, cách A.
       const lowerMsg = message.toLowerCase().trim();
       const CONTRACT_KEYWORDS = ['hợp đồng', 'hop dong', 'đơn hàng', 'don hang', 'trạng thái', 'trang thai', 'tình hình', 'tinh hinh'];
       const containsContractKeyword = CONTRACT_KEYWORDS.some(kw => lowerMsg.includes(kw));
@@ -1217,7 +1217,7 @@ async function startServer() {
         
         if (hasCustomerMatch) {
           if (containsStatsKeyword) {
-            // Keep stats intent
+            // Giữ nguyên intent thống kê đã nhận diện.
           } else {
             intent = containsContractKeyword ? 'CONTRACT_STATUS' : 'CUSTOMER_LIST';
             score = 1.0; // Force classification success
@@ -1233,10 +1233,10 @@ async function startServer() {
         });
       }
 
-      // 3. Extract entities
+      // 3. Trích xuất thực thể.
       const rawEntities = await extractEntities(message, intent as any);
 
-      // 4. Handle resolution for customer searches
+      // 4. Xử lý kết quả làm rõ cho truy vấn khách hàng.
       if (intent === 'CUSTOMER_LIST' || intent === 'CONTRACT_STATUS') {
         if (!rawEntities.customerName) {
           session.intent = intent;
@@ -1275,11 +1275,11 @@ async function startServer() {
           });
         }
         
-        // Found single match
+        // Đã tìm thấy đúng một kết quả.
         rawEntities.customerName = resolveRes.customer!.full_name;
       }
 
-      // 5. Execute query
+      // 5. Thực thi truy vấn.
       const data = await buildAndExecuteQuery(intent as any, rawEntities);
       const reply = renderResponse(intent as any, data);
 
@@ -1290,7 +1290,7 @@ async function startServer() {
     }
   });
 
-  // ----------------- AUTH ENDPOINTS -----------------
+  // Các endpoint xác thực.
   app.post('/api/auth/login', loginLimiter, async (req: Request, res: Response) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -1353,7 +1353,7 @@ async function startServer() {
     let dbStatus = 'online';
     let dbLatency = 0;
     try {
-      // Execute a lightweight query to test PostgreSQL connection health
+      // Chạy truy vấn nhẹ để kiểm tra kết nối PostgreSQL.
       await prisma.$queryRaw`SELECT 1`;
       dbLatency = Date.now() - startTime;
     } catch (err) {
@@ -1384,7 +1384,7 @@ async function startServer() {
     });
   });
 
-  // ----------------- USERS & ROLES ENDPOINTS -----------------
+  // Các endpoint tài khoản và vai trò.
   app.get('/api/users', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
     const usersWithRoles = db.users.map(u => {
@@ -1424,7 +1424,7 @@ async function startServer() {
       return res.status(400).json({ error: 'Mật khẩu phải có độ dài tối thiểu 8 ký tự' });
     }
 
-    // Yield control for hashing before fetching database state to prevent race conditions
+    // Hoàn tất hash trước khi đọc state database để tránh ghi đè do tranh chấp đồng thời.
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const db = LocalDatabase.get();
@@ -1461,7 +1461,7 @@ async function startServer() {
       return res.status(400).json({ error: 'Mật khẩu phải có độ dài tối thiểu 8 ký tự' });
     }
 
-    // Yield control for hashing before fetching database state to prevent race conditions
+    // Hoàn tất hash trước khi đọc state database để tránh ghi đè do tranh chấp đồng thời.
     let hashedPassword = undefined;
     if (password) {
       hashedPassword = await bcrypt.hash(password, 10);
@@ -1505,7 +1505,7 @@ async function startServer() {
       return res.status(404).json({ error: 'Không tìm thấy người dùng' });
     }
 
-    // Soft delete
+    // Vô hiệu hóa tài khoản thay vì xóa cứng.
     db.users[idx].is_active = false;
     db.users[idx].session_version = (db.users[idx].session_version || 0) + 1;
     LocalDatabase.save(db);
@@ -1573,7 +1573,7 @@ async function startServer() {
       return res.status(404).json({ error: 'Không tìm thấy vai trò' });
     }
 
-    // Check if any active user is using this role
+    // Không cho xóa role đang được tài khoản hoạt động sử dụng.
     const hasUsers = db.users.some(u => u.role_id === id && u.is_active);
     if (hasUsers) {
       return res.status(400).json({ error: 'Không thể xóa vai trò này vì đang có nhân sự sử dụng' });
@@ -1587,7 +1587,7 @@ async function startServer() {
 
 
 
-  // ----------------- CUSTOMERS ENDPOINTS -----------------
+  // Các endpoint khách hàng.
   app.get('/api/customers', authenticate, requirePermission('customers.view'), (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
     const query = (req.query.q as string || '').toLowerCase();
@@ -1695,7 +1695,7 @@ async function startServer() {
   });
 
 
-  // ----------------- ORDERS ENDPOINTS -----------------
+  // Các endpoint đơn hàng.
   app.get('/api/orders', authenticate, requirePermission('orders.view'), (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
     const { status, date, assigned_staff } = req.query;
@@ -1718,7 +1718,7 @@ async function startServer() {
     }
 
     if (assigned_staff) {
-      // Find orders that have tasks assigned to this staff member
+      // Tìm các đơn có công việc được giao cho nhân sự này.
       const matchingOrderIds = db.tasks
         .filter(t => t.assigned_to === assigned_staff && t.order_id)
         .map(t => t.order_id);
@@ -1771,7 +1771,7 @@ async function startServer() {
 
     db.orders.push(newOrder);
 
-    // Initial status history
+    // Ghi lịch sử trạng thái đầu tiên.
     const history: OrderStatusHistory = {
       id: 'hist-' + LocalDatabase.uuid(),
       order_id: newOrder.id,
@@ -1859,7 +1859,7 @@ async function startServer() {
 
     const oldStatus = db.orders[idx].status;
 
-    // Rule check: Cannot transition backwards unless admin
+    // Chỉ admin mới được chuyển trạng thái đơn theo chiều lùi.
     const statusOrder = ['new', 'confirmed', 'shooting', 'editing', 'ready', 'delivered', 'cancelled'];
     const oldIdx = statusOrder.indexOf(oldStatus);
     const newIdx = statusOrder.indexOf(status);
@@ -1877,11 +1877,11 @@ async function startServer() {
       });
     }
 
-    // Change status
+    // Cập nhật trạng thái đơn.
     db.orders[idx].status = status;
     db.orders[idx].updated_at = new Date().toISOString();
 
-    // Log status history
+    // Ghi lịch sử thay đổi trạng thái.
     const history: OrderStatusHistory = {
       id: 'hist-' + LocalDatabase.uuid(),
       order_id: id,
@@ -1912,7 +1912,7 @@ async function startServer() {
 
 
 
-  // ----------------- TASKS ENDPOINTS -----------------
+  // Các endpoint công việc.
   app.get('/api/tasks', authenticate, (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
     const { assigned_to, status, order_id, date } = req.query;
@@ -1932,7 +1932,7 @@ async function startServer() {
       };
     });
 
-    // Rule: Staff can only see their own tasks
+    // Nhân viên chỉ được xem công việc được giao cho chính mình.
     if (req.role?.id === 'role-staff' || req.role?.id === 'role-photographer' || req.role?.id === 'role-editor' || (req.role?.permissions.includes('tasks.view_own') && !req.role?.permissions.includes('tasks.view_all'))) {
       result = result.filter(t => t.assigned_to === req.user?.id);
     } else if (assigned_to) {
@@ -1994,7 +1994,7 @@ async function startServer() {
 
     db.tasks.push(newTask);
 
-    // Initial update history
+    // Ghi lịch sử cập nhật đầu tiên.
     const update: TaskUpdate = {
       id: 'up-' + LocalDatabase.uuid(),
       task_id: newTask.id,
@@ -2029,7 +2029,7 @@ async function startServer() {
       return res.status(404).json({ error: 'Không tìm thấy công việc' });
     }
 
-    // Role check: Staff cannot view other staff's task details
+    // Nhân viên không được xem chi tiết công việc của người khác.
     if (req.role?.id !== 'role-admin' && req.role?.id !== 'role-manager' && task.assigned_to !== req.user?.id) {
       return res.status(403).json({ error: 'Không có quyền truy cập công việc của người khác' });
     }
@@ -2077,7 +2077,7 @@ async function startServer() {
 
     const task = db.tasks[idx];
 
-    // Staff can only update task STATUS. Admin/Manager can update everything.
+    // Nhân viên chỉ được cập nhật trạng thái; admin và manager được sửa toàn bộ công việc.
     const isManager = req.role?.id === 'role-admin' || req.role?.id === 'role-manager' || req.role?.permissions.includes('tasks.assign');
 
     if (!isManager && task.assigned_to !== req.user?.id) {
@@ -2099,7 +2099,7 @@ async function startServer() {
       task.status = status;
       statusLogged = true;
 
-      // Log status change
+      // Ghi lịch sử đổi trạng thái.
       const update: TaskUpdate = {
         id: 'up-' + LocalDatabase.uuid(),
         task_id: id,
@@ -2218,11 +2218,11 @@ async function startServer() {
 
 
 
-  // ----------------- DASHBOARD ENDPOINTS -----------------
+  // Các endpoint dashboard.
   app.get('/api/dashboard/summary', authenticate, (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
     
-    // Status counts of orders
+    // Thống kê đơn hàng theo trạng thái.
     const orderStatuses: Record<string, number> = {
       new: 0, confirmed: 0, shooting: 0, editing: 0, ready: 0, delivered: 0, cancelled: 0
     };
@@ -2232,11 +2232,11 @@ async function startServer() {
       }
     });
 
-    // Task counts
+    // Thống kê số lượng công việc.
     const totalTasks = db.tasks.length;
     const doneTasks = db.tasks.filter(t => t.status === 'done').length;
 
-    // Count of overdue tasks
+    // Đếm công việc đã quá hạn.
     const todayStr = new Date().toISOString().split('T')[0];
     const overdueTasksCount = db.tasks.filter(t => 
       t.status !== 'done' && 
@@ -2313,7 +2313,7 @@ async function startServer() {
 
 
 
-  // ----------------- OBJECTIVES & KEY RESULTS (TARGET) ENDPOINTS -----------------
+  // Các endpoint mục tiêu và kết quả then chốt.
   app.get('/api/objectives', authenticate, (req: AuthenticatedRequest, res: Response) => {
     const isManagerOrAdmin = req.role?.id === 'role-admin' || req.role?.id === 'role-manager';
     if (!isManagerOrAdmin) {
@@ -2329,7 +2329,7 @@ async function startServer() {
       const creator = db.users.find(u => u.id === obj.created_by);
       const objKrs = krs.filter(k => k.objective_id === obj.id);
       
-      // Calculate average progress
+      // Tính tiến độ trung bình.
       let averageProgress = 0;
       if (objKrs.length > 0) {
         const sum = objKrs.reduce((acc, k) => acc + k.progress, 0);
@@ -2533,7 +2533,7 @@ async function startServer() {
     const objective = (db.objectives || []).find(o => o.id === kr.objective_id);
     const objectiveTitle = objective ? objective.title : 'mục tiêu lớn';
 
-    // 1. Log in objective_progress_updates as a notice/comment
+    // 1. Ghi nội dung đôn đốc vào lịch sử tiến độ mục tiêu.
     const logComment = comment || (action_type === 'request_update' 
       ? `[Yêu cầu cập nhật] Quản lý yêu cầu báo cáo tiến độ công việc.` 
       : `[Đôn đốc tiến độ] Quản lý thúc giục đẩy nhanh tiến độ thực hiện.`);
@@ -2550,7 +2550,7 @@ async function startServer() {
     };
     db.objective_progress_updates.push(newLog);
 
-    // 2. Create target-specific system notification for the assigned staff member
+    // 2. Tạo thông báo hệ thống riêng cho nhân sự được giao việc.
     if (kr.assigned_to_user_id) {
       if (!db.notifications) db.notifications = [];
       db.notifications.push({
@@ -2638,12 +2638,12 @@ async function startServer() {
     });
   });
 
-  // ----------------- NOTIFICATIONS ENDPOINTS -----------------
+  // Các endpoint thông báo.
   app.get('/api/notifications', authenticate, (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
     const userId = req.user!.id;
     
-    // Return notifications for this user (either receiver_id is this user, or it is null/global)
+    // Trả thông báo riêng của người dùng và thông báo chung có receiver_id bằng null.
     const list = (db.notifications || []).filter(n => n.receiver_id === null || n.receiver_id === userId);
     
     const result = list.map(n => {
@@ -2728,7 +2728,7 @@ async function startServer() {
     res.json({ success: true });
   });
 
-  // ----------------- CHAT ENDPOINTS -----------------
+  // Các endpoint trò chuyện nội bộ.
   const canStartPrivateChat = (requestingUser: User, targetUser: User) => {
     if (!targetUser.is_active || requestingUser.id === targetUser.id) return false;
     const requesterRole = LocalDatabase.get().roles.find(role => role.id === requestingUser.role_id)?.name;
@@ -2904,13 +2904,13 @@ async function startServer() {
     const userId = req.user!.id;
     const messages = db.chat_messages || [];
 
-    // Filter messages where receiver_id is null (general chat) OR receiver_id is the current user
+    // Lấy tin kênh chung hoặc tin nhắn gửi trực tiếp cho người dùng hiện tại.
     const receivedMessages = messages.filter(m => m.receiver_id === null || m.receiver_id === userId);
 
-    // Sort by newest first
+    // Sắp xếp tin mới nhất lên trước.
     const sorted = [...receivedMessages].sort((a, b) => b.created_at.localeCompare(a.created_at));
 
-    // Take the 10 newest
+    // Chỉ lấy 10 tin gần nhất cho dashboard.
     const slice = sorted.slice(0, 10);
 
     const result = slice.map(m => {
@@ -2942,10 +2942,10 @@ async function startServer() {
 
     let filtered = [];
     if (targetUserId === null) {
-      // General group chat
+      // Lịch sử kênh chung.
       filtered = messages.filter(m => m.receiver_id === null);
     } else {
-      // Private chat between userId and targetUserId
+      // Lịch sử tin nhắn riêng giữa hai người dùng.
       filtered = messages.filter(m => 
         (m.sender_id === userId && m.receiver_id === targetUserId) ||
         (m.sender_id === targetUserId && m.receiver_id === userId)
@@ -3032,7 +3032,7 @@ async function startServer() {
     return `${key.substring(0, 3)}...${key.substring(key.length - 4)}`;
   }
 
-  // ----------------- STUDIO SETTINGS ENDPOINTS -----------------
+  // Các endpoint cấu hình Studio.
   app.get('/api/studio/settings', authenticate, (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
     res.json(db.studio_settings || {});
@@ -3076,12 +3076,12 @@ async function startServer() {
     res.json(db.studio_settings);
   });
 
-  // Get database synchronization status, conflicts, and dead letter queue
+  // Lấy trạng thái đồng bộ database, xung đột và hàng đợi lỗi.
   app.get('/api/admin/sync-status', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const queue = LocalDatabase.getDeadLetterQueue();
     const conflicts = LocalDatabase.getConflicts();
     
-    // Strip payloads to keep response small and performant
+    // Loại payload để phản hồi gọn và tránh lộ dữ liệu không cần thiết.
     const cleanQueue = queue.map(({ payload, ...item }) => item);
     
     res.json({
@@ -3092,7 +3092,7 @@ async function startServer() {
     });
   });
 
-  // Manually retry a failed database sync item from the Dead Letter Queue
+  // Thử lại thủ công một mục đồng bộ lỗi trong hàng đợi.
   app.post('/api/admin/sync-retry/:id', authenticate, requirePermission('users.manage'), async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
     const success = await LocalDatabase.retryDeadLetterItem(id);
@@ -3103,7 +3103,7 @@ async function startServer() {
     }
   });
 
-  // Helper to sanitize DB for exports & local disk backups
+  // Làm sạch dữ liệu trước khi export hoặc tạo backup JSON cục bộ.
   function sanitizeDbForExportOrBackup(db: any) {
     if (!db) return db;
     const cloned = JSON.parse(JSON.stringify(db));
@@ -3124,7 +3124,7 @@ async function startServer() {
     return cloned;
   }
 
-  // Helper to validate and merge imported database structures
+  // Kiểm tra và hợp nhất cấu trúc dữ liệu được import.
   function validateAndMergeDbImport(importedDb: any, currentDb: any): { error?: string; cleanDb?: any } {
     if (!importedDb || typeof importedDb !== 'object') {
       return { error: 'Dữ liệu không hợp lệ.' };
@@ -3173,7 +3173,7 @@ async function startServer() {
       }
     }
 
-    // Force strip legacy LLM parameters from imported settings
+    // Luôn loại cấu hình LLM cũ khỏi dữ liệu import.
     if (cloned.studio_settings) {
       delete cloned.studio_settings.mimo_api_key;
       delete cloned.studio_settings.mimo_api_base_url;
@@ -3188,8 +3188,8 @@ async function startServer() {
     return { cleanDb: cloned };
   }
 
-  // ----------------- DATABASE MANAGEMENT ENDPOINTS -----------------
-  // Export entire database as JSON file download
+  // Các endpoint quản lý database và backup JSON nội bộ.
+  // Export dữ liệu thành file JSON tải về từ giao diện quản trị.
   app.get('/api/database/export', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
     const exportDb = sanitizeDbForExportOrBackup(db);
@@ -3198,7 +3198,7 @@ async function startServer() {
     res.send(JSON.stringify(exportDb, null, 2));
   });
 
-  // Import / Restore database from uploaded JSON
+  // Import hoặc khôi phục dữ liệu từ file JSON được tải lên.
   app.post('/api/database/import', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const importedDb = req.body;
     const currentDb = LocalDatabase.get();
@@ -3214,13 +3214,13 @@ async function startServer() {
     res.json({ success: true, message: 'Nhập dữ liệu thành công!' });
   });
 
-  // List backup history
+  // Liệt kê lịch sử backup JSON trong ứng dụng.
   app.get('/api/database/backups', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
     res.json(db.backups || []);
   });
 
-  // Trigger manual or scheduled backup creation
+  // Tạo backup JSON thủ công hoặc theo lịch nội bộ.
   app.post('/api/database/backups/create', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
     const { trigger_type } = req.body;
@@ -3275,7 +3275,7 @@ async function startServer() {
     return resolved;
   }
 
-  // Restore database from specific backup ID
+  // Khôi phục dữ liệu từ một mã backup cụ thể.
   app.post('/api/database/backups/restore/:id', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
     const db = LocalDatabase.get();
@@ -3311,7 +3311,7 @@ async function startServer() {
     }
   });
 
-  // Delete specific backup
+  // Xóa một backup JSON cụ thể.
   app.delete('/api/database/backups/:id', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
     const db = LocalDatabase.get();
@@ -3339,7 +3339,7 @@ async function startServer() {
     res.json({ success: true, message: 'Đã xóa bản sao lưu thành công' });
   });
 
-  // ----------------- LEADS (CRM) ENDPOINTS -----------------
+  // Các endpoint khách hàng tiềm năng trong CRM.
   app.get('/api/leads', authenticate, (req: AuthenticatedRequest, res: Response) => {
     const hasViewAll = req.role?.permissions.includes('leads.view_all') || req.role?.permissions.includes('admin') || req.role?.id === 'role-admin';
     const hasManage = req.role?.permissions.includes('leads.manage');
@@ -3351,7 +3351,7 @@ async function startServer() {
     const db = LocalDatabase.get();
     let result = db.leads || [];
 
-    // Filter by sales role if they don't have view_all
+    // Nhân viên sale không có quyền view_all chỉ thấy lead được giao cho mình.
     if (!hasViewAll && req.user) {
       result = result.filter(l => l.assigned_sale_id === req.user?.id);
     }
@@ -3438,7 +3438,7 @@ async function startServer() {
       return res.status(404).json({ error: 'Không tìm thấy thông tin tư vấn' });
     }
 
-    // Permission check: if they only have leads.manage, check if lead is assigned to them
+    // Người chỉ có quyền leads.manage phải là người được giao lead này.
     const hasViewAll = req.role?.permissions.includes('leads.view_all') || req.role?.permissions.includes('admin') || req.role?.id === 'role-admin';
     if (!hasViewAll && db.leads[idx].assigned_sale_id !== req.user?.id) {
       return res.status(403).json({ error: 'Forbidden: Bạn không có quyền chỉnh sửa thông tin tư vấn này' });
@@ -3560,7 +3560,7 @@ async function startServer() {
 
     LocalDatabase.save(db);
     
-    // Return backward compatible object with dynamically attached fields
+    // Giữ cấu trúc phản hồi tương thích ngược và bổ sung các trường động.
     const updatedLeadWithMetaData = {
       ...db.leads[idx],
       new_order_id: undefined,
@@ -3675,12 +3675,12 @@ async function startServer() {
 
     const db = LocalDatabase.get();
     
-    // Clean up lead "Nguyễn Hoàng Nam"
+    // Dọn lead mẫu "Nguyễn Hoàng Nam".
     if (db.leads) {
       db.leads = db.leads.filter(l => l.customer_name !== 'Nguyễn Hoàng Nam');
     }
     
-    // Clean up chat messages sent by this user that contain the demo text
+    // Dọn tin nhắn demo do người dùng hiện tại tạo.
     if (db.chat_messages) {
       db.chat_messages = db.chat_messages.filter(m => 
         !(m.sender_id === req.user!.id && m.content.includes('Chào cả nhà, chúc studio mình tuần mới'))
@@ -3691,9 +3691,9 @@ async function startServer() {
     res.json({ success: true, message: 'Dữ liệu demo đã được dọn dẹp sạch sẽ!' });
   });
 
-  // ----------------- VITE DEVELOPMENT / STATIC PROD SERVING -----------------
+  // Phục vụ Vite ở môi trường phát triển hoặc static build ở production.
   if (process.env.NODE_ENV === 'test') {
-    // API-only test mode: no Vite middleware and no static catch-all.
+    // Chế độ test chỉ chạy API, không gắn Vite middleware hoặc static catch-all.
   } else if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -3708,7 +3708,7 @@ async function startServer() {
     });
   }
 
-  // ----------------- ANNIVERSARY NOTIFICATION SCHEDULER -----------------
+  // Bộ lập lịch nhắc sinh nhật và kỷ niệm.
   if (process.env.NODE_ENV !== 'test') {
     setTimeout(() => {
       console.log('[ANNIVERSARY] Initial scanning starting...');

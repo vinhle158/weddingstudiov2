@@ -84,7 +84,7 @@ export default function MobileDashboard({ userRole, userId, onNavigate, unreadNo
     );
   }
 
-  // Filter staff tasks locally if they are staff
+  // Nhân viên chỉ thấy task của mình trên dashboard mobile.
   const staffTasks = isStaff ? tasks.filter(t => t.assigned_to === userId) : tasks;
 
   return (

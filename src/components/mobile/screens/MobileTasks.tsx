@@ -34,15 +34,15 @@ export default function MobileTasks({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filters
+  // Bộ lọc công việc.
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'in_progress' | 'done'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Detail Modal
+  // Hộp thoại chi tiết công việc.
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // Add Update state
+  // State thêm cập nhật tiến độ.
   const [commentText, setCommentText] = useState('');
   const [commentStatusChange, setCommentStatusChange] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
@@ -122,7 +122,7 @@ export default function MobileTasks({
   };
 
   const getFilteredTasks = () => {
-    // Show technical staff only their tasks
+    // Nhân sự kỹ thuật chỉ được xem task được giao cho mình.
     const isStaff = userRole === 'role-photographer' || userRole === 'role-editor' || userRole === 'role-staff';
     
     return tasks.filter(t => {

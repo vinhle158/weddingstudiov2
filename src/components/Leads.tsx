@@ -92,10 +92,10 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // View states
+  // State chế độ hiển thị.
   const [viewMode] = useState<'kanban' | 'table' | 'analytics'>('table');
   
-  // Filters
+  // Bộ lọc lead.
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedSource, setSelectedSource] = useState<string>('all');
@@ -103,18 +103,18 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedStep, setSelectedStep] = useState<number | 'all'>('all');
   
-  // Modal states
+  // State các hộp thoại.
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   
-  // Custom Won Success Modal states
+  // State hộp thoại xác nhận lead thành công.
   const [showWonModal, setShowWonModal] = useState(false);
   const [newlyCreatedCustomerId, setNewlyCreatedCustomerId] = useState<string | null>(null);
   const [wonCustomerDraft, setWonCustomerDraft] = useState<any>(null);
   const [wonOrderPrefill, setWonOrderPrefill] = useState<any>(null);
   const [newlyCreatedCustomerName, setNewlyCreatedCustomerName] = useState('');
   
-  // Form states (Create Lead)
+  // State biểu mẫu tạo lead.
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newSource, setNewSource] = useState('PAGE THE WILL');
@@ -128,7 +128,7 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
   const [newNotes, setNewNotes] = useState('');
   const [newSupport, setNewSupport] = useState('');
   
-  // Form states (Edit Lead Detail)
+  // State biểu mẫu chỉnh sửa chi tiết lead.
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editSource, setEditSource] = useState('');
@@ -152,11 +152,11 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
   const [editNotes, setEditNotes] = useState('');
   const [editSupport, setEditSupport] = useState('');
   
-  // Feedback state
+  // State phản hồi chăm sóc.
   const [feedbackContent, setFeedbackContent] = useState('');
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
-  // Analytics state
+  // State dữ liệu phân tích.
   const [analytics, setAnalytics] = useState<any>(null);
 
   const isAdmin = userRole === 'admin' || userRole === 'manager';
@@ -192,7 +192,7 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
     }
   }, [userRole]);
 
-  // Handle Create Lead
+  // Xử lý tạo lead.
   const handleCreateLead = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim()) return;
@@ -211,7 +211,7 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
       await apiRequest('/api/leads', 'POST', payload);
       setIsCreateModalOpen(false);
       
-      // Reset form
+      // Đặt lại biểu mẫu.
       setNewName('');
       setNewPhone('');
       setNewSource('PAGE THE WILL');
@@ -232,7 +232,7 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
     }
   };
 
-  // Open Edit/Detail Modal
+  // Mở hộp thoại xem hoặc chỉnh sửa chi tiết.
   const openDetailModal = (lead: Lead) => {
     setSelectedLead(lead);
     setEditName(lead.customer_name);
@@ -250,7 +250,7 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
     setFeedbackContent('');
   };
 
-  // Update Lead
+  // Cập nhật lead.
   const handleUpdateLead = async () => {
     if (!selectedLead) return;
 
@@ -270,7 +270,7 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
         support_needed: editSupport || null
       };
 
-      // Check validation
+      // Kiểm tra dữ liệu hợp lệ.
       if (editStatus === 'won' && !editRevenue) {
         alert('Vui lòng nhập doanh số chốt được!');
         return;
@@ -281,7 +281,7 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
       fetchLeads();
       if (isAdmin) fetchAnalytics();
 
-      // If just won: trigger our beautiful custom React modal
+      // Khi lead vừa thành công, mở hộp thoại xác nhận tùy chỉnh.
       if (editStatus === 'won' && selectedLead.status !== 'won') {
         setNewlyCreatedCustomerName(editName);
         setNewlyCreatedCustomerId(updated.new_customer_id || null);
@@ -297,7 +297,7 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
     }
   };
 
-  // Submit Feedback (Admin only)
+  // Gửi phản hồi chăm sóc, chỉ dành cho admin.
   const handleSendFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedLead || !feedbackContent.trim()) return;
@@ -308,7 +308,7 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
         content: feedbackContent
       });
 
-      // Update local state for feedback list
+      // Cập nhật danh sách phản hồi trên giao diện.
       setSelectedLead({
         ...selectedLead,
         admin_feedbacks: [...selectedLead.admin_feedbacks, newFeedback]
@@ -322,7 +322,7 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
     }
   };
 
-  // Move Sales Step directly in Kanban
+  // Chuyển bước bán hàng trực tiếp trên Kanban.
   const moveLeadStep = async (leadId: string, currentStep: number, direction: 'prev' | 'next') => {
     let nextStep = currentStep;
     if (direction === 'prev' && currentStep > 1) nextStep = currentStep - 1;
@@ -339,7 +339,7 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
     }
   };
 
-  // Filtering Logic
+  // Logic lọc danh sách.
   const getFilteredLeads = () => {
     const getLeadTime = (lead: Lead) => {
       const raw = lead.date || lead.created_at || lead.updated_at || '';
@@ -348,26 +348,26 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
     };
 
     return leads.filter(l => {
-      // 1. Search term (Name, Phone, Notes)
+      // 1. Tìm theo tên, số điện thoại hoặc ghi chú.
       const matchesSearch = 
         l.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (l.phone && l.phone.includes(searchTerm)) ||
         (l.notes && l.notes.toLowerCase().includes(searchTerm.toLowerCase()));
       
-      // 2. Month filter (date format: YYYY-MM-DD)
+      // 2. Lọc theo tháng với ngày định dạng YYYY-MM-DD.
       const matchesMonth = selectedMonth === 'all' || l.date.substring(5, 7) === selectedMonth;
 
-      // 3. Source filter
+      // 3. Lọc theo nguồn lead.
       const matchesSource = selectedSource === 'all' || l.source === selectedSource;
 
-      // 4. Package filter
+      // 4. Lọc theo gói dịch vụ.
       let matchesPackage = true;
       if (selectedPackage !== 'all') {
         const key = selectedPackage as keyof typeof l.interested_packages;
         matchesPackage = l.interested_packages[key] === true;
       }
 
-      // 5. Status filter
+      // 5. Lọc theo trạng thái.
       let matchesStatus = true;
       if (selectedStatus === 'all') {
         matchesStatus = true;
@@ -415,11 +415,11 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
     });
   };
 
-  // Helper values for selectors
+  // Dữ liệu dùng cho các bộ chọn.
   const allMonths = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
   const allSources = Array.from(new Set(leads.map(l => l.source)));
 
-  // Define 6 Steps Names
+  // Tên hiển thị của sáu bước bán hàng.
   const stepNames = [
     { num: 1, label: 'Khai thác nhu cầu', desc: 'Hiểu khách cần chụp dịp gì, mong muốn và lo lắng lớn nhất' },
     { num: 2, label: 'Tư vấn theo nhu cầu', desc: 'Tập trung vào giải pháp cho mong muốn của khách, gửi ảnh minh họa' },
@@ -429,7 +429,7 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
     { num: 6, label: 'Chốt đơn / Thỏa thuận', desc: 'Chủ động giữ lịch, cọc tiền cọc hoặc ký hợp đồng' }
   ];
 
-  // Codes definitions for display
+  // Mã trạng thái dùng để hiển thị.
   const successCodes = [
     { code: 'K1', desc: 'Nhu cầu rõ (Biết rõ mong muốn, hỏi thẳng gói)' },
     { code: 'K2', desc: 'Đã tham khảo trước (Đã so sánh kỹ, sẵn sàng cọc)' },
@@ -457,7 +457,7 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
     { code: 'P03', desc: 'Các gói chụp chưa đúng nhu cầu mong muốn' }
   ];
 
-  // RENDER LOADING / ERROR
+  // Giao diện đang tải hoặc có lỗi.
   if (loading && leads.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 min-h-[400px]">
@@ -1446,7 +1446,7 @@ export default function Leads({ userRole, onNavigate }: LeadsProps) {
                     )}
                   </>
                 ) : (
-                  /* ─── SALE VIEW: Edit Form ─── */
+                  /* Biểu mẫu chỉnh sửa dành cho nhân viên sale. */
                   <>
                     <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1.5 select-none">
                       <Edit className="w-4 h-4 text-gold-600" />

@@ -26,15 +26,15 @@ export default function MobileOrders({ userRole, initialSelectedOrderId, onNavig
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filters
+  // Bộ lọc đơn hàng.
   const [activeFilter, setActiveFilter] = useState<'all' | 'shooting' | 'editing' | 'ready' | 'delivered'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Selected Order Detail
+  // Chi tiết đơn hàng đang chọn.
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   
-  // Status transition state
+  // State chuyển trạng thái đơn hàng.
   const [newStatus, setNewStatus] = useState('');
   const [statusNote, setStatusNote] = useState('');
   const [submittingStatus, setSubmittingStatus] = useState(false);
@@ -56,7 +56,7 @@ export default function MobileOrders({ userRole, initialSelectedOrderId, onNavig
     fetchOrders();
   }, []);
 
-  // Handle deep link (when clicking from dashboard)
+  // Xử lý deep link khi mở đơn từ dashboard.
   useEffect(() => {
     if (initialSelectedOrderId && orders.length > 0) {
       const ord = orders.find(o => o.id === initialSelectedOrderId);

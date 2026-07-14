@@ -3,7 +3,7 @@ import path from 'path';
 import { prisma } from '../db_service';
 import { formatVndFromThousands } from './money';
 
-// Interfaces mapping to Section 2 of spec
+// Các interface tương ứng với phần 2 của đặc tả NLP.
 export interface DictionaryEntry {
   id: string;
   phrase: string;
@@ -51,7 +51,7 @@ export interface TraceObject {
   row_count: number;
 }
 
-// Helpers
+// Hàm tiện ích dùng chung.
 const configPath = path.join(process.cwd(), 'config', 'business_nlp_config.json');
 
 export function loadNlpConfig(): NlpConfig {
@@ -62,26 +62,26 @@ export function loadNlpConfig(): NlpConfig {
   return JSON.parse(raw);
 }
 
-// Normalizer (Section 2)
+// Chuẩn hóa văn bản theo phần 2 của đặc tả.
 export function normalizeVietnamese(text: string): string {
   let str = text.toLowerCase().trim();
-  // Remove accents
+  // Loại dấu tiếng Việt để so khớp ổn định.
   str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  // Replace dd -> d
+  // Đổi "đ" thành "d" sau bước bỏ dấu.
   str = str.replace(/đ/g, 'd');
-  // Strip special chars
+  // Loại ký tự đặc biệt.
   str = str.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, ' ');
-  // Replace multiple spaces
+  // Gộp nhiều khoảng trắng liên tiếp.
   str = str.replace(/\s+/g, ' ').trim();
   return str;
 }
 
-// Tokenizer & Longest-Match Phrase Lookup (Section 1 & 3)
+// Tách token và tìm cụm từ khớp dài nhất theo phần 1 và 3.
 export function lookupPhrases(normalizedText: string, config: NlpConfig): { matched: { phrase: string; concept: string }[]; remainingText: string } {
   const words = normalizedText.split(' ');
   const matched: { phrase: string; concept: string; priority: number }[] = [];
   
-  // Sort dictionary phrases by length (longest match first) and priority descending
+  // Ưu tiên cụm dài hơn, sau đó ưu tiên mục có priority cao hơn.
   const sortedDict = [...config.dictionary].sort((a, b) => {
     const aLen = a.phrase.split(' ').length;
     const bLen = b.phrase.split(' ').length;
@@ -93,7 +93,7 @@ export function lookupPhrases(normalizedText: string, config: NlpConfig): { matc
 
   for (const entry of sortedDict) {
     const entryPhrase = entry.phrase;
-    // Check if phrase is present as word boundary match
+    // Chỉ nhận cụm từ khớp trọn ranh giới từ.
     const regex = new RegExp(`\\b${entryPhrase}\\b`, 'gi');
     if (regex.test(remaining)) {
       matched.push({
@@ -101,12 +101,12 @@ export function lookupPhrases(normalizedText: string, config: NlpConfig): { matc
         concept: entry.concept_id,
         priority: entry.priority
       });
-      // Replace matched phrase to avoid nested overlap
+      // Đánh dấu phần đã khớp để tránh nhận diện lồng nhau.
       remaining = remaining.replace(regex, ' ').replace(/\s+/g, ' ').trim();
     }
   }
 
-  // Deduplicate and resolve priorities
+  // Loại kết quả trùng và xử lý độ ưu tiên.
   const resolved = matched.reduce((acc, current) => {
     const x = acc.find(item => item.concept === current.concept);
     if (!x) {
@@ -123,24 +123,24 @@ export function lookupPhrases(normalizedText: string, config: NlpConfig): { matc
   };
 }
 
-// Entity Extractor (Section 3.1)
+// Trích xuất thực thể theo phần 3.1.
 export function extractEntities(question: string): Record<string, any> {
   const entities: Record<string, any> = {};
   const normalized = normalizeVietnamese(question);
 
-  // 1. Phone number (6+ digits)
+  // 1. Số điện thoại có ít nhất sáu chữ số.
   const phoneMatch = normalized.replace(/[^\d]/g, '').match(/\d{6,15}/);
   if (phoneMatch) {
     entities.phone = phoneMatch[0];
   }
 
-  // 2. Order codes like OD1001, ORD-1002
+  // 2. Mã đơn hàng như OD1001 hoặc ORD-1002.
   const orderCodeMatch = question.match(/(?:OD|ORD)[-\s]*\d+/i);
   if (orderCodeMatch) {
     entities.order_code = orderCodeMatch[0].toUpperCase().replace(/\s+/g, '');
   }
 
-  // 3. Date extraction (DD/MM/YYYY or DD-MM)
+  // 3. Trích xuất ngày theo dạng DD/MM/YYYY hoặc DD-MM.
   const dateMatch = question.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{4}))?/);
   if (dateMatch) {
     const day = parseInt(dateMatch[1]);
@@ -151,7 +151,7 @@ export function extractEntities(question: string): Record<string, any> {
     entities.end_date = formatted;
   }
 
-  // 4. Relative range extraction
+  // 4. Trích xuất khoảng thời gian tương đối.
   if (normalized.includes('ngay mai') || normalized.includes('ngay mai')) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -182,7 +182,7 @@ export function extractEntities(question: string): Record<string, any> {
     entities.end_date = todayStr;
   }
 
-  // 5. Limit/number extraction (e.g. 5 nguoi, top 10)
+  // 5. Trích xuất số lượng giới hạn, ví dụ 5 người hoặc top 10.
   const limitMatch = normalized.match(/top\s*(\d+)/i) || normalized.match(/limit\s*(\d+)/i) || normalized.match(/(\d+)\s*(khach|don|lead|task|nguoi)/i);
   if (limitMatch) {
     entities.limit = parseInt(limitMatch[1]);
@@ -193,14 +193,14 @@ export function extractEntities(question: string): Record<string, any> {
   return entities;
 }
 
-// Intent Classifier (Section 3.2)
+// Phân loại intent theo phần 3.2.
 export function classifyIntent(normalizedText: string, config: NlpConfig): 'COUNT' | 'LIST' | 'DETAIL' | 'TOP_N' {
-  // Check if it matches TOP_N keyword patterns
+  // Kiểm tra mẫu từ khóa TOP_N.
   if (/\btop\s*\d+\b/i.test(normalizedText) || normalizedText.includes('gan nhat') || normalizedText.includes('moi nhat')) {
     return 'TOP_N';
   }
 
-  // Check intent patterns from config
+  // Kiểm tra các mẫu intent trong cấu hình.
   for (const pattern of config.intent_patterns) {
     for (const keyword of pattern.pattern_keywords) {
       if (normalizedText.includes(keyword)) {
@@ -209,11 +209,11 @@ export function classifyIntent(normalizedText: string, config: NlpConfig): 'COUN
     }
   }
 
-  // Fallback to LIST
+  // Dùng intent LIST khi không có mẫu cụ thể hơn.
   return 'LIST';
 }
 
-// Status translation map
+// Bảng dịch mã trạng thái sang nội dung hiển thị.
 export const statusTranslationMap: Record<string, string> = {
   new: 'Đơn mới',
   confirmed: 'Đã xác nhận',
@@ -238,14 +238,14 @@ export function translateStatus(status: string): string {
   return statusTranslationMap[status.toLowerCase()] || status;
 }
 
-// Template Engine / Response Generator (Section 1 & 11)
+// Bộ sinh câu trả lời theo phần 1 và 11.
 export function generateNaturalResponse(intent: string, resolvedConcepts: string[], rows: any[], traceId: string, extractedEntities: Record<string, any>): string {
   let reply = '';
 
   const concept = resolvedConcepts[0];
   
   if (concept === 'BUSINESS_OVERVIEW') {
-    // Overview query returns row object
+    // Truy vấn tổng quan trả về một object dữ liệu.
     const stats = rows[0] || {};
     reply += `Chào bạn! Dưới đây là thông tin hoạt động tổng quan của studio:\n\n`;
     reply += `• **Khách hàng:** Tổng số **${stats.customers || 0}** khách hàng đã đăng ký.\n`;
@@ -417,7 +417,7 @@ export function generateNaturalResponse(intent: string, resolvedConcepts: string
             });
           }
         } catch (e) {
-          // ignore
+          // Bỏ qua trường không thể định dạng thành tiền tệ.
         }
       }
     });
@@ -429,7 +429,7 @@ export function generateNaturalResponse(intent: string, resolvedConcepts: string
       reply += `• **${u.full_name}** - Email: **${u.email}** (Trạng thái: **${u.is_active ? 'Hoạt động' : 'Đã khóa'}**)\n`;
     });
   } else {
-    // Default fallback
+    // Phản hồi mặc định khi không có template phù hợp.
     reply += `Đã kiểm tra hệ thống. Kết quả:\n\n`;
     rows.slice(0, 5).forEach((r: any, idx: number) => {
       reply += `${idx + 1}. ${JSON.stringify(r)}\n`;
@@ -440,18 +440,18 @@ export function generateNaturalResponse(intent: string, resolvedConcepts: string
   return reply;
 }
 
-// Complete Business NLP Pipeline (Section 1)
+// Luồng xử lý NLP nghiệp vụ hoàn chỉnh theo phần 1.
 export async function processNlpQuery(rawQuestion: string): Promise<{ answer: string; trace: TraceObject }> {
   const traceId = `trace-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
   const config = loadNlpConfig();
   const normalized = normalizeVietnamese(rawQuestion);
   const entities = extractEntities(rawQuestion);
   
-  // Lookup Dictionary & Intent (Section 1 & 3)
+  // Tra từ điển và nhận diện intent theo phần 1 và 3.
   const { matched, remainingText } = lookupPhrases(normalized, config);
   const intent = classifyIntent(normalized, config);
 
-  // Ambiguity / Fallback check (Section 3.5)
+  // Kiểm tra câu hỏi mơ hồ và phương án dự phòng theo phần 3.5.
   if (matched.length === 0) {
     const normalizedWords = normalized.split(/\s+/);
     const suggestedConcepts = new Set<string>();
@@ -511,10 +511,10 @@ export async function processNlpQuery(rawQuestion: string): Promise<{ answer: st
     };
   }
 
-  // Business Concept Resolver (Section 3.4)
+  // Xác định khái niệm nghiệp vụ theo phần 3.4.
   const resolvedConcepts = matched.map(m => m.concept);
 
-  // Clean query from stop words (grammatical filler words and question particles)
+  // Loại stop word, từ đệm và trợ từ nghi vấn khỏi nội dung tìm kiếm.
   const stopWords = new Set([
     'nao', 'can', 'ai', 'tim', 'danh', 'sach', 'liet', 'ke', 'hien',
     'thi', 'show', 'co', 'may', 'bao', 'nhieu', 'la', 'gi', 'cung',
@@ -524,7 +524,7 @@ export async function processNlpQuery(rawQuestion: string): Promise<{ answer: st
   ]);
   const cleanedQuery = remainingText.trim().split(/\s+/).filter(word => !stopWords.has(word)).join(' ');
 
-  // Default parameters prep
+  // Chuẩn bị tham số mặc định.
   const todayStr = new Date().toISOString().split('T')[0];
   const finalParams: Record<string, any> = {
     today: todayStr,
@@ -534,7 +534,7 @@ export async function processNlpQuery(rawQuestion: string): Promise<{ answer: st
     query: entities.phone || entities.order_code || cleanedQuery
   };
 
-  // Rule mapping extraction & query building (Section 3.6 & 8 & 9)
+  // Ánh xạ quy tắc và dựng truy vấn theo phần 3.6, 8 và 9.
   let sql = '';
   const pgParams: any[] = [];
   const concept = resolvedConcepts[0]; // primary concept drives the table selection
@@ -544,17 +544,17 @@ export async function processNlpQuery(rawQuestion: string): Promise<{ answer: st
   
   const category = conceptMetadata?.category || 'overview';
   
-  // Override defaults with entity fields
+  // Ghi đè giá trị mặc định bằng các thực thể đã trích xuất.
   if (ruleMeta) {
     Object.assign(finalParams, ruleMeta.default_params);
   }
 
-  // If there's an explicit search query extracted, let's bind it
+  // Gắn từ khóa tìm kiếm khi câu hỏi đã cung cấp rõ nội dung cần tra.
   if (entities.phone) finalParams.query = entities.phone;
   else if (entities.order_code) finalParams.query = entities.order_code;
 
   if (concept === 'BUSINESS_OVERVIEW') {
-    // business overview executes in memory queries or direct queries
+    // Tổng quan nghiệp vụ có thể chạy trên bộ nhớ đệm hoặc truy vấn trực tiếp.
     sql = `
       SELECT 
         (SELECT COUNT(*) FROM "Customer") as customers,
@@ -582,7 +582,7 @@ export async function processNlpQuery(rawQuestion: string): Promise<{ answer: st
     pgParams.push(todayStr, finalParams.limit);
   }
   else if (concept === 'OPERATIONAL_ALERTS') {
-    // Compound alerts SQL
+    // SQL tổng hợp nhiều nhóm cảnh báo vận hành.
     sql = `
       SELECT 'overdue_task' as alert_type, t.title, t.due_date, u.full_name as assigned_to_name, null as order_code, 0::float as total_amount, null as shoot_date, null as shoot_time, null as customer_name
       FROM "Task" t
@@ -637,7 +637,7 @@ export async function processNlpQuery(rawQuestion: string): Promise<{ answer: st
     sql = `SELECT id, full_name, email, is_active FROM "User" ORDER BY full_name ASC`;
   }
   else {
-    // Standard table query builder
+    // Dựng truy vấn bảng tiêu chuẩn.
     let tableName = 'Customer';
     let selectColumns = '*';
     if (category === 'leads') {
@@ -658,7 +658,7 @@ export async function processNlpQuery(rawQuestion: string): Promise<{ answer: st
 
     let whereClause = ruleMeta?.sql_fragment || '1=1';
 
-    // If there is search query text, let's append keyword matching filters!
+    // Thêm điều kiện lọc từ khóa khi người dùng cung cấp nội dung tìm kiếm.
     if (finalParams.query && finalParams.query.length > 0) {
       const q = `%${finalParams.query}%`;
       if (tableName === 'Customer') {
@@ -678,7 +678,7 @@ export async function processNlpQuery(rawQuestion: string): Promise<{ answer: st
 
     sql = `SELECT ${selectColumns} FROM "${tableName}" WHERE ${whereClause}`;
 
-    // Add order/limit if LIST or TOP_N
+    // Thêm sắp xếp và giới hạn cho intent LIST hoặc TOP_N.
     if (intent === 'TOP_N') {
       if (tableName === 'Order') sql += ` ORDER BY shoot_date ASC, shoot_time ASC`;
       else if (tableName === 'Task') sql += ` ORDER BY due_date ASC`;
@@ -690,7 +690,7 @@ export async function processNlpQuery(rawQuestion: string): Promise<{ answer: st
       sql += ` LIMIT :limit`;
     }
 
-    // Convert named params to PG index params ($1, $2, $3...)
+    // Chuyển tham số có tên sang tham số vị trí của PostgreSQL ($1, $2, $3...).
     const paramRegex = /:([a-zA-Z0-9_]+)/g;
     sql = sql.replace(paramRegex, (match, paramName) => {
       const val = finalParams[paramName];
@@ -699,12 +699,12 @@ export async function processNlpQuery(rawQuestion: string): Promise<{ answer: st
     });
   }
 
-  // Execute SQL on PostgreSQL (Section 10)
+  // Thực thi SQL trên PostgreSQL theo phần 10.
   let rows: any[] = [];
   try {
     rows = await prisma.$queryRawUnsafe(sql, ...pgParams);
     
-    // For lead/order lists, fetch relational names if needed
+    // Bổ sung tên quan hệ cho danh sách lead hoặc đơn hàng khi cần.
     if (concept === 'LEAD_LIST' && rows.length > 0) {
       const users = await prisma.user.findMany();
       rows = rows.map(r => ({
@@ -738,10 +738,10 @@ export async function processNlpQuery(rawQuestion: string): Promise<{ answer: st
     throw new Error('Không thể truy vấn cơ sở dữ liệu. Vui lòng kiểm tra lại cấu trúc câu hỏi.');
   }
 
-  // Generate natural language response (Section 11)
+  // Sinh phản hồi ngôn ngữ tự nhiên theo phần 11.
   const answer = generateNaturalResponse(intent, resolvedConcepts, rows, traceId, finalParams);
 
-  // Return trace info + final answer
+  // Trả thông tin truy vết cùng câu trả lời cuối.
   return {
     answer,
     trace: {

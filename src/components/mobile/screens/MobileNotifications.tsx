@@ -38,7 +38,7 @@ export default function MobileNotifications({ userId, userRole, onRefresh }: Mob
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isAnnounceOpen, setIsAnnounceOpen] = useState(false);
 
-  // Announcement Form
+  // Biểu mẫu tạo thông báo chung.
   const [annTitle, setAnnTitle] = useState('');
   const [annContent, setAnnContent] = useState('');
   const [submittingAnn, setSubmittingAnn] = useState(false);

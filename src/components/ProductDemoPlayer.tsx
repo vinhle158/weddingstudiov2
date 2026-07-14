@@ -33,7 +33,7 @@ export function ProductDemoPlayer({
   handleLogout,
   setViewMode
 }: ProductDemoPlayerProps) {
-  // UI states
+  // State giao diện trình diễn.
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [showWelcome, setShowWelcome] = useState(true);
@@ -42,20 +42,20 @@ export function ProductDemoPlayer({
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
 
-  // Marketing Overlay Text State
+  // State lớp nội dung giới thiệu sản phẩm.
   const [marketingText, setMarketingText] = useState({
     title: '',
     subtitle: '',
     visible: false
   });
 
-  // Ripple effect state
+  // State hiệu ứng gợn sóng khi nhấp.
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordProgress, setRecordProgress] = useState(0);
 
-  // Refs
+  // Tham chiếu đến các phần tử giao diện.
   const cursorRef = useRef<HTMLDivElement>(null);
   const introOverlayRef = useRef<HTMLDivElement>(null);
   const outroOverlayRef = useRef<HTMLDivElement>(null);
@@ -66,14 +66,14 @@ export function ProductDemoPlayer({
   const recordedChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Audio system hook for commercial sync
+  // Hook âm thanh để đồng bộ với timeline trình diễn.
   const triggerSound = (type: 'whoosh' | 'click' | 'pop' | 'success') => {
     if (!soundEnabled) return;
     
-    // We log the sound cues in console so the developer can attach HTML5 Audio or Web Audio API easily
+    // Ghi cue âm thanh ra console để có thể gắn audio thật khi sản xuất video.
     console.log(`[Sound Event] Play sound type: ${type}`);
     
-    // Synthesize simple web audio API bleeps/whooshes if user enables audio!
+    // Tạo âm báo đơn giản bằng Web Audio API khi người dùng bật âm thanh.
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioCtx) return;
@@ -126,18 +126,18 @@ export function ProductDemoPlayer({
         osc2.stop(ctx.currentTime + 0.4);
       }
     } catch (e) {
-      // Audio context blocked or unsupported
+      // Trình duyệt chặn hoặc không hỗ trợ AudioContext.
     }
   };
 
-  // Synchronize body overflow to hide layout scrollbars during zooms
+  // Ẩn thanh cuộn của trang trong lúc chạy hiệu ứng zoom.
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     if (setViewMode) setViewMode('pc');
     
     return () => {
       document.body.style.overflow = '';
-      // Reset viewport styling on component unmount
+      // Khôi phục style viewport khi component được gỡ.
       const viewport = document.getElementById('demo-camera-viewport');
       if (viewport) {
         gsap.killTweensOf(viewport);
@@ -147,17 +147,17 @@ export function ProductDemoPlayer({
     };
   }, [setViewMode]);
 
-  // Handle Authentication trigger to resume timeline
+  // Tiếp tục timeline sau khi luồng xác thực hoàn tất.
   useEffect(() => {
     if (isAuthenticated && timelineRef.current && timelineRef.current.isActive() === false) {
-      // Resume timeline once logged in
+      // Chạy tiếp timeline khi đã đăng nhập.
       setStatusMessage("Xác thực thành công. Tiếp tục giới thiệu...");
       triggerSound('success');
       timelineRef.current.resume();
     }
   }, [isAuthenticated]);
 
-  // ----------------- VIRTUAL 3D CAMERA MATH -----------------
+  // Tính toán camera 3D ảo.
 
   const getFocusParams = (selector: string, zoom = 1.25) => {
     const el = document.querySelector(selector) as HTMLElement;
@@ -170,7 +170,7 @@ export function ProductDemoPlayer({
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
     
-    // dx, dy are the shifts needed to bring the element center to viewport center
+    // dx và dy là độ lệch cần thiết để đưa tâm phần tử vào giữa viewport.
     const dx = (centerX - elemX) * zoom;
     const dy = (centerY - elemY) * zoom;
     
@@ -188,7 +188,7 @@ export function ProductDemoPlayer({
     };
   };
 
-  // Click ripple simulation
+  // Mô phỏng hiệu ứng gợn sóng khi nhấp.
   const addRipple = (x: number, y: number) => {
     const id = rippleIdRef.current++;
     setRipples(prev => [...prev, { id, x, y }]);
@@ -197,7 +197,7 @@ export function ProductDemoPlayer({
     }, 1000);
   };
 
-  // ----------------- BUILD GSAP COMMERCIAL TIMELINE -----------------
+  // Dựng timeline trình diễn bằng GSAP.
 
   const initTimeline = () => {
     if (timelineRef.current) {
@@ -209,7 +209,7 @@ export function ProductDemoPlayer({
     const intro = introOverlayRef.current;
     const outro = outroOverlayRef.current;
 
-    // Reset components to initial clean state
+    // Đưa các component về trạng thái ban đầu.
     gsap.set(viewport, { scale: 1, x: 0, y: 0, filter: 'blur(0px)' });
     gsap.set(cursor, { x: -100, y: -100, opacity: 0 });
     gsap.set(intro, { display: 'flex', opacity: 1 });
@@ -217,14 +217,14 @@ export function ProductDemoPlayer({
 
     const tl = gsap.timeline({
       onUpdate: () => {
-        // We sync the progress to UI if needed
+        // Đồng bộ tiến độ lên giao diện khi cần.
       },
       onComplete: () => {
         setIsPlaying(false);
         setMarketingText(prev => ({ ...prev, visible: false }));
         gsap.to(cursor, { opacity: 0, duration: 0.5 });
         
-        // Show outro screen
+        // Hiển thị màn hình kết thúc.
         gsap.set(outro, { display: 'flex' });
         gsap.to(outro, { opacity: 1, duration: 1.5, ease: 'power2.out' });
         setShowOutro(true);
@@ -233,26 +233,26 @@ export function ProductDemoPlayer({
 
     timelineRef.current = tl;
 
-    // --- SCENE 1: CINEMATIC INTRO (0s - 4.5s) ---
+    // Cảnh 1: mở đầu điện ảnh, từ 0 đến 4,5 giây.
     tl.addLabel('intro', 0);
     tl.to('#intro-logo-container', { scale: 1, opacity: 1, duration: 1.5, ease: 'power3.out' }, 'intro+=0.5');
     tl.to('#intro-slogan', { y: 0, opacity: 1, duration: 1, ease: 'power2.out' }, 'intro+=1.2');
     
-    // Zoom out the website layout in the background during reveal
+    // Thu nhỏ giao diện nền khi bắt đầu phần giới thiệu.
     tl.set(viewport, { scale: 0.7, filter: 'blur(5px)' }, 0);
     
-    // Transition from Intro to Login
+    // Chuyển từ phần mở đầu sang màn hình đăng nhập.
     tl.call(() => triggerSound('whoosh'), [], 'intro+=3.5');
     tl.to(intro, { opacity: 0, duration: 1, ease: 'power2.inOut' }, 'intro+=3.5');
     tl.to(viewport, { scale: 1.25, filter: 'blur(0px)', duration: 1.5, ease: 'power3.inOut' }, 'intro+=3.5');
     tl.call(() => gsap.set(intro, { display: 'none' }), [], 'intro+=4.5');
 
-    // --- SCENE 2: LOG IN WORKFLOW (4.5s - 12s) ---
+    // Cảnh 2: quy trình đăng nhập, từ 4,5 đến 12 giây.
     tl.addLabel('login', 4.5);
     tl.call(() => setStatusMessage("Đang tiến hành đăng nhập..."), [], 'login');
     tl.to(cursor, { opacity: 1, duration: 0.5 }, 'login');
 
-    // Move to Email input
+    // Di chuyển con trỏ đến ô email.
     tl.to(cursor, {
       x: () => getElementCoords('input[type="email"]').x,
       y: () => getElementCoords('input[type="email"]').y,
@@ -260,7 +260,7 @@ export function ProductDemoPlayer({
       ease: 'power2.inOut'
     }, 'login+=0.5');
 
-    // Focus & Highlight Email Input
+    // Focus và làm nổi bật ô email.
     tl.to(viewport, {
       x: () => getFocusParams('input[type="email"]', 1.35).x,
       y: () => getFocusParams('input[type="email"]', 1.35).y,
@@ -270,7 +270,7 @@ export function ProductDemoPlayer({
     }, 'login+=0.5');
     tl.call(() => triggerSound('click'), [], 'login+=1.7');
 
-    // Type email
+    // Mô phỏng nhập email.
     const emailStr = 'viet@studio.com';
     const emailObj = { charCount: 0 };
     tl.to(emailObj, {
@@ -289,7 +289,7 @@ export function ProductDemoPlayer({
       }
     }, 'login+=1.8');
 
-    // Move to Password input
+    // Di chuyển con trỏ đến ô mật khẩu.
     tl.to(cursor, {
       x: () => getElementCoords('input[type="password"]').x,
       y: () => getElementCoords('input[type="password"]').y,
@@ -305,7 +305,7 @@ export function ProductDemoPlayer({
     }, 'login+=3.2');
     tl.call(() => triggerSound('click'), [], 'login+=4');
 
-    // Type password
+    // Mô phỏng nhập mật khẩu.
     const passStr = 'admin123';
     const passObj = { charCount: 0 };
     tl.to(passObj, {
@@ -324,7 +324,7 @@ export function ProductDemoPlayer({
       }
     }, 'login+=4.1');
 
-    // Move to Login Button
+    // Di chuyển con trỏ đến nút đăng nhập.
     tl.to(cursor, {
       x: () => getElementCoords('button[type="submit"]').x,
       y: () => getElementCoords('button[type="submit"]').y,
@@ -339,7 +339,7 @@ export function ProductDemoPlayer({
       ease: 'power2.inOut'
     }, 'login+=5.2');
     
-    // Click submit
+    // Mô phỏng nhấn nút gửi.
     tl.call(() => {
       const coords = getElementCoords('button[type="submit"]');
       addRipple(coords.x, coords.y);
@@ -348,15 +348,15 @@ export function ProductDemoPlayer({
       const btn = document.querySelector('button[type="submit"]') as HTMLButtonElement;
       if (btn) btn.click();
       
-      // Pause timeline to wait for network authentication response
+      // Tạm dừng timeline để chờ phản hồi xác thực từ server.
       tl.pause();
     }, [], 'login+=5.8');
 
-    // --- SCENE 3: DASHBOARD WORKSPACE (12s - 20s) ---
+    // Cảnh 3: dashboard vận hành, từ 12 đến 20 giây.
     tl.addLabel('dashboard', 12);
     tl.call(() => {
       setStatusMessage("Khám phá Bảng chỉ số điều hành Dashboard...");
-      // Show marketing overlays
+      // Hiển thị lớp nội dung giới thiệu.
       setMarketingText({
         title: "TỐI ƯU HÓA HOẠT ĐỘNG",
         subtitle: "Quản lý doanh thu và chỉ số điều hành thời gian thực",
@@ -365,12 +365,12 @@ export function ProductDemoPlayer({
       triggerSound('whoosh');
     }, [], 'dashboard');
 
-    // Transition zoom out of dashboard with blur
+    // Thu nhỏ dashboard kèm hiệu ứng làm mờ.
     tl.to(viewport, { scale: 0.9, x: 0, y: 0, filter: 'blur(3px)', duration: 1, ease: 'power3.inOut' }, 'dashboard');
     tl.call(() => setActiveTab('dashboard'), [], 'dashboard+=0.5');
     tl.to(viewport, { scale: 1, filter: 'blur(0px)', duration: 1.2, ease: 'power3.out' }, 'dashboard+=1.2');
 
-    // Pan to stats cards
+    // Di chuyển khung nhìn đến các thẻ thống kê.
     tl.to(viewport, {
       x: () => getFocusParams('.grid.grid-cols-2.lg\\:grid-cols-4', 1.2).x,
       y: () => getFocusParams('.grid.grid-cols-2.lg\\:grid-cols-4', 1.2).y,
@@ -385,7 +385,7 @@ export function ProductDemoPlayer({
       ease: 'power2.inOut'
     }, 'dashboard+=2');
 
-    // Scroll dashboard content
+    // Cuộn nội dung dashboard.
     const scrollObj = { y: 0 };
     tl.to(scrollObj, {
       y: 350,
@@ -404,15 +404,15 @@ export function ProductDemoPlayer({
       ease: 'power2.inOut'
     }, 'dashboard+=3.8');
 
-    // Hide marketing text
+    // Ẩn nội dung giới thiệu.
     tl.to('#marketing-overlay-card', { opacity: 0, y: -20, duration: 0.5 }, 'dashboard+=6.5');
     tl.call(() => setMarketingText(prev => ({ ...prev, visible: false })), [], 'dashboard+=7');
 
-    // --- SCENE 4: CRM LEADS WORKSPACE (20s - 30s) ---
+    // Cảnh 4: CRM Leads, từ 20 đến 30 giây.
     tl.addLabel('crm', 20);
     tl.call(() => {
       setStatusMessage("Trải nghiệm CRM Leads & Phễu khách hàng...");
-      // Scroll main layout back to top
+      // Cuộn bố cục chính về đầu trang.
       const main = document.querySelector('main');
       if (main) main.scrollTop = 0;
       
@@ -424,7 +424,7 @@ export function ProductDemoPlayer({
       triggerSound('whoosh');
     }, [], 'crm');
 
-    // Transition CRM Leads tab
+    // Chuyển sang tab CRM Leads.
     tl.to(viewport, { scale: 0.88, x: 0, y: 0, filter: 'blur(3.5px)', duration: 1, ease: 'power3.inOut' }, 'crm');
     tl.call(() => {
       const tabBtn = document.querySelector('button[data-demo-tab="leads"]') as HTMLButtonElement;
@@ -432,7 +432,7 @@ export function ProductDemoPlayer({
     }, [], 'crm+=0.5');
     tl.to(viewport, { scale: 1, filter: 'blur(0px)', duration: 1.2, ease: 'power3.out' }, 'crm+=1.2');
 
-    // Move cursor to Kanban Board
+    // Di chuyển con trỏ đến bảng Kanban.
     tl.to(cursor, {
       x: () => getElementCoords('.flex.gap-4.overflow-x-auto').x,
       y: () => getElementCoords('.flex.gap-4.overflow-x-auto').y,
@@ -447,7 +447,7 @@ export function ProductDemoPlayer({
       ease: 'power2.inOut'
     }, 'crm+=1.5');
 
-    // Move cursor to "Add Lead" button
+    // Di chuyển con trỏ đến nút thêm lead.
     tl.to(cursor, {
       x: () => getElementCoords('button[data-demo-btn="add-lead"]').x,
       y: () => getElementCoords('button[data-demo-btn="add-lead"]').y,
@@ -462,7 +462,7 @@ export function ProductDemoPlayer({
       ease: 'power2.inOut'
     }, 'crm+=3.5');
 
-    // Click "Add Lead"
+    // Mô phỏng nhấn nút thêm lead.
     tl.call(() => {
       const coords = getElementCoords('button[data-demo-btn="add-lead"]');
       addRipple(coords.x, coords.y);
@@ -471,7 +471,7 @@ export function ProductDemoPlayer({
       if (btn) btn.click();
     }, [], 'crm+=4.5');
 
-    // Fill new lead name
+    // Chuẩn bị nhập tên lead mới.
     tl.to(viewport, {
       x: 0,
       y: 0,
@@ -486,7 +486,7 @@ export function ProductDemoPlayer({
       ease: 'power2.inOut'
     }, 'crm+=5.5');
 
-    // Type new lead name
+    // Mô phỏng nhập tên lead mới.
     const leadName = 'Nguyễn Hoàng Nam';
     const nameObj = { charCount: 0 };
     tl.to(nameObj, {
@@ -505,7 +505,7 @@ export function ProductDemoPlayer({
       }
     }, 'crm+=6.4');
 
-    // Type notes
+    // Mô phỏng nhập ghi chú.
     tl.to(cursor, {
       x: () => getElementCoords('textarea[placeholder*="Khách muốn chụp phong cách nhẹ nhàng"]').x,
       y: () => getElementCoords('textarea[placeholder*="Khách muốn chụp phong cách nhẹ nhàng"]').y,
@@ -538,7 +538,7 @@ export function ProductDemoPlayer({
       }
     }, 'crm+=8.3');
 
-    // Move to Submit Lead button
+    // Di chuyển đến nút lưu lead.
     tl.to(cursor, {
       x: () => getElementCoords('button[type="submit"]').x,
       y: () => getElementCoords('button[type="submit"]').y,
@@ -553,7 +553,7 @@ export function ProductDemoPlayer({
       ease: 'power2.inOut'
     }, 'crm+=9.5');
 
-    // Click submit
+    // Mô phỏng nhấn nút lưu.
     tl.call(() => {
       const coords = getElementCoords('button[type="submit"]');
       addRipple(coords.x, coords.y);
@@ -562,11 +562,11 @@ export function ProductDemoPlayer({
       if (btn) btn.click();
     }, [], 'crm+=10.2');
 
-    // Hide marketing text
+    // Ẩn nội dung giới thiệu.
     tl.to('#marketing-overlay-card', { opacity: 0, y: -20, duration: 0.5 }, 'crm+=10.2');
     tl.call(() => setMarketingText(prev => ({ ...prev, visible: false })), [], 'crm+=10.7');
 
-    // --- SCENE 5: CONTRACTS & ORDERS WORKSPACE (31s - 38s) ---
+    // Cảnh 5: hợp đồng và đơn hàng, từ 31 đến 38 giây.
     tl.addLabel('orders', 31);
     tl.call(() => {
       setStatusMessage("Giám sát Hợp đồng & Doanh thu...");
@@ -578,7 +578,7 @@ export function ProductDemoPlayer({
       triggerSound('whoosh');
     }, [], 'orders');
 
-    // Transition Orders tab
+    // Chuyển sang tab đơn hàng.
     tl.to(viewport, { scale: 0.9, x: 0, y: 0, filter: 'blur(3px)', duration: 1, ease: 'power3.inOut' }, 'orders');
     tl.call(() => {
       const tabBtn = document.querySelector('button[data-demo-tab="orders"]') as HTMLButtonElement;
@@ -586,7 +586,7 @@ export function ProductDemoPlayer({
     }, [], 'orders+=0.5');
     tl.to(viewport, { scale: 1, filter: 'blur(0px)', duration: 1.2, ease: 'power3.out' }, 'orders+=1.2');
 
-    // Focus on Orders list
+    // Đưa khung nhìn vào danh sách đơn hàng.
     tl.to(viewport, {
       x: () => getFocusParams('table', 1.15).x,
       y: () => getFocusParams('table', 1.15).y,
@@ -601,11 +601,11 @@ export function ProductDemoPlayer({
       ease: 'power2.inOut'
     }, 'orders+=1.5');
 
-    // Hide marketing text
+    // Ẩn nội dung giới thiệu.
     tl.to('#marketing-overlay-card', { opacity: 0, y: -20, duration: 0.5 }, 'orders+=5.5');
     tl.call(() => setMarketingText(prev => ({ ...prev, visible: false })), [], 'orders+=6');
 
-    // --- SCENE 6: STAFF COORDINATION / INTERNAL CHAT (38s - 48s) ---
+    // Cảnh 6: phối hợp nhân sự và chat nội bộ, từ 38 đến 48 giây.
     tl.addLabel('chat', 38);
     tl.call(() => {
       setStatusMessage("Phối hợp thời gian thực thông qua Chat nội bộ...");
@@ -617,7 +617,7 @@ export function ProductDemoPlayer({
       triggerSound('whoosh');
     }, [], 'chat');
 
-    // Transition Chat tab
+    // Chuyển sang tab trò chuyện.
     tl.to(viewport, { scale: 0.9, x: 0, y: 0, filter: 'blur(3px)', duration: 1, ease: 'power3.inOut' }, 'chat');
     tl.call(() => {
       const tabBtn = document.querySelector('button[data-demo-tab="chat"]') as HTMLButtonElement;
@@ -625,7 +625,7 @@ export function ProductDemoPlayer({
     }, [], 'chat+=0.5');
     tl.to(viewport, { scale: 1, filter: 'blur(0px)', duration: 1.2, ease: 'power3.out' }, 'chat+=1.2');
 
-    // Focus Chat container
+    // Đưa khung nhìn vào vùng trò chuyện.
     tl.to(viewport, {
       x: () => getFocusParams('#chat-messages-container', 1.15).x,
       y: () => getFocusParams('#chat-messages-container', 1.15).y,
@@ -634,7 +634,7 @@ export function ProductDemoPlayer({
       ease: 'power2.inOut'
     }, 'chat+=1.5');
 
-    // Focus Chat input
+    // Focus ô nhập tin nhắn.
     tl.to(cursor, {
       x: () => getElementCoords('#chat-input-field').x,
       y: () => getElementCoords('#chat-input-field').y,
@@ -650,7 +650,7 @@ export function ProductDemoPlayer({
     }, 'chat+=2.5');
     tl.call(() => triggerSound('click'), [], 'chat+=3.5');
 
-    // Type chat content
+    // Mô phỏng nhập nội dung chat.
     const chatMsg = 'Chúc toàn ekip một tuần mới chốt thật nhiều hợp đồng lớn nhé! 🚀';
     const chatObj = { charCount: 0 };
     tl.to(chatObj, {
@@ -669,7 +669,7 @@ export function ProductDemoPlayer({
       }
     }, 'chat+=3.6');
 
-    // Move to send btn
+    // Di chuyển con trỏ đến nút gửi.
     tl.to(cursor, {
       x: () => getElementCoords('#chat-send-btn').x,
       y: () => getElementCoords('#chat-send-btn').y,
@@ -684,7 +684,7 @@ export function ProductDemoPlayer({
       ease: 'power2.inOut'
     }, 'chat+=5');
 
-    // Click Send
+    // Mô phỏng nhấn nút gửi.
     tl.call(() => {
       const coords = getElementCoords('#chat-send-btn');
       addRipple(coords.x, coords.y);
@@ -693,18 +693,18 @@ export function ProductDemoPlayer({
       if (btn) btn.click();
     }, [], 'chat+=5.7');
 
-    // Wait and hide overlays
+    // Chờ rồi ẩn các lớp giới thiệu.
     tl.to('#marketing-overlay-card', { opacity: 0, y: -20, duration: 0.5 }, 'chat+=8.5');
     tl.call(() => setMarketingText(prev => ({ ...prev, visible: false })), [], 'chat+=9');
 
-    // --- SCENE 7: CINEMATIC OUTRO & CALL TO ACTION (48s - 54s) ---
+    // Cảnh 7: kết thúc và lời kêu gọi hành động, từ 48 đến 54 giây.
     tl.addLabel('outro', 48);
     tl.call(() => {
       setStatusMessage("Hoàn tất buổi trình diễn.");
       triggerSound('whoosh');
     }, [], 'outro');
 
-    // Website fades away and zooms out into blur
+    // Làm mờ và thu nhỏ giao diện để chuyển sang phần kết thúc.
     tl.to(viewport, {
       scale: 0.5,
       x: 0,
@@ -715,16 +715,16 @@ export function ProductDemoPlayer({
       ease: 'power3.inOut'
     }, 'outro');
 
-    // Automatically stop recording when outro completes
+    // Tự dừng ghi hình khi phần kết thúc hoàn tất.
     tl.call(() => {
       stopScreenRecording();
     }, [], 'outro+=2.2');
   };
 
-  // Screen recording trigger functions using standard browser Screen Capture stream
+  // Các hàm ghi màn hình dùng Screen Capture API tiêu chuẩn của trình duyệt.
   const startScreenRecording = async () => {
     try {
-      // Capture viewport area
+      // Ghi lại vùng viewport hiện tại.
       if (!(navigator.mediaDevices && (navigator.mediaDevices as any).getDisplayMedia)) {
         alert("Trình duyệt không hỗ trợ ghi hình màn hình. Vui lòng sử dụng Chrome, Edge hoặc Firefox.");
         return false;
@@ -782,7 +782,7 @@ export function ProductDemoPlayer({
       recorder.start(1000); // chunk every 1 second
       setIsRecording(true);
       
-      // Stop stream tracks if user cancels sharing
+      // Dừng toàn bộ track khi người dùng hủy chia sẻ màn hình.
       captureStream.getVideoTracks()[0].onended = () => {
         stopScreenRecording();
       };
@@ -804,7 +804,7 @@ export function ProductDemoPlayer({
     }
   };
 
-  // Launch demo with video recording enabled
+  // Chạy bản demo và bật ghi video.
   const handleStartDemoWithRecord = async () => {
     const success = await startScreenRecording();
     if (success) {
@@ -812,7 +812,7 @@ export function ProductDemoPlayer({
     }
   };
 
-  // Run on first play click
+  // Khởi tạo timeline ở lần nhấn phát đầu tiên.
   const handleStartDemo = () => {
     setShowWelcome(false);
     setIsPlaying(true);
@@ -825,7 +825,7 @@ export function ProductDemoPlayer({
     }, 100);
   };
 
-  // Toggle Play / Pause
+  // Chuyển đổi giữa phát và tạm dừng.
   const handleTogglePlay = () => {
     if (showWelcome) {
       handleStartDemo();
@@ -838,7 +838,7 @@ export function ProductDemoPlayer({
       isPlayingRef.current = false;
     } else {
       if (timelineRef.current) {
-        // If outro is visible, restart
+        // Khởi động lại nếu màn hình kết thúc đang hiển thị.
         if (showOutro) {
           handleRestartDemo();
         } else {
@@ -852,7 +852,7 @@ export function ProductDemoPlayer({
     }
   };
 
-  // Monitor recording track duration
+  // Theo dõi thời lượng track đang ghi.
   useEffect(() => {
     let interval: any;
     if (isRecording && timelineRef.current) {
@@ -867,7 +867,7 @@ export function ProductDemoPlayer({
     return () => clearInterval(interval);
   }, [isRecording]);
 
-  // Jump to specific label (welcome / login / dashboard / crm / orders / chat / outro)
+  // Chuyển nhanh đến một mốc của timeline: mở đầu, login, dashboard, CRM, đơn hàng, chat hoặc kết thúc.
   const handleJumpToStep = (label: string, stepIdx: number) => {
     if (showWelcome) {
       setShowWelcome(false);
@@ -887,11 +887,11 @@ export function ProductDemoPlayer({
 
     const tl = timelineRef.current;
     if (tl) {
-      // If jumping to dashboard or later and not authenticated, we quick log in first!
+      // Nếu chuyển đến dashboard hoặc đoạn sau mà chưa xác thực, đăng nhập trước.
       if (label !== 'intro' && label !== 'login' && !isAuthenticated) {
         setStatusMessage("Đang đăng nhập nhanh...");
         handleQuickLogin('viet@studio.com', 'admin123');
-        // Wait briefly for auth then seek
+        // Chờ xác thực trong thời gian ngắn rồi chuyển đến mốc yêu cầu.
         setTimeout(() => {
           tl.seek(label);
           tl.play();
@@ -901,7 +901,7 @@ export function ProductDemoPlayer({
         return;
       }
 
-      // If jumping back to login from authenticated view, we log out
+      // Đăng xuất nếu chuyển ngược từ màn hình đã xác thực về login.
       if (label === 'login' && isAuthenticated) {
         handleLogout();
         setTimeout(() => {
@@ -920,7 +920,7 @@ export function ProductDemoPlayer({
     }
   };
 
-  // Restart Demo
+  // Khởi động lại bản demo.
   const handleRestartDemo = () => {
     setShowOutro(false);
     setShowWelcome(false);
@@ -948,13 +948,13 @@ export function ProductDemoPlayer({
     }
   };
 
-  // Exit demo and trigger database cleanup
+  // Thoát demo và yêu cầu dọn dữ liệu demo.
   const handleExitDemo = async () => {
     if (timelineRef.current) {
       timelineRef.current.kill();
     }
     
-    // Reset camera viewport style
+    // Khôi phục style viewport của camera.
     const viewport = document.getElementById('demo-camera-viewport');
     if (viewport) {
       viewport.style.transform = '';
@@ -977,7 +977,7 @@ export function ProductDemoPlayer({
     }
   };
 
-  // Sync speed scaling in GSAP
+  // Đồng bộ hệ số tốc độ với timeline GSAP.
   useEffect(() => {
     if (timelineRef.current) {
       timelineRef.current.timeScale(speed);
@@ -997,7 +997,7 @@ export function ProductDemoPlayer({
     if (!timelineRef.current) return 0;
     const time = timelineRef.current.time();
     
-    // Check timing thresholds corresponding to GSAP label offsets
+    // Kiểm tra các mốc thời gian tương ứng với label trong GSAP.
     if (time >= 48) return 6; // Outro
     if (time >= 38) return 5; // Chat
     if (time >= 31) return 4; // Orders

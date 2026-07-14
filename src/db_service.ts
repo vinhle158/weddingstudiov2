@@ -4,7 +4,7 @@ import crypto from 'crypto';
 
 export const prisma = new PrismaClient();
 
-// Types matching the schema
+// Các kiểu dữ liệu tương ứng với Prisma schema.
 export interface User {
   id: string;
   full_name: string;
@@ -332,7 +332,7 @@ export class LocalDatabase {
       console.log('Connecting to PostgreSQL database (PostgreSQL-only Active Cache mode)...');
       await prisma.$queryRaw`SELECT 1`;
 
-      // Seed roles if empty
+      // Tạo các role mặc định khi database chưa có role.
       const roleCount = await prisma.role.count();
       if (roleCount === 0) {
         console.log('Seeding default roles to PostgreSQL...');
@@ -340,7 +340,7 @@ export class LocalDatabase {
           await prisma.role.create({ data: role });
         }
       } else {
-        // Sync permissions for existing default roles (in case code added new permissions)
+        // Đồng bộ permission mới vào các role mặc định đã tồn tại.
         for (const role of defaultRoles) {
           const existing = await prisma.role.findUnique({ where: { id: role.id } });
           if (existing) {
@@ -355,7 +355,7 @@ export class LocalDatabase {
         }
       }
 
-      // Seed users if empty
+      // Tạo người dùng seed khi database chưa có tài khoản.
       const userCount = await prisma.user.count();
       if (userCount === 0) {
         console.log('Seeding default users to PostgreSQL...');
@@ -365,7 +365,7 @@ export class LocalDatabase {
         }
       }
 
-      // Load all records from PostgreSQL into memory cache
+      // Nạp dữ liệu PostgreSQL vào bộ nhớ đệm của tiến trình.
       console.log('Loading database records from PostgreSQL into active memory cache...');
       const roles = await prisma.role.findMany();
       const users = await prisma.user.findMany();
@@ -437,7 +437,7 @@ export class LocalDatabase {
       return;
     }
 
-    // Queue the PostgreSQL sync to prevent concurrent database transaction/overwrite collisions
+    // Xếp hàng lượt đồng bộ PostgreSQL để tránh transaction đồng thời ghi đè lẫn nhau.
     this.writeQueue = this.writeQueue
       .then(() => this.syncToPostgres(data))
       .catch(err => {
@@ -448,7 +448,7 @@ export class LocalDatabase {
   private static async syncToPostgres(data: DatabaseSchema) {
     try {
       await prisma.$transaction(async (tx) => {
-        // Sync tables
+        // Đồng bộ các bảng nghiệp vụ.
         await this.reconcileTable(tx, 'role', data.roles || [], ['name', 'display_name', 'permissions']);
         await this.reconcileTable(tx, 'user', data.users || [], ['full_name', 'email', 'password_hash', 'role_id', 'is_active', 'created_at', 'session_version']);
         await this.reconcileTable(tx, 'customer', data.customers || [], ['full_name', 'phone', 'email', 'address', 'notes', 'birthday', 'wedding_date', 'facebook_url', 'created_at', 'updated_at']);
@@ -465,7 +465,7 @@ export class LocalDatabase {
         await this.reconcileTable(tx, 'databaseBackup', data.backups || [], ['filename', 'created_at', 'size_bytes', 'trigger_type', 'status']);
         await this.reconcileTable(tx, 'lead', data.leads || [], ['date', 'customer_name', 'phone', 'source', 'interested_packages', 'sales_step', 'follow_up_status', 'status', 'revenue', 'success_reason', 'failure_reason', 'assigned_sale_id', 'support_needed', 'notes', 'admin_feedbacks', 'created_at', 'updated_at']);
 
-        // Sync StudioSettings singleton
+        // Đồng bộ bản ghi cấu hình StudioSettings duy nhất.
         if (data.studio_settings) {
           const dbSettings = await tx.studioSettings.findUnique({
             where: { id: 'singleton' }
@@ -523,7 +523,7 @@ export class LocalDatabase {
     const model = tx[modelName];
     const dbRecords = await model.findMany();
     
-    // 1. Delete records in DB but not in memory
+    // 1. Xóa bản ghi còn trong database nhưng không còn trong bộ nhớ đệm.
     const memoryIds = new Set(memoryRecords.map(r => r.id));
     const idsToDelete = dbRecords
       .filter((dbR: any) => !memoryIds.has(dbR.id))
@@ -535,7 +535,7 @@ export class LocalDatabase {
       });
     }
     
-    // 2. Create or Update
+    // 2. Tạo mới hoặc cập nhật bản ghi.
     for (const mR of memoryRecords) {
       const dbR = dbRecords.find((r: any) => r.id === mR.id);
       if (!dbR) {
@@ -598,7 +598,7 @@ export class LocalDatabase {
     return `${prefix}${formattedNum}`;
   }
 
-  // Backwards compatibility stubs for DB management
+  // Các hàm tương thích ngược cho luồng quản lý database cũ.
   public static getDeadLetterQueue() { return []; }
   public static getConflicts() { return []; }
   public static async retryDeadLetterItem(id: string) { return true; }

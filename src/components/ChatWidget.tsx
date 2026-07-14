@@ -28,7 +28,7 @@ export default function ChatWidget({ userName, userEmail, placement = 'desktop' 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Maintain a random session ID for conversation state
+  // Duy trì session ID ngẫu nhiên cho ngữ cảnh hội thoại.
   const sessionId = useMemo(() => {
     return 'session-' + Math.random().toString(36).substring(2, 15);
   }, []);
@@ -43,7 +43,7 @@ export default function ChatWidget({ userName, userEmail, placement = 'desktop' 
 
   const [messages, setMessages] = useState<Message[]>([]);
 
-  // Initialize with greeting
+  // Khởi tạo hội thoại bằng lời chào.
   useEffect(() => {
     setMessages([
       {
@@ -55,7 +55,7 @@ export default function ChatWidget({ userName, userEmail, placement = 'desktop' 
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom of chat
+  // Tự cuộn xuống cuối hội thoại.
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
@@ -125,7 +125,7 @@ export default function ChatWidget({ userName, userEmail, placement = 'desktop' 
         content = line.substring(line.indexOf('-') + 1).trim();
       }
 
-      // Parse **bold** and *italic*
+      // Phân tích cú pháp **in đậm** và *in nghiêng*.
       const parts = content.split('**');
       const renderedText = parts.map((part, pIdx) => {
         if (pIdx % 2 === 1) {

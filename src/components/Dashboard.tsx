@@ -116,17 +116,17 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // States for work history, progress, and task trace
+  // State lịch sử công việc, tiến độ và truy vết task.
   const [activeTraceTab, setActiveTraceTab] = useState<'pipeline' | 'task' | 'staff'>(isStaff ? 'task' : 'pipeline');
   const [selectedTraceTaskId, setSelectedTraceTaskId] = useState<string>('');
   const [selectedTraceUserId, setSelectedTraceUserId] = useState<string>('');
   const [taskUpdates, setTaskUpdates] = useState<any[]>([]);
   const [updatesLoading, setUpdatesLoading] = useState<boolean>(false);
 
-  // Gantt Bubble popup state
+  // State popup chi tiết trên biểu đồ Gantt.
   const [activeGanttBubbleOrderId, setActiveGanttBubbleOrderId] = useState<string | null>(null);
   
-  // Gantt Timeframe Range Switcher state: 'week' (7 days) or 'month' (calendar month)
+  // State khoảng thời gian Gantt: tuần bảy ngày hoặc tháng dương lịch.
   const [ganttRange, setGanttRange] = useState<'week' | 'month'>('month');
 
   const handleSelectTraceTask = async (taskId: string) => {
@@ -180,17 +180,17 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
       setDashboardAlerts(unreadNotifications);
       setShowDashboardAlerts(true);
 
-      // Automatically select first task or staff if any exist for tracing
+      // Tự chọn task hoặc nhân sự đầu tiên khi có dữ liệu để truy vết.
       if (tasksData && tasksData.length > 0) {
         handleSelectTraceTask(tasksData[0].id);
       }
       if (usersData && usersData.length > 0) {
-        // Find first staff user
+        // Tìm tài khoản nhân viên đầu tiên.
         const firstStaff = usersData.find((u: any) => u.role_id === 'role-photographer' || u.role_id === 'role-editor' || u.role_id === 'role-staff');
         setSelectedTraceUserId(firstStaff?.id || usersData[0].id);
       }
 
-      // Filter staff tasks locally
+      // Lọc task của nhân sự ngay trên dữ liệu đã tải.
       if (userRole === 'staff' || userRole === 'photographer' || userRole === 'editor') {
         const staffTasksData = tasksData.filter((t: any) => t.assigned_to === userId);
         setStaffTasks(staffTasksData);
@@ -240,7 +240,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
     
     const newStatus = statuses[newIndex];
     
-    // Safety role check for going backward
+    // Kiểm tra role trước khi cho phép chuyển trạng thái theo chiều lùi.
     if (newIndex < currentIndex && userRole !== 'admin' && userRole !== 'manager') {
       showFeedback('Chỉ Quản lý hoặc Quản trị viên mới có quyền dời ngược trạng thái đơn hàng.', 'error');
       return;
@@ -317,7 +317,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
     const dateRange: Date[] = [];
     
     if (ganttRange === 'week') {
-      // Find Monday of the current week
+      // Tìm ngày thứ Hai của tuần hiện tại.
       const day = today.getDay();
       const diff = today.getDate() - day + (day === 0 ? -6 : 1);
       const monday = new Date(today);
@@ -328,7 +328,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
         dateRange.push(addDays(monday, i));
       }
     } else {
-      // Current Calendar Month (from 1st to last day of month)
+      // Khoảng tháng hiện tại, từ ngày đầu đến ngày cuối tháng.
       const year = today.getFullYear();
       const month = today.getMonth();
       const firstDay = new Date(year, month, 1);
@@ -1127,7 +1127,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
                             <button
                               type="button"
                               onClick={() => {
-                                // Find customer
+                                // Tìm khách hàng của đơn.
                                 const customerObj = customers.find(c => c.full_name === traceTask.customer_name);
                                 if (customerObj) {
                                   onNavigate('customers', { selectCustomerId: customerObj.id });
@@ -1492,7 +1492,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
               </div>
             </div>
           ) : (
-            /* Staff Active Tasks List */
+            /* Danh sách công việc đang hoạt động của nhân sự. */
             <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
               <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                 <div className="flex items-center space-x-2">

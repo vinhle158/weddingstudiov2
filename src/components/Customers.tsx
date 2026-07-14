@@ -36,7 +36,7 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Form states
+  // State biểu mẫu khách hàng.
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formName, setFormName] = useState('');

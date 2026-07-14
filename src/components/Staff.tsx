@@ -28,7 +28,7 @@ export default function Staff({ userRole }: StaffProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // User form states
+  // State biểu mẫu tài khoản.
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
@@ -39,7 +39,7 @@ export default function Staff({ userRole }: StaffProps) {
   const [userIsActive, setUserIsActive] = useState(true);
   const [userError, setUserError] = useState<string | null>(null);
 
-  // Role form states
+  // State biểu mẫu vai trò.
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [isEditingRole, setIsEditingRole] = useState(false);
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);

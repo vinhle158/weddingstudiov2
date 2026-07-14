@@ -54,7 +54,7 @@ interface SettingsProps {
 export default function Settings({ onSettingsSaved }: SettingsProps) {
   const [activeSubTab, setActiveSubTab] = useState<'info' | 'database'>('info');
   
-  // Settings Form State
+  // State biểu mẫu cấu hình Studio.
   const [settings, setSettings] = useState<StudioSettings>({
     name: 'The Will Studio',
     phone: '',
@@ -72,7 +72,7 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsMsg, setSettingsMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-  // Backup List State
+  // State danh sách backup JSON trong ứng dụng.
   const [backups, setBackups] = useState<BackupItem[]>([]);
   const [loadingBackups, setLoadingBackups] = useState(false);
   const [creatingBackup, setCreatingBackup] = useState(false);
@@ -80,14 +80,14 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [backupMsg, setBackupMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-  // Import State
+  // State import dữ liệu.
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   
-  // Confirm Modal State
+  // State hộp thoại xác nhận.
   const [showRestoreConfirm, setShowRestoreConfirm] = useState<BackupItem | null>(null);
 
-  // System Status State
+  // State trạng thái hệ thống.
   const [systemStatus, setSystemStatus] = useState<any>(null);
   const [loadingSystemStatus, setLoadingSystemStatus] = useState(false);
   const [systemStatusError, setSystemStatusError] = useState<string | null>(null);
@@ -164,7 +164,7 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
     const token = localStorage.getItem('studio_token');
     if (!token) return;
     
-    // Programmatically trigger a file download using standard form/link behavior to include the Bearer Token
+    // Tạo lượt tải file bằng request có Bearer Token thay vì mở URL trực tiếp.
     fetch('/api/database/export', {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -227,7 +227,7 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
       setBackups([newBackup, ...backups]);
       setBackupMsg({ type: 'success', text: 'Đã tạo bản sao lưu vật lý thành công!' });
       
-      // Update local last backup time
+      // Cập nhật thời điểm backup gần nhất trên giao diện.
       setSettings(prev => ({ ...prev, last_backup_time: newBackup.created_at }));
       setTimeout(() => setBackupMsg(null), 4000);
     } catch (err: any) {
@@ -407,7 +407,7 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
       </div>
 
       {activeSubTab === 'info' && (
-        /* STUDIO INFO SETTINGS PANEL */
+        /* Khu vực cấu hình thông tin Studio. */
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -581,7 +581,7 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
       )}
 
       {activeSubTab === 'database' && (
-        /* DATABASE MANAGEMENT & BACKUPS PANEL */
+        /* Khu vực quản lý database và backup JSON trong ứng dụng. */
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

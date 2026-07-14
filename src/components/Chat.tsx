@@ -103,7 +103,7 @@ export default function Chat({ userId, isMobile, onNavigate }: ChatProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Fetch private chat contacts
+  // Tải danh sách nhân sự có thể nhắn tin riêng.
   const fetchContacts = async () => {
     try {
       setLoadingContacts(true);
@@ -120,7 +120,7 @@ export default function Chat({ userId, isMobile, onNavigate }: ChatProps) {
     }
   };
 
-  // Fetch messages for the currently selected channel
+  // Tải lịch sử của kênh đang được chọn.
   const updateMessage = useCallback((message: ChatMessage) => {
     setMessages(previous => {
       const existingIndex = previous.findIndex(item => item.id === message.id);
@@ -225,7 +225,7 @@ export default function Chat({ userId, isMobile, onNavigate }: ChatProps) {
     return () => window.clearInterval(interval);
   }, [connectionStatus, fetchMessages, fetchUnread]);
 
-  // Scroll to bottom on messages load/update
+  // Cuộn xuống cuối khi tải hoặc nhận thêm tin nhắn.
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container || container.scrollHeight - container.scrollTop - container.clientHeight < 180) {

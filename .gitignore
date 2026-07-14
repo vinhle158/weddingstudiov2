@@ -4,6 +4,8 @@ dist/
 coverage/
 chat_uploads/
 data/chat_uploads/
+backups/
+model.nlp
 .DS_Store
 *.log
 .env*

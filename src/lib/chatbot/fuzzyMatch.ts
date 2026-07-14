@@ -13,7 +13,7 @@ async function getCustomers(): Promise<Customer[]> {
       lastFetched = now;
     } catch (err) {
       console.error('Failed to fetch customers for fuzzy matching:', err);
-      // Fallback: if we have cached customers, keep them, otherwise return empty
+      // Khi API lỗi, dùng danh sách khách hàng đã cache nếu có.
     }
   }
   return cachedCustomers;
@@ -35,7 +35,7 @@ export async function resolveCustomer(rawCustomerName: string): Promise<ResolveC
     };
   }
 
-  // Set up Fuse.js
+  // Cấu hình Fuse.js cho tìm kiếm gần đúng.
   const fuse = new Fuse(customers, {
     keys: ['full_name'],
     threshold: 0.4,
@@ -51,24 +51,24 @@ export async function resolveCustomer(rawCustomerName: string): Promise<ResolveC
     };
   }
 
-  // If there's a very confident single match
+  // Trả ngay khi chỉ có một kết quả với độ tin cậy cao.
   const bestMatch = results[0];
   
   if (results.length === 1) {
     return { customer: bestMatch.item };
   }
 
-  // If there are multiple matches, check how close the scores are
+  // Khi có nhiều kết quả, so sánh mức chênh lệch điểm.
   const secondMatch = results[1];
   const bestScore = bestMatch.score ?? 1;
   const secondScore = secondMatch.score ?? 1;
 
-  // If the best match is significantly better than the second, choose it
+  // Chọn kết quả đầu nếu tốt hơn rõ rệt so với kết quả thứ hai.
   if (secondScore - bestScore > 0.15) {
     return { customer: bestMatch.item };
   }
 
-  // Otherwise, ask for clarification listing up to 4 options
+  // Nếu vẫn mơ hồ, yêu cầu làm rõ với tối đa bốn lựa chọn.
   const options = results.slice(0, 4).map(r => r.item);
   let optionsText = options.map((c, i) => `${i + 1}. ${c.full_name} (${c.phone})`).join('\n');
   

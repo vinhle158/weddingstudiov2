@@ -23,13 +23,13 @@ export default function MobileCustomers({ userRole, onNavigate }: MobileCustomer
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Selected Customer details
+  // Chi tiết khách hàng đang chọn.
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [customerOrders, setCustomerOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // Form modal
+  // State hộp thoại biểu mẫu.
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formName, setFormName] = useState('');

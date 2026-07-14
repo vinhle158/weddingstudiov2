@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 import { BrowserNotificationStatus, getBrowserNotificationStatus, requestBrowserNotifications, showBrowserNotification } from '../../lib/browserNotifications';
 import MobileLayout from './MobileLayout';
 
-// Import screens
+// Các màn hình chức năng trên mobile.
 import MobileDashboard from './screens/MobileDashboard';
 import MobileLeads from './screens/MobileLeads';
 import MobileOrders from './screens/MobileOrders';
@@ -17,7 +17,7 @@ import MobileStaff from './screens/MobileStaff';
 import MobileSettings from './screens/MobileSettings';
 import ChatWidget from '../ChatWidget';
 
-// Icons for launcher menu
+// Biểu tượng dùng trong menu mở nhanh.
 import { Users, Target, Bell, ShieldAlert, Settings, MessageSquare, LogOut, Sparkles } from 'lucide-react';
 
 interface MobileAppProps {
@@ -41,7 +41,7 @@ export default function MobileApp({ user, role, onLogout, studioSettings }: Mobi
     return role.permissions.includes(permission) || role.id === 'role-admin';
   };
 
-  // Poll for notifications
+  // Kiểm tra thông báo mới theo chu kỳ.
   const fetchUnreadCount = async () => {
     try {
       const notifs = await apiRequest('/api/notifications');
@@ -112,7 +112,7 @@ export default function MobileApp({ user, role, onLogout, studioSettings }: Mobi
     setNavigationArg(arg);
   };
 
-  // Map tab IDs to screen titles
+  // Ánh xạ mã tab sang tiêu đề màn hình.
   const getScreenTitle = (tab: string) => {
     switch (tab) {
       case 'dashboard': return 'Tổng quan Studio';

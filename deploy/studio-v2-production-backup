@@ -44,9 +44,9 @@ fi
 plain_dump="${work_dir}/${database_name}_${timestamp}.dump"
 plain_uploads="${work_dir}/chat_uploads_${timestamp}.tar"
 
-# Dump the database first. Files created after this point may be extra in the
-# archive, but a restored database will never reference a file omitted by an
-# earlier file snapshot.
+# Dump database trước khi đóng gói ảnh. File ảnh phát sinh sau thời điểm này có thể
+# xuất hiện dư trong archive, nhưng database khôi phục sẽ không tham chiếu đến file
+# đã bị bỏ sót do chụp ảnh sớm hơn database.
 docker exec "${DB_CONTAINER}" pg_dump \
   --username "${database_user}" \
   --dbname "${database_name}" \

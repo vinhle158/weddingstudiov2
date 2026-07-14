@@ -1,15 +1,15 @@
 import { QueryResult } from './queryBuilder';
 import { Intent } from './types';
 
-// Helper to format currency to VND format
+// Định dạng số tiền theo đơn vị VND.
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 }
 
-// Helper to translate status codes to Vietnamese descriptions
+// Dịch mã trạng thái sang mô tả tiếng Việt.
 export function translateStatus(status: string): string {
   const map: Record<string, string> = {
-    // Order statuses
+    // Trạng thái đơn hàng.
     new: 'Đơn hàng mới',
     confirmed: 'Đã xác nhận cọc',
     shooting: 'Đang thực hiện chụp',
@@ -17,15 +17,15 @@ export function translateStatus(status: string): string {
     ready: 'Sẵn sàng bàn giao',
     delivered: 'Đã hoàn thành / Bàn giao',
     cancelled: 'Đã hủy',
-    // Task statuses
+    // Trạng thái công việc.
     pending: 'Chờ thực hiện',
     in_progress: 'Đang làm',
     done: 'Hoàn tất',
-    // Lead statuses
+    // Trạng thái khách hàng tiềm năng.
     consulting: 'Đang tư vấn',
     won: 'Thành công',
     lost: 'Thất bại',
-    // Priorities
+    // Mức độ ưu tiên.
     low: 'THẤP',
     normal: 'THƯỜNG',
     high: 'KHẨN CẤP'
@@ -93,7 +93,7 @@ function renderCustomerList(data: QueryResult): string {
   const { customer, customers = [], leads = [], tasks = [] } = data;
 
   if (customer) {
-    // P3-3: Detailed customer profile display contact info, address, leads & tasks (no orders detailed history to avoid overlap)
+    // P3-3: Hồ sơ khách hàng hiển thị liên hệ, địa chỉ, lead và task; không lặp lịch sử chi tiết đơn hàng.
     let details = `Dưới đây là thông tin liên hệ và hồ sơ khách hàng **${customer.full_name}**:\n`;
     details += `• **Số điện thoại**: ${customer.phone}\n`;
     if (customer.email) details += `• **Email**: ${customer.email}\n`;

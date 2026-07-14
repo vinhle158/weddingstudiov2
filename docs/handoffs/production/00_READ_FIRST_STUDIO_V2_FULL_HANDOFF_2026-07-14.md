@@ -292,9 +292,10 @@ Nếu cần rollback, dừng và lập kế hoạch trước. Không tự chạy
 ### Trong repo chuẩn
 
 ```text
-HANDOFF_CHAT_NATIVE_LOCAL_2026-07-13.md
-PLAN_PRODUCTION_CHAT_CUTOVER_2026-07-14.md
-00_READ_FIRST_STUDIO_V2_FULL_HANDOFF_2026-07-14.md
+docs/handoffs/production/HANDOFF_CHAT_NATIVE_LOCAL_2026-07-13.md
+docs/handoffs/production/PLAN_PRODUCTION_CHAT_CUTOVER_2026-07-14.md
+docs/handoffs/production/00_READ_FIRST_STUDIO_V2_FULL_HANDOFF_2026-07-14.md
+docs/handoffs/production/BEAUTIFUL_STUDIO_V2_FULL_HANDOFF_2026-07-14.md
 Dockerfile
 docker-compose.prod.yml
 deploy/studio-v2-production-backup

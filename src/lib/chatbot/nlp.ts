@@ -80,7 +80,7 @@ const rules: Array<{ intent: Intent; phrases: string[] }> = [
 ];
 
 export async function initNlp(): Promise<void> {
-  // Kept for API compatibility. Deterministic rules require no model training or runtime files.
+  // Giữ hàm này để tương thích API; bộ quy tắc xác định không cần train model hoặc file runtime.
 }
 
 export async function classifyIntent(message: string): Promise<ClassifiedIntent> {

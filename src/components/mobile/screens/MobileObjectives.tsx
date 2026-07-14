@@ -16,7 +16,7 @@ export default function MobileObjectives({ userRole }: MobileObjectivesProps) {
       setLoading(true);
       const data = await apiRequest('/api/objectives');
       setObjectives(data || []);
-      // Expand first objective by default
+      // Mặc định mở rộng mục tiêu đầu tiên.
       if (data && data.length > 0) {
         setExpandedObj({ [data[0].id]: true });
       }
@@ -62,7 +62,7 @@ export default function MobileObjectives({ userRole }: MobileObjectivesProps) {
           {objectives.map(obj => {
             const isOpen = expandedObj[obj.id];
             
-            // Calculate overall progress of KRs
+            // Tính tiến độ tổng hợp của các kết quả then chốt.
             const krs = obj.key_results || [];
             const totalProgress = krs.reduce((acc: number, curr: any) => acc + (curr.current_progress || 0), 0);
             const totalTarget = krs.reduce((acc: number, curr: any) => acc + (curr.target_value || 100), 0);

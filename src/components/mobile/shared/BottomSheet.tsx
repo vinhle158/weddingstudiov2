@@ -16,7 +16,7 @@ export default function BottomSheet({
   children,
   maxHeight = '85vh'
 }: BottomSheetProps) {
-  // Prevent body scroll when open
+  // Khóa cuộn trang nền khi BottomSheet đang mở.
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';

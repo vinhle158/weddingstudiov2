@@ -1,4 +1,4 @@
-# Restore Studio V2 production backup
+# Khôi phục backup production của Studio V2
 
 Mỗi backup hợp lệ gồm ba file có cùng timestamp:
 

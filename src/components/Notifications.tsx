@@ -48,14 +48,14 @@ export default function Notifications({ userRole, userId, onNavigate, initialSel
   const [error, setError] = useState<string | null>(null);
   const notificationRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Announcement form states (Admin/Manager only)
+  // State tạo thông báo chung, chỉ dành cho admin và manager.
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
 
-  // Quick reply state for internal chat messages
+  // State trả lời nhanh tin nhắn nội bộ.
   const [quickReplyText, setQuickReplyText] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
   const [replySuccess, setReplySuccess] = useState<string | null>(null);
@@ -82,7 +82,7 @@ export default function Notifications({ userRole, userId, onNavigate, initialSel
   useEffect(() => {
     fetchNotificationsAndMessages();
     
-    // Poll for updates every 20 seconds for a responsive feel
+    // Kiểm tra cập nhật mỗi 20 giây để giao diện phản hồi kịp thời.
     const interval = setInterval(fetchNotificationsAndMessages, 20000);
     return () => clearInterval(interval);
   }, []);
@@ -163,7 +163,7 @@ export default function Notifications({ userRole, userId, onNavigate, initialSel
 
     try {
       setSendingReply(true);
-      // If Global Chat, receiver_id is null. If Private Chat, reply to sender.
+      // Kênh chung dùng receiver_id bằng null; tin riêng trả lời trực tiếp người gửi.
       const receiver_id = selectedItem.receiver_id === null ? null : selectedItem.sender_id;
       
       await apiRequest('/api/chat/messages', 'POST', {
@@ -174,7 +174,7 @@ export default function Notifications({ userRole, userId, onNavigate, initialSel
       setReplySuccess('Gửi phản hồi thành công!');
       setTimeout(() => setReplySuccess(null), 3000);
       
-      // Update local state immediately
+      // Cập nhật state giao diện ngay sau khi gửi thành công.
       const msgsData = await apiRequest('/api/chat/dashboard-messages').catch(() => []);
       setChatMessages(msgsData || []);
     } catch (err) {

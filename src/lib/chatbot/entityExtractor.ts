@@ -1,6 +1,6 @@
 import { ExtractedEntities, Intent } from './types';
 
-// Normalizer helper (strips accents for easier relative word matching)
+// Hàm chuẩn hóa bỏ dấu để so khớp từ tương đối dễ hơn.
 function normalizeText(text: string): string {
   let str = text.toLowerCase().trim();
   str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -13,7 +13,7 @@ export async function extractEntities(message: string, intent: Intent): Promise<
   const lowerMessage = message.toLowerCase().trim();
   const normalized = normalizeText(message);
 
-  // 1. Extract Order Code (e.g. HĐ-2026-0001)
+  // 1. Trích xuất mã đơn hàng, ví dụ HĐ-2026-0001.
   const orderCodeRegex = /(?:mã\s*đơn|đơn\s*hàng|hợp\s*đồng|hđ)\s*#?([A-Za-z0-9\-]+)/i;
   const orderCodeMatch = message.match(orderCodeRegex);
   if (orderCodeMatch) {
@@ -23,7 +23,7 @@ export async function extractEntities(message: string, intent: Intent): Promise<
     }
   }
 
-  // 2. Extract Month & Year
+  // 2. Trích xuất tháng và năm.
   const monthYearRegex = /tháng\s*(\d{1,2})(?:\s*(?:năm|\/)\s*(\d{4}))?/i;
   const monthYearMatch = message.match(monthYearRegex);
   if (monthYearMatch) {
@@ -33,7 +33,7 @@ export async function extractEntities(message: string, intent: Intent): Promise<
     }
   }
 
-  // 3. Extract Quarter
+  // 3. Trích xuất quý.
   const quarterRegex = /quý\s*([1-4])(?:\s*(?:năm|\/)\s*(\d{4}))?/i;
   const quarterMatch = message.match(quarterRegex);
   if (quarterMatch) {
@@ -43,7 +43,7 @@ export async function extractEntities(message: string, intent: Intent): Promise<
     }
   }
 
-  // 4. Extract Year alone
+  // 4. Trích xuất năm khi đứng riêng.
   const yearRegex = /năm\s*(\d{4})/i;
   const yearMatch = message.match(yearRegex);
   if (yearMatch && !entities.year) {
@@ -60,7 +60,7 @@ export async function extractEntities(message: string, intent: Intent): Promise<
     entities.limit = 5; // Default limit
   }
 
-  // 6. Relative range extraction (today, tomorrow, this week, next week)
+  // 6. Trích xuất khoảng tương đối như hôm nay, ngày mai, tuần này hoặc tuần sau.
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
   
@@ -91,7 +91,7 @@ export async function extractEntities(message: string, intent: Intent): Promise<
     entities.dateTo = `${todayStr}T23:59:59.999Z`;
   }
 
-  // 7. Default Time Range for Statistical Intent (if not explicitly extracted)
+  // 7. Dùng khoảng thời gian mặc định cho intent thống kê khi câu hỏi không nêu rõ.
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth() + 1; // 1-indexed
 
@@ -118,19 +118,19 @@ export async function extractEntities(message: string, intent: Intent): Promise<
     entities.year = currentYear - 1;
   }
 
-  // Fallback default years for month/quarter
+  // Dùng năm hiện tại khi câu hỏi theo tháng/quý không nêu rõ năm.
   if ((entities.month || entities.quarter) && !entities.year) {
     entities.year = currentYear;
   }
 
-  // 7.5. Extract Priority filter
+  // 7.5. Trích xuất bộ lọc độ ưu tiên.
   if (normalized.includes('khan cap') || normalized.includes('gap') || normalized.includes('khan_cap')) {
     entities.priority = 'high';
   } else if (normalized.includes('thuong') || normalized.includes('binh thuong')) {
     entities.priority = 'normal';
   }
 
-  // 8. Extract Customer Name (for CUSTOMER_LIST & CONTRACT_STATUS)
+  // 8. Trích xuất tên khách hàng cho CUSTOMER_LIST và CONTRACT_STATUS.
   if (intent === 'CUSTOMER_LIST' || intent === 'CONTRACT_STATUS') {
     const prefixes = [
       'tra cứu thông tin khách hàng',

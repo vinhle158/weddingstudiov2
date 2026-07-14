@@ -29,7 +29,7 @@ export async function apiRequest<T = any>(
       const errJson = await response.json();
       errorMsg = errJson.error || errorMsg;
     } catch (e) {
-      // ignore
+      // Bỏ qua lỗi đọc phản hồi vì request gốc sẽ trả lỗi phù hợp phía dưới.
     }
     throw new Error(errorMsg);
   }

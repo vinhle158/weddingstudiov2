@@ -58,13 +58,13 @@ export default function Objectives({ userRole }: ObjectivesProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Selection states
+  // State lựa chọn mục tiêu.
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string | null>(null);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [reportData, setReportData] = useState<any>(null);
   const [reportLoading, setReportLoading] = useState(false);
 
-  // Form Modals states
+  // State các hộp thoại biểu mẫu.
   const [isObjModalOpen, setIsObjModalOpen] = useState(false);
   const [isEditingObj, setIsEditingObj] = useState(false);
   const [objFormId, setObjFormId] = useState('');
@@ -85,25 +85,25 @@ export default function Objectives({ userRole }: ObjectivesProps) {
   const [progressHistory, setProgressHistory] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
-  // Form errors
+  // Lỗi kiểm tra biểu mẫu.
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Active Report Data for selected Objective (used for staff charts and history tracking)
+  // Dữ liệu báo cáo của mục tiêu đang chọn, dùng cho biểu đồ và lịch sử tiến độ.
   const [activeReportData, setActiveReportData] = useState<any>(null);
   const [activeReportLoading, setActiveReportLoading] = useState(false);
 
-  // Pushing / Urging staff states
+  // State gửi yêu cầu đôn đốc nhân sự.
   const [pushingKrId, setPushingKrId] = useState<string | null>(null);
   const [pushActionType, setPushActionType] = useState<'urge' | 'request_update' | null>(null);
   const [pushComment, setPushComment] = useState('');
   const [pushSuccessMsg, setPushSuccessMsg] = useState<string | null>(null);
   const [pushLoading, setPushLoading] = useState(false);
 
-  // View modes: 'list' (original tabular/list view), 'fishbone' (Ishikawa diagrams), 'mindmap' (visual mindmaps tree)
+  // Chế độ xem: danh sách, sơ đồ xương cá Ishikawa hoặc cây mindmap.
   const [viewMode, setViewMode] = useState<'list' | 'fishbone' | 'mindmap'>('list');
   const [collapsedDepts, setCollapsedDepts] = useState<Record<string, boolean>>({});
 
-  // Time filter states: 'all' (all objectives), 'week' (by week), 'month' (by month), 'year' (by year)
+  // Bộ lọc thời gian: toàn bộ, tuần, tháng hoặc năm.
   const [timeFilter, setTimeFilter] = useState<'all' | 'week' | 'month' | 'year'>('all');
   const [currentDatePivot, setCurrentDatePivot] = useState<Date>(new Date());
 
@@ -232,7 +232,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
     setFormError(null);
     setIsProgressModalOpen(true);
     
-    // Fetch progress updates history
+    // Tải lịch sử cập nhật tiến độ.
     try {
       setHistoryLoading(true);
       const updates = await apiRequest(`/api/key-results/${kr.id}/updates`);
@@ -258,7 +258,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
     }
   };
 
-  // Auto-fetch report data for active objective
+  // Tự tải báo cáo của mục tiêu đang được chọn.
   useEffect(() => {
     if (selectedObjectiveId) {
       const fetchActiveReport = async () => {
@@ -288,7 +288,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
       setPushSuccessMsg(actionType === 'request_update' ? 'Đã gửi yêu cầu báo cáo tiến độ!' : 'Đã gửi đôn đốc thúc đẩy công việc!');
       setTimeout(() => setPushSuccessMsg(null), 3000);
       
-      // Refresh objectives list
+      // Làm mới danh sách mục tiêu.
       fetchObjectives();
     } catch (err: any) {
       alert(err.message || 'Lỗi gửi yêu cầu đôn đốc');
@@ -313,7 +313,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
     }
   };
 
-  // Helper to calculate ranges for time filtering
+  // Tính khoảng ngày cho bộ lọc thời gian.
   const getWeekRange = (date: Date) => {
     const d = new Date(date);
     const day = d.getDay();
@@ -343,7 +343,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
     return { start, end };
   };
 
-  // Filtered objectives list based on timeFilter & currentDatePivot
+  // Lọc mục tiêu theo khoảng thời gian và mốc ngày hiện tại.
   const getFilteredObjectives = () => {
     return objectives.filter((obj) => {
       if (timeFilter === 'all') return true;
@@ -367,7 +367,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
   const filteredObjectives = getFilteredObjectives();
   const selectedObjective = filteredObjectives.find(o => o.id === selectedObjectiveId) || filteredObjectives[0];
 
-  // Group key results by department for fishbone & mindmap views
+  // Nhóm kết quả then chốt theo bộ phận cho sơ đồ xương cá và mindmap.
   const getTasksByDept = (obj: any) => {
     const krs = obj?.key_results || [];
     const map: Record<string, any[]> = {};
@@ -379,7 +379,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
     return map;
   };
 
-  // Status mapping UI
+  // Ánh xạ trạng thái sang nội dung giao diện.
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -646,7 +646,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
 
           {/* MAIN RENDER ENGINE */}
           {viewMode === 'list' ? (
-            /* ================= VIEW 1: TRADITIONAL LIST GRID ================= */
+            /* Chế độ 1: danh sách dạng bảng truyền thống. */
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               
               {/* LEFT COLUMN: List of big objectives */}
@@ -737,7 +737,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
               {/* RIGHT COLUMN: Selected objective details or Report */}
               <div className="lg:col-span-7">
                 {selectedReportId && reportData ? (
-                  /* REPORT DETAIL VIEW */
+                  /* Màn hình chi tiết báo cáo. */
                   <div className="bg-white rounded-2xl border border-gold-300 shadow-md overflow-hidden relative animate-fade-in">
                     {/* Gold Top Border & Ribbon */}
                     <div className="bg-[#1e293b] text-white p-6 relative">
@@ -864,7 +864,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
                     </div>
                   </div>
                 ) : selectedObjective ? (
-                  /* DETAILED OBJECTIVE VIEW */
+                  /* Màn hình chi tiết mục tiêu. */
                   <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden space-y-6 p-6 animate-fade-in">
                     
                     {/* Title & Description block */}
@@ -1156,7 +1156,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
                                         'Nhân viên': t.updated_by_name,
                                       }));
 
-                                    // If no updates yet, add starting state (0%)
+                                    // Nếu chưa có cập nhật, thêm mốc khởi đầu 0%.
                                     if (timelineUpdates.length === 0) {
                                       timelineUpdates.push({ time: 'Bắt đầu', 'Tiến độ': 0, 'Nhân viên': 'Hệ thống' });
                                     }
@@ -1246,7 +1246,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
 
             </div>
           ) : viewMode === 'fishbone' && selectedObjective ? (
-            /* ================= VIEW 2: FISHBONE (ISHIKAWA) DIAGRAM ================= */
+            /* Chế độ 2: sơ đồ xương cá Ishikawa. */
             <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm space-y-6 overflow-hidden animate-fade-in">
               
               {/* Diagram Header / Summary */}
@@ -1300,7 +1300,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
                   );
                 }
 
-                // Coordinate spacing and ribs setup
+                // Thiết lập tọa độ, khoảng cách và các nhánh xương cá.
                 const numDepts = activeDepts.length;
                 const ribs = activeDepts.map((deptName, i) => {
                   const isUp = i % 2 === 0;
@@ -1313,7 +1313,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
                   return { deptName, isUp, xBase, xTip, yTip };
                 });
 
-                // Generate branch points for tasks on each rib
+                // Tạo điểm nhánh cho công việc trên từng xương.
                 const fishboneBranches = ribs.flatMap((rib) => {
                   const tasks = deptMap[rib.deptName] || [];
                   const numTasks = tasks.length;
@@ -1508,7 +1508,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
 
             </div>
           ) : viewMode === 'mindmap' && selectedObjective ? (
-            /* ================= VIEW 3: MINDMAP TREE VIEW ================= */
+            /* Chế độ 3: cây mindmap. */
             <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm space-y-6 overflow-hidden animate-fade-in">
               
               {/* Mindmap Header */}
@@ -1529,7 +1529,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      // Expand All Departments
+                      // Mở rộng toàn bộ bộ phận.
                       setCollapsedDepts({});
                     }}
                     className="bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold py-1.5 px-3 rounded-lg text-[10px] border border-slate-200 transition-colors"
@@ -1539,7 +1539,7 @@ export default function Objectives({ userRole }: ObjectivesProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      // Collapse All Departments
+                      // Thu gọn toàn bộ bộ phận.
                       const deptMap = getTasksByDept(selectedObjective);
                       const activeDepts = Object.keys(deptMap);
                       const collapsed: Record<string, boolean> = {};

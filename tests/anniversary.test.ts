@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { LocalDatabase } from '../src/db_service';
 import jwt from 'jsonwebtoken';
 
-// Setup mock database state
+// Chuẩn bị state database giả lập.
 const mockDb = {
   roles: [
     { id: 'role-admin', name: 'admin', display_name: 'Admin', permissions: ['admin', 'users.manage', 'customers.edit', 'customers.view'] }
@@ -51,7 +51,7 @@ before(async () => {
   };
   LocalDatabase.save(mockDb as any);
 
-  // Dynamically import server to start it
+  // Import động server sau khi đã cấu hình môi trường test.
   const serverModule = await import('../server');
   scanAndGenerateAnniversaryNotifications = serverModule.scanAndGenerateAnniversaryNotifications;
   const res = await serverModule.startServer();
@@ -128,7 +128,7 @@ describe('Studio V2 Customer Anniversary & Birthday Reminder Tests', () => {
     assert.strictEqual(customer.wedding_date, '2024-07-15');
     assert.strictEqual(customer.facebook_url, 'https://facebook.com/test.customer');
 
-    // Verify it is saved in memory database
+    // Xác nhận dữ liệu đã được lưu vào database trong bộ nhớ.
     const dbAfter = LocalDatabase.get();
     const found = dbAfter.customers.find(c => c.id === customer.id);
     assert.ok(found);

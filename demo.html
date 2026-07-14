@@ -1,17 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Will Studio - Product Demo</title>
+    <title>The Will Studio — Bản trình diễn sản phẩm</title>
   </head>
   <body>
     <div id="root"></div>
     <script>
-      // Flag to signal React app to activate the Product Demo overlay
+      // Đánh dấu để ứng dụng React bật lớp trình diễn sản phẩm.
       window.isDemoMode = true;
       
-      // Auto-append the ?demo=true search parameter to the URL for routing safety
+      // Tự thêm tham số demo để điều hướng luôn nhận đúng chế độ trình diễn.
       const url = new URL(window.location.href);
       if (url.searchParams.get('demo') !== 'true') {
         url.searchParams.set('demo', 'true');
