@@ -265,3 +265,23 @@ Giới hạn xác minh: kênh điều khiển in-app browser không khả dụng
 - Mật khẩu hiện tại của `viet@studio.com` trùng với credential hạ tầng đã được chia sẻ trong quá trình vận hành và từng xuất hiện trong tài liệu/test cũ. Current tree đã được làm sạch chuỗi credential, nhưng Git history không thể coi credential đó còn bí mật.
 - Vì vậy không được tiếp tục giữ nguyên password hash khi cutover. Cần người dùng chọn mật khẩu quản trị ứng dụng mới hoặc cho phép tạo tự động và bàn giao qua file local mode `0600`.
 - Việc đổi mật khẩu ứng dụng không đồng nghĩa được phép đổi mật khẩu SSH; đây là hai thao tác tách biệt.
+
+## 13. Cutover production hoàn tất ngày 2026-07-14
+
+Cutover green–blue đã hoàn tất lúc khoảng 12:57 (UTC+7):
+
+- Production đang chạy đúng image Linux AMD64 theo digest `vinhle158/studiov2-app@sha256:a1bf06d9de933937e739cd63f0570e54fbec84c11ee4203b0e6da5114bfe8bf5`.
+- App chỉ bind `127.0.0.1:3005`; upload được mount bền vững từ `/home/will/studio-v2/data/chat_uploads` vào `/app/chat_uploads`.
+- Database cũ được giữ nguyên dưới tên `studio_db_pre_chat_20260714`; có 4 user, 19 ChatMessage và không có Customer.
+- `studio_db` mới có 1 migration thành công, 4 role và duy nhất `viet@studio.com` active/role-admin.
+- Mật khẩu ứng dụng quản trị đã được xoay theo giá trị người dùng bàn giao; mật khẩu cũ trả 401, mật khẩu mới đăng nhập được. Không lưu plaintext trong repo, release directory hoặc handoff.
+- Dữ liệu QA đã được xóa cứng sau smoke test. Các bảng nghiệp vụ/chat/read-state bằng 0, thư mục upload bằng 0 file; giữ lại duy nhất role, admin, migration và StudioSettings nền.
+- Localhost và public `/healthz` đều trả `OK`; public root và service worker trả HTTP 200; log container không có lỗi runtime.
+- WebSocket qua `https://thewill.io.vn` kết nối thành công.
+- Smoke test bằng QA user tạm đã đạt: contacts, mention, general unread, DM unread, customer/task reference, attachment bảo vệ bằng auth, persistence qua restart và anniversary notification chống trùng.
+- Visual QA qua domain thật đã đạt trên desktop và viewport mobile 390×844. Mobile composer có font 16px, không tràn ngang và bám đáy; dashboard có nút bật thông báo.
+- Có một console error duy nhất khi browser thử khôi phục token cũ sau khi xoay mật khẩu; app tự đưa về login và sau login mới không phát hiện lỗi chức năng.
+- Backup service đã được nâng cấp để mã hóa và upload cả PostgreSQL lẫn `chat_uploads`; checksum đạt, service exit 0 và timer đã active trở lại.
+- File tạm chứa export/hash đã được shred; không đổi mật khẩu SSH.
+
+Chỉ còn Gate 3: giữ database rollback và backup tạm tối thiểu đến sau ngày 2026-07-21. Không xóa `studio_db_pre_chat_20260714` nếu chưa có phê duyệt riêng của người dùng sau thời gian theo dõi.

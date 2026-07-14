@@ -231,3 +231,20 @@ Gate B đã đạt trên server, không ảnh hưởng production:
 - Production vẫn running và health `OK` sau toàn bộ rehearsal.
 
 Gate C đang dừng trước cutover vì phát hiện credential quản trị ứng dụng hiện tại không còn đủ điều kiện bảo mật. Cần quyết định riêng về mật khẩu ứng dụng mới. Không đổi mật khẩu SSH trong phạm vi này nếu chưa có lệnh rõ ràng.
+
+## 13. Kết quả Gate C/D ngày 2026-07-14
+
+Người dùng đã cung cấp mật khẩu ứng dụng mới và Gate C/D đã hoàn tất:
+
+- Backup cuối thành công; timer được dừng trong maintenance window, backup rollback được tách khỏi retention và image cũ được gắn rollback tag.
+- App cũ được dừng riêng; database cũ đổi tên thành `studio_db_pre_chat_20260714`, không bị xóa hoặc sửa dữ liệu.
+- Database mới được tạo sạch, migration deploy thành công, import 4 role + duy nhất admin và xoay password hash trước khi start app.
+- App mới chạy đúng immutable digest, bind localhost và mount persistent uploads.
+- Local/public health, public login, system status và WebSocket HTTPS đạt; mật khẩu cũ bị từ chối.
+- Smoke test Chat Native, attachment, mentions, task/customer reference, unread/DM và anniversary đạt qua domain thật.
+- Recreate/restart app không làm mất ảnh QA; scheduler không tạo notification anniversary trùng.
+- Toàn bộ QA user/customer/task/chat/read-state/notification/file đã được xóa cứng; production kết thúc với đúng 1 admin và 0 dữ liệu nghiệp vụ/chat.
+- Visual QA desktop/mobile đạt; service worker trả HTTP 200.
+- Backup mới gồm database + uploads đạt checksum và timer đã active.
+
+Gate 3 vẫn chưa được duyệt. Database rollback và backup bảo vệ phải được giữ tối thiểu 7 ngày, đến sau ngày 2026-07-21, rồi mới được xem xét xóa bằng một lệnh riêng.
