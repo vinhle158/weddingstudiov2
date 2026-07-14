@@ -1,23 +1,25 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${STUDIO_V2_IMAGE:-vinhle158/studiov2-app@sha256:a1bf06d9de933937e739cd63f0570e54fbec84c11ee4203b0e6da5114bfe8bf5}
     container_name: studiov2_app
     restart: always
     ports:
-      - "3005:3005"
+      - "127.0.0.1:3005:3005"
     environment:
       - NODE_ENV=production
       - PORT=3005
+      - HOST=0.0.0.0
       - DATABASE_URL=postgresql://studio_user:${POSTGRES_PASSWORD}@postgres:5432/studio_db?schema=public
-      - APP_URL=http://localhost:3005
+      - APP_URL=${APP_URL:-https://thewill.io.vn}
+      - CORS_ORIGIN=${CORS_ORIGIN:-https://thewill.io.vn}
       - JWT_SECRET=${JWT_SECRET}
       - TRUST_PROXY=loopback, linklocal, uniquelocal
+      - TZ=Asia/Bangkok
     volumes:
       - ${CHAT_UPLOADS_DIR:-./data/chat_uploads}:/app/chat_uploads
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   postgres:
     image: postgres:15-alpine
@@ -28,9 +30,14 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: studio_db
     ports:
-      - "5433:5432" # Use 5433 host port to avoid conflicting with local Postgres container on 5432 if running
+      - "127.0.0.1:5433:5432"
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U studio_user -d studio_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data_prod:
