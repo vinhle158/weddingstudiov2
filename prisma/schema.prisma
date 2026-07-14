@@ -160,11 +160,28 @@ model Notification {
 }
 
 model ChatMessage {
-  id          String   @id
-  sender_id   String
-  receiver_id String?
-  content     String
-  created_at  String
+  id                 String   @id
+  sender_id          String
+  receiver_id        String?
+  content            String
+  attachment_filename String?
+  attachment_name    String?
+  attachment_mime    String?
+  reference_type     String?
+  reference_id       String?
+  reference_label    String?
+  mentioned_user_ids String[] @default([])
+  created_at         String
+}
+
+model ChatReadState {
+  id               String @id
+  user_id          String
+  conversation_key String
+  last_read_at     String
+
+  @@unique([user_id, conversation_key])
+  @@index([user_id])
 }
 
 model StudioSettings {
@@ -210,4 +227,3 @@ model Lead {
   created_at          String
   updated_at          String
 }
-

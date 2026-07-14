@@ -1,179 +1,92 @@
-import path from 'path';
-import fs from 'fs';
-// @ts-ignore
-import pkg from 'node-nlp';
-const { NlpManager } = pkg;
+import type { Intent } from './types';
 
-const modelPath = path.join(process.cwd(), 'model.nlp');
-const manager = new NlpManager({ languages: ['vi'], forceNER: true });
+type ClassifiedIntent = { intent: Intent | 'unknown'; score: number };
 
-let isTrained = false;
-
-export async function initNlp() {
-  if (isTrained) return;
-
-  if (fs.existsSync(modelPath)) {
-    try {
-      await manager.load(modelPath);
-      isTrained = true;
-      return;
-    } catch (err) {
-      console.error('Failed to load NLP model, retraining...', err);
-    }
-  }
-
-  // 1. BUSINESS_OVERVIEW
-  manager.addDocument('vi', 'tổng quan', 'BUSINESS_OVERVIEW');
-  manager.addDocument('vi', 'tình hình', 'BUSINESS_OVERVIEW');
-  manager.addDocument('vi', 'tổng quan studio', 'BUSINESS_OVERVIEW');
-  manager.addDocument('vi', 'tổng quan hoạt động', 'BUSINESS_OVERVIEW');
-  manager.addDocument('vi', 'tổng quan hôm nay', 'BUSINESS_OVERVIEW');
-  manager.addDocument('vi', 'tình hình hôm nay', 'BUSINESS_OVERVIEW');
-  manager.addDocument('vi', 'báo cáo tổng quan', 'BUSINESS_OVERVIEW');
-  manager.addDocument('vi', 'tình hình hoạt động của studio', 'BUSINESS_OVERVIEW');
-
-  // 2. CUSTOMER_LIST (General info & contact profile)
-  manager.addDocument('vi', 'danh sách khách hàng', 'CUSTOMER_LIST');
-  manager.addDocument('vi', 'khách hàng', 'CUSTOMER_LIST');
-  manager.addDocument('vi', 'ds khách hàng', 'CUSTOMER_LIST');
-  manager.addDocument('vi', 'd sách khách hàng', 'CUSTOMER_LIST');
-  manager.addDocument('vi', 'tra cứu khách hàng', 'CUSTOMER_LIST');
-  manager.addDocument('vi', 'tìm khách hàng %customerName%', 'CUSTOMER_LIST');
-  manager.addDocument('vi', 'tra cứu thông tin khách hàng %customerName%', 'CUSTOMER_LIST');
-  manager.addDocument('vi', 'khách hàng %customerName% là ai', 'CUSTOMER_LIST');
-  manager.addDocument('vi', 'cho tôi thông tin của %customerName%', 'CUSTOMER_LIST');
-  manager.addDocument('vi', 'thông tin khách hàng %customerName%', 'CUSTOMER_LIST');
-  manager.addDocument('vi', 'hồ sơ khách hàng %customerName%', 'CUSTOMER_LIST');
-  manager.addDocument('vi', 'xem hồ sơ của %customerName%', 'CUSTOMER_LIST');
-
-  // 3. LEAD_LIST
-  manager.addDocument('vi', 'lead', 'LEAD_LIST');
-  manager.addDocument('vi', 'crm', 'LEAD_LIST');
-  manager.addDocument('vi', 'tư vấn', 'LEAD_LIST');
-  manager.addDocument('vi', 'chăm sóc', 'LEAD_LIST');
-  manager.addDocument('vi', 'ds lead', 'LEAD_LIST');
-  manager.addDocument('vi', 'khách hàng tiềm năng', 'LEAD_LIST');
-  manager.addDocument('vi', 'danh sách lead', 'LEAD_LIST');
-  manager.addDocument('vi', 'lead cần chăm sóc', 'LEAD_LIST');
-
-  // 4. ORDER_LIST (General active contracts list)
-  manager.addDocument('vi', 'danh sách đơn hàng', 'ORDER_LIST');
-  manager.addDocument('vi', 'danh sách hợp đồng', 'ORDER_LIST');
-  manager.addDocument('vi', 'đơn hàng đã ký', 'ORDER_LIST');
-  manager.addDocument('vi', 'hợp đồng đã chốt', 'ORDER_LIST');
-  manager.addDocument('vi', 'hợp đồng studio', 'ORDER_LIST');
-
-  // 5. SCHEDULE_RANGE
-  manager.addDocument('vi', 'lịch', 'SCHEDULE_RANGE');
-  manager.addDocument('vi', 'lịch chụp', 'SCHEDULE_RANGE');
-  manager.addDocument('vi', 'chụp', 'SCHEDULE_RANGE');
-  manager.addDocument('vi', 'lịch chụp sắp tới', 'SCHEDULE_RANGE');
-  manager.addDocument('vi', 'lịch chụp hôm nay', 'SCHEDULE_RANGE');
-  manager.addDocument('vi', 'lịch chụp ngày mai', 'SCHEDULE_RANGE');
-  manager.addDocument('vi', 'xem lịch chụp', 'SCHEDULE_RANGE');
-  manager.addDocument('vi', 'kế hoạch chụp ảnh', 'SCHEDULE_RANGE');
-
-  // 6. TASK_LIST
-  manager.addDocument('vi', 'công việc', 'TASK_LIST');
-  manager.addDocument('vi', 'task', 'TASK_LIST');
-  manager.addDocument('vi', 'danh sách công việc', 'TASK_LIST');
-  manager.addDocument('vi', 'công việc cần làm', 'TASK_LIST');
-  manager.addDocument('vi', 'nhiệm vụ cần xử lý', 'TASK_LIST');
-  manager.addDocument('vi', 'tiến độ công việc', 'TASK_LIST');
-
-  // 7. OPERATIONAL_ALERTS
-  manager.addDocument('vi', 'cảnh báo', 'OPERATIONAL_ALERTS');
-  manager.addDocument('vi', 'cảnh báo vận hành', 'OPERATIONAL_ALERTS');
-  manager.addDocument('vi', 'bất thường', 'OPERATIONAL_ALERTS');
-  manager.addDocument('vi', 'cảnh báo o p', 'OPERATIONAL_ALERTS');
-  manager.addDocument('vi', 'cảnh báo hệ thống', 'OPERATIONAL_ALERTS');
-  manager.addDocument('vi', 'các vấn đề vận hành', 'OPERATIONAL_ALERTS');
-
-  // 8. STAFF_WORKLOAD
-  manager.addDocument('vi', 'nhân viên', 'STAFF_WORKLOAD');
-  manager.addDocument('vi', 'khối lượng công việc', 'STAFF_WORKLOAD');
-  manager.addDocument('vi', 'ai bận', 'STAFF_WORKLOAD');
-  manager.addDocument('vi', 'ai rảnh', 'STAFF_WORKLOAD');
-  manager.addDocument('vi', 'ai bận nhất', 'STAFF_WORKLOAD');
-  manager.addDocument('vi', 'khối lượng công việc nhân sự', 'STAFF_WORKLOAD');
-  manager.addDocument('vi', 'khối lượng công việc của nhân sự', 'STAFF_WORKLOAD');
-  manager.addDocument('vi', 'ai bận nhất tuần này', 'STAFF_WORKLOAD');
-
-  // 9. OKR_LIST
-  manager.addDocument('vi', 'okr', 'OKR_LIST');
-  manager.addDocument('vi', 'mục tiêu', 'OKR_LIST');
-  manager.addDocument('vi', 'kết quả then chốt', 'OKR_LIST');
-  manager.addDocument('vi', 'tiến độ okr', 'OKR_LIST');
-  manager.addDocument('vi', 'tỉ lệ hoàn thành', 'OKR_LIST');
-  manager.addDocument('vi', 'tiến độ mục tiêu', 'OKR_LIST');
-  manager.addDocument('vi', 'kết quả okr của studio', 'OKR_LIST');
-
-  // 10. LEAD_SUCCESS_REASONS
-  manager.addDocument('vi', 'lý do thành công', 'LEAD_SUCCESS_REASONS');
-  manager.addDocument('vi', 'chốt thành công', 'LEAD_SUCCESS_REASONS');
-  manager.addDocument('vi', 'mã lý do thành công', 'LEAD_SUCCESS_REASONS');
-  manager.addDocument('vi', 'lý do chốt đơn thành công', 'LEAD_SUCCESS_REASONS');
-
-  // 11. LEAD_FAILURE_REASONS
-  manager.addDocument('vi', 'lý do thất bại', 'LEAD_FAILURE_REASONS');
-  manager.addDocument('vi', 'tại sao thất bại', 'LEAD_FAILURE_REASONS');
-  manager.addDocument('vi', 'lý do khách từ chối', 'LEAD_FAILURE_REASONS');
-  manager.addDocument('vi', 'tại sao khách hàng từ chối', 'LEAD_FAILURE_REASONS');
-  manager.addDocument('vi', 'khách từ chối', 'LEAD_FAILURE_REASONS');
-  manager.addDocument('vi', 'khách hàng từ chối', 'LEAD_FAILURE_REASONS');
-
-  // 12. LEAD_SUPPORT_REQUESTS
-  manager.addDocument('vi', 'lead cần hỗ trợ', 'LEAD_SUPPORT_REQUESTS');
-  manager.addDocument('vi', 'yêu cầu trợ giúp', 'LEAD_SUPPORT_REQUESTS');
-  manager.addDocument('vi', 'sales cần hỗ trợ', 'LEAD_SUPPORT_REQUESTS');
-  manager.addDocument('vi', 'khách hàng nào cần hỗ trợ', 'LEAD_SUPPORT_REQUESTS');
-  manager.addDocument('vi', 'khách hàng nào cần hỗ trợ tư vấn', 'LEAD_SUPPORT_REQUESTS');
-  manager.addDocument('vi', 'cần hỗ trợ tư vấn', 'LEAD_SUPPORT_REQUESTS');
-  manager.addDocument('vi', 'cần hỗ trợ', 'LEAD_SUPPORT_REQUESTS');
-
-  // 13. STAFF_LIST
-  manager.addDocument('vi', 'danh sách nhân viên', 'STAFF_LIST');
-  manager.addDocument('vi', 'danh sách nhân sự', 'STAFF_LIST');
-  manager.addDocument('vi', 'vai trò nhân sự', 'STAFF_LIST');
-  manager.addDocument('vi', 'tài khoản nhân sự', 'STAFF_LIST');
-
-  // 14. CONTRACT_STATUS (Detailed contract and status info by customer name)
-  manager.addDocument('vi', 'hợp đồng của %customerName% trạng thái thế nào', 'CONTRACT_STATUS');
-  manager.addDocument('vi', 'kiểm tra trạng thái hợp đồng %customerName%', 'CONTRACT_STATUS');
-  manager.addDocument('vi', 'trạng thái hợp đồng của %customerName%', 'CONTRACT_STATUS');
-  manager.addDocument('vi', 'hợp đồng %customerName%', 'CONTRACT_STATUS');
-  manager.addDocument('vi', 'trạng thái đơn hàng %customerName%', 'CONTRACT_STATUS');
-  manager.addDocument('vi', 'hợp đồng cưới của %customerName%', 'CONTRACT_STATUS');
-  manager.addDocument('vi', 'đơn hàng của khách %customerName% thế nào', 'CONTRACT_STATUS');
-  manager.addDocument('vi', 'kiểm tra hợp đồng của %customerName%', 'CONTRACT_STATUS');
-
-  // 15. thong_ke_doanh_so (Periodic statistics)
-  manager.addDocument('vi', 'doanh số', 'thong_ke_doanh_so');
-  manager.addDocument('vi', 'doanh số tháng %month% năm %year%', 'thong_ke_doanh_so');
-  manager.addDocument('vi', 'doanh số quý %quarter% năm %year%', 'thong_ke_doanh_so');
-  manager.addDocument('vi', 'doanh số năm %year%', 'thong_ke_doanh_so');
-  manager.addDocument('vi', 'doanh thu tháng %month% năm %year%', 'thong_ke_doanh_so');
-  manager.addDocument('vi', 'doanh thu quý %quarter% năm %year%', 'thong_ke_doanh_so');
-  manager.addDocument('vi', 'doanh thu năm %year%', 'thong_ke_doanh_so');
-  manager.addDocument('vi', 'thống kê doanh thu tháng này', 'thong_ke_doanh_so');
-  manager.addDocument('vi', 'doanh số tháng này', 'thong_ke_doanh_so');
-  manager.addDocument('vi', 'doanh số tháng trước', 'thong_ke_doanh_so');
-  manager.addDocument('vi', 'doanh số quý này', 'thong_ke_doanh_so');
-  manager.addDocument('vi', 'doanh số năm nay', 'thong_ke_doanh_so');
-  manager.addDocument('vi', 'doanh số năm ngoái', 'thong_ke_doanh_so');
-
-  await manager.train();
-  await manager.save(modelPath);
-  isTrained = true;
+function normalizeVietnamese(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s/-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
-export async function classifyIntent(message: string): Promise<{ intent: string; score: number }> {
-  await initNlp();
-  const response = await manager.process('vi', message);
-  return {
-    intent: response.intent || 'unknown',
-    score: response.score || 0,
-  };
+const includesAny = (text: string, phrases: string[]) => phrases.some(phrase => text.includes(phrase));
+
+const rules: Array<{ intent: Intent; phrases: string[] }> = [
+  {
+    intent: 'LEAD_SUCCESS_REASONS',
+    phrases: ['ly do thanh cong', 'chot thanh cong', 'ma ly do thanh cong', 'ly do chot don thanh cong'],
+  },
+  {
+    intent: 'LEAD_FAILURE_REASONS',
+    phrases: ['ly do that bai', 'tai sao that bai', 'ly do khach tu choi', 'khach hang tu choi', 'khach tu choi'],
+  },
+  {
+    intent: 'LEAD_SUPPORT_REQUESTS',
+    phrases: ['lead can ho tro', 'yeu cau tro giup', 'sales can ho tro', 'can ho tro tu van', 'khach hang nao can ho tro', 'can ho tro'],
+  },
+  {
+    intent: 'thong_ke_doanh_so',
+    phrases: ['doanh so', 'doanh thu', 'thong ke', 'thu nhap', 'tong thu'],
+  },
+  {
+    intent: 'STAFF_WORKLOAD',
+    phrases: ['ai ban', 'ai ranh', 'khoi luong cong viec', 'workload'],
+  },
+  {
+    intent: 'STAFF_LIST',
+    phrases: ['danh sach nhan vien', 'danh sach nhan su', 'vai tro nhan su', 'tai khoan nhan su'],
+  },
+  {
+    intent: 'OPERATIONAL_ALERTS',
+    phrases: ['canh bao van hanh', 'canh bao he thong', 'cac van de van hanh', 'bat thuong', 'canh bao'],
+  },
+  {
+    intent: 'OKR_LIST',
+    phrases: ['ket qua then chot', 'tien do muc tieu', 'tien do okr', 'ket qua okr', 'ti le hoan thanh', 'okr', 'muc tieu'],
+  },
+  {
+    intent: 'SCHEDULE_RANGE',
+    phrases: ['lich chup', 'ke hoach chup anh', 'xem lich chup', 'lich'],
+  },
+  {
+    intent: 'TASK_LIST',
+    phrases: ['danh sach cong viec', 'cong viec can lam', 'nhiem vu can xu ly', 'tien do cong viec', 'cong viec', 'task'],
+  },
+  {
+    intent: 'LEAD_LIST',
+    phrases: ['khach hang tiem nang', 'danh sach lead', 'lead can cham soc', 'ds lead', 'lead', 'crm', 'tu van', 'cham soc'],
+  },
+  {
+    intent: 'ORDER_LIST',
+    phrases: ['danh sach don hang', 'danh sach hop dong', 'don hang da ky', 'hop dong da chot', 'hop dong studio'],
+  },
+  {
+    intent: 'CONTRACT_STATUS',
+    phrases: ['trang thai hop dong', 'kiem tra hop dong', 'hop dong cuoi cua', 'don hang cua khach', 'hop dong cua', 'hop dong'],
+  },
+  {
+    intent: 'CUSTOMER_LIST',
+    phrases: ['danh sach khach hang', 'ds khach hang', 'tra cuu khach hang', 'thong tin khach hang', 'ho so khach hang', 'xem ho so', 'tim khach hang', 'khach hang'],
+  },
+  {
+    intent: 'BUSINESS_OVERVIEW',
+    phrases: ['bao cao tong quan', 'tong quan hoat dong', 'tinh hinh hoat dong', 'tong quan studio', 'tong quan', 'tinh hinh'],
+  },
+];
+
+export async function initNlp(): Promise<void> {
+  // Kept for API compatibility. Deterministic rules require no model training or runtime files.
 }
 
-export { manager };
+export async function classifyIntent(message: string): Promise<ClassifiedIntent> {
+  const normalized = normalizeVietnamese(message);
+  if (!normalized) return { intent: 'unknown', score: 0 };
+
+  const rule = rules.find(candidate => includesAny(normalized, candidate.phrases));
+  return rule ? { intent: rule.intent, score: 1 } : { intent: 'unknown', score: 0 };
+}

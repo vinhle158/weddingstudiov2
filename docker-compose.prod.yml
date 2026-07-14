@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -15,6 +13,9 @@ services:
       - DATABASE_URL=postgresql://studio_user:${POSTGRES_PASSWORD}@postgres:5432/studio_db?schema=public
       - APP_URL=http://localhost:3005
       - JWT_SECRET=${JWT_SECRET}
+      - TRUST_PROXY=loopback, linklocal, uniquelocal
+    volumes:
+      - ${CHAT_UPLOADS_DIR:-./data/chat_uploads}:/app/chat_uploads
     depends_on:
       - postgres
 

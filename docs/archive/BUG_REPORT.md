@@ -54,7 +54,7 @@ Dự án là ứng dụng quản lý studio cưới (The Will Studio / Aura Brid
 ### C-03: Thông tin đăng nhập hardcoded trong file văn bản
 
 - **File:** `New Text Document.txt:1-2`
-- **Mô tả:** Chứa `viet@studio.com` và `123abc456` — email và mật khẩu thật trong một file thừa.
+- **Mô tả:** Chứa `viet@studio.com` và một mật khẩu thật đã được redacted — thông tin đăng nhập nằm trong một file thừa.
 - **Hậu quả:** Thông tin đăng nhập bị lộ trên ổ đĩa, có thể đã bị commit vào git.
 - **Sửa:** Xóa file ngay lập tức. Đổi mật khẩu đã bị lộ.
 

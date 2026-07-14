@@ -31,34 +31,41 @@ export default function MobileLayout({
   onBackClick,
   assistantSlot
 }: MobileLayoutProps) {
+  const isChat = activeTab === 'chat';
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[#faf9f6] w-full max-w-md mx-auto relative border-x border-slate-100">
+    <div className="flex flex-col h-[100dvh] overflow-hidden bg-[#faf9f6] w-full max-w-md mx-auto relative border-x border-slate-100">
       {/* Header */}
-      <MobileHeader
-        title={title}
-        studioName={studioSettings?.name}
-        unreadCount={unreadNotifications}
-        userInitial={user?.full_name?.charAt(0).toUpperCase() || 'U'}
-        onNotificationClick={() => onTabChange('notifications')}
-        onProfileClick={() => onTabChange('settings')}
-        showBackButton={showBackButton}
-        onBackClick={onBackClick}
-      />
+      {!isChat && (
+        <MobileHeader
+          title={title}
+          studioName={studioSettings?.name}
+          unreadCount={unreadNotifications}
+          userInitial={user?.full_name?.charAt(0).toUpperCase() || 'U'}
+          onNotificationClick={() => onTabChange('notifications')}
+          onProfileClick={() => onTabChange('settings')}
+          showBackButton={showBackButton}
+          onBackClick={onBackClick}
+        />
+      )}
 
       {/* Main Content scrollable */}
-      <main className="flex-1 overflow-y-auto px-4 py-4 pb-24 scroll-smooth">
+      <main className={isChat
+        ? 'flex-1 min-h-0 overflow-hidden bg-white'
+        : 'flex-1 overflow-y-auto px-4 py-4 pb-24 scroll-smooth'}>
         {children}
       </main>
 
-      {assistantSlot}
+      {!isChat && assistantSlot}
 
       {/* Navigation */}
-      <BottomNav
-        activeTab={activeTab}
-        onTabChange={onTabChange}
-        unreadNotifications={unreadNotifications}
-        hasPermission={hasPermission}
-      />
+      {!isChat && (
+        <BottomNav
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          unreadNotifications={unreadNotifications}
+          hasPermission={hasPermission}
+        />
+      )}
     </div>
   );
 }

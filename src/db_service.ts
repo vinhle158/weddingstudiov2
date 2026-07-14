@@ -162,7 +162,21 @@ export interface ChatMessage {
   sender_id: string;
   receiver_id: string | null;
   content: string;
+  attachment_filename?: string | null;
+  attachment_name?: string | null;
+  attachment_mime?: string | null;
+  reference_type?: 'task' | 'customer' | null;
+  reference_id?: string | null;
+  reference_label?: string | null;
+  mentioned_user_ids?: string[];
   created_at: string;
+}
+
+export interface ChatReadState {
+  id: string;
+  user_id: string;
+  conversation_key: string;
+  last_read_at: string;
 }
 
 export interface StudioSettings {
@@ -230,6 +244,7 @@ export interface DatabaseSchema {
   objective_progress_updates?: ObjectiveProgressUpdate[];
   notifications?: Notification[];
   chat_messages?: ChatMessage[];
+  chat_read_states?: ChatReadState[];
   studio_settings?: StudioSettings;
   backups?: DatabaseBackup[];
   leads: Lead[];
@@ -364,6 +379,7 @@ export class LocalDatabase {
       const objectiveProgressUpdates = await prisma.objectiveProgressUpdate.findMany();
       const notifications = await prisma.notification.findMany();
       const chatMessages = await prisma.chatMessage.findMany();
+      const chatReadStates = await prisma.chatReadState.findMany();
       const backups = await prisma.databaseBackup.findMany();
       const leads = await prisma.lead.findMany();
       const studioSettingsList = await prisma.studioSettings.findMany();
@@ -393,7 +409,8 @@ export class LocalDatabase {
         objective_key_results: objectiveKeyResults as any,
         objective_progress_updates: objectiveProgressUpdates,
         notifications: notifications as any,
-        chat_messages: chatMessages,
+        chat_messages: chatMessages as ChatMessage[],
+        chat_read_states: chatReadStates,
         studio_settings: (studioSettingsList[0] || defaultStudioSettings) as any,
         backups: backups as any,
         leads: leads as any
@@ -443,7 +460,8 @@ export class LocalDatabase {
         await this.reconcileTable(tx, 'objectiveKeyResult', data.objective_key_results || [], ['objective_id', 'title', 'assigned_department', 'assigned_to_user_id', 'status', 'progress', 'notes', 'updated_at']);
         await this.reconcileTable(tx, 'objectiveProgressUpdate', data.objective_progress_updates || [], ['key_result_id', 'updated_by', 'progress_from', 'progress_to', 'comment', 'created_at']);
         await this.reconcileTable(tx, 'notification', data.notifications || [], ['sender_id', 'receiver_id', 'title', 'content', 'type', 'related_id', 'is_read_by', 'created_at']);
-        await this.reconcileTable(tx, 'chatMessage', data.chat_messages || [], ['sender_id', 'receiver_id', 'content', 'created_at']);
+        await this.reconcileTable(tx, 'chatMessage', data.chat_messages || [], ['sender_id', 'receiver_id', 'content', 'attachment_filename', 'attachment_name', 'attachment_mime', 'reference_type', 'reference_id', 'reference_label', 'mentioned_user_ids', 'created_at']);
+        await this.reconcileTable(tx, 'chatReadState', data.chat_read_states || [], ['user_id', 'conversation_key', 'last_read_at']);
         await this.reconcileTable(tx, 'databaseBackup', data.backups || [], ['filename', 'created_at', 'size_bytes', 'trigger_type', 'status']);
         await this.reconcileTable(tx, 'lead', data.leads || [], ['date', 'customer_name', 'phone', 'source', 'interested_packages', 'sales_step', 'follow_up_status', 'status', 'revenue', 'success_reason', 'failure_reason', 'assigned_sale_id', 'support_needed', 'notes', 'admin_feedbacks', 'created_at', 'updated_at']);
 

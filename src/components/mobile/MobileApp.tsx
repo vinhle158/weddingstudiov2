@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { apiRequest } from '../../lib/api';
+import { io } from 'socket.io-client';
+import { BrowserNotificationStatus, getBrowserNotificationStatus, requestBrowserNotifications, showBrowserNotification } from '../../lib/browserNotifications';
 import MobileLayout from './MobileLayout';
 
 // Import screens
@@ -29,6 +31,10 @@ export default function MobileApp({ user, role, onLogout, studioSettings }: Mobi
   const [activeTab, setActiveTab] = useState('dashboard');
   const [navigationArg, setNavigationArg] = useState<any>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [notificationStatus, setNotificationStatus] = useState<BrowserNotificationStatus>(() => getBrowserNotificationStatus());
+  const [pushEnabled, setPushEnabled] = useState(() => localStorage.getItem(`studio_push_enabled_${user?.id}`) === 'true' && getBrowserNotificationStatus() === 'granted');
+  const seenNotificationIds = useRef<Set<string> | null>(null);
+  const activeTabRef = useRef(activeTab);
 
   const hasPermission = (permission: string) => {
     if (!role) return false;
@@ -39,8 +45,20 @@ export default function MobileApp({ user, role, onLogout, studioSettings }: Mobi
   const fetchUnreadCount = async () => {
     try {
       const notifs = await apiRequest('/api/notifications');
-      const count = notifs.filter((n: any) => !n.is_read).length;
+      const unread = notifs.filter((n: any) => !n.is_read);
+      const count = unread.length;
       setUnreadNotifications(count);
+      const currentIds = new Set<string>(unread.map((notification: any) => notification.id));
+      if (seenNotificationIds.current && pushEnabled) {
+        const newest = unread.find((notification: any) => !seenNotificationIds.current!.has(notification.id));
+        if (newest) {
+          void showBrowserNotification(newest.title || 'Thông báo mới từ Studio', {
+            body: newest.content || 'Bạn có một thông báo mới cần xem.',
+            tag: `studio-notification-${newest.id}`,
+          });
+        }
+      }
+      seenNotificationIds.current = currentIds;
     } catch (err) {
       console.error('Failed to fetch unread notifications count:', err);
     }
@@ -50,7 +68,44 @@ export default function MobileApp({ user, role, onLogout, studioSettings }: Mobi
     fetchUnreadCount();
     const interval = setInterval(fetchUnreadCount, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [pushEnabled]);
+
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!pushEnabled || notificationStatus !== 'granted') return;
+    const token = localStorage.getItem('studio_token');
+    if (!token) return;
+    const socket = io({ path: '/socket.io', auth: { token }, transports: ['websocket', 'polling'] });
+    socket.on('chat:message', message => {
+      if (message.sender_id === user?.id || activeTabRef.current === 'chat') return;
+      void showBrowserNotification(`Tin nhắn từ ${message.sender_name || 'nhân viên'}`, {
+        body: message.content || (message.attachment_filename ? 'Đã gửi một hình ảnh' : 'Bạn có tin nhắn mới'),
+        tag: `studio-chat-${message.id}`,
+      });
+    });
+    return () => { socket.disconnect(); };
+  }, [notificationStatus, pushEnabled, user?.id]);
+
+  const togglePushNotifications = async () => {
+    if (pushEnabled) {
+      localStorage.setItem(`studio_push_enabled_${user?.id}`, 'false');
+      setPushEnabled(false);
+      return;
+    }
+    const status = await requestBrowserNotifications();
+    setNotificationStatus(status);
+    if (status === 'granted') {
+      localStorage.setItem(`studio_push_enabled_${user?.id}`, 'true');
+      setPushEnabled(true);
+      await showBrowserNotification('Đã bật thông báo The Will Studio', {
+        body: 'Bạn sẽ nhận thông báo công việc và tin nhắn mới khi web đang mở hoặc chạy nền.',
+        tag: 'studio-push-enabled',
+      });
+    }
+  };
 
   const handleNavigate = (tab: string, arg?: any) => {
     setActiveTab(tab);
@@ -83,6 +138,10 @@ export default function MobileApp({ user, role, onLogout, studioSettings }: Mobi
             userRole={role?.id}
             userId={user?.id}
             onNavigate={handleNavigate}
+            unreadNotifications={unreadNotifications}
+            notificationStatus={notificationStatus}
+            pushEnabled={pushEnabled}
+            onTogglePush={togglePushNotifications}
           />
         );
       case 'leads':
@@ -118,7 +177,7 @@ export default function MobileApp({ user, role, onLogout, studioSettings }: Mobi
       case 'objectives':
         return <MobileObjectives userRole={role?.id} />;
       case 'chat':
-        return <MobileChat userId={user?.id} userRole={role?.id} />;
+        return <MobileChat userId={user?.id} userRole={role?.id} onNavigate={handleNavigate} />;
       case 'notifications':
         return (
           <MobileNotifications
@@ -146,6 +205,10 @@ export default function MobileApp({ user, role, onLogout, studioSettings }: Mobi
             userRole={role?.id}
             userId={user?.id}
             onNavigate={handleNavigate}
+            unreadNotifications={unreadNotifications}
+            notificationStatus={notificationStatus}
+            pushEnabled={pushEnabled}
+            onTogglePush={togglePushNotifications}
           />
         );
     }

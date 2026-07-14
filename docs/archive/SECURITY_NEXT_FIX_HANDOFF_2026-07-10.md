@@ -32,8 +32,8 @@ README.md hoặc handoff deploy nếu cần
 Hiện có password gốc hardcoded:
 
 ```ts
-bcrypt.hashSync('123abc456', 10)
-bcrypt.hashSync('staff123', 10)
+bcrypt.hashSync('[REDACTED_ADMIN_PASSWORD]', 10)
+bcrypt.hashSync('[REDACTED_STAFF_PASSWORD]', 10)
 ```
 
 Yêu cầu:
@@ -292,7 +292,7 @@ Không cần test rate limit chat.
 ```bash
 cd /Users/mac/Documents/STUDIO_V2_GITHUB_MAIN
 
-rg -n "123abc456|staff123|production_password|MIMO_|GEMINI_|fallback-secret-key-change-this-in-production" .
+rg -n "KNOWN_EXPOSED_PASSWORD|production_password|MIMO_|GEMINI_|fallback-secret-key-change-this-in-production" .
 
 npm run lint
 npm run build

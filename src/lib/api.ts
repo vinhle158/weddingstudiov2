@@ -36,3 +36,12 @@ export async function apiRequest<T = any>(
 
   return response.json();
 }
+
+export async function apiRequestBlob(endpoint: string): Promise<Blob> {
+  const token = localStorage.getItem('studio_token');
+  const response = await fetch(endpoint, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) throw new Error(`Không thể tải tệp: ${response.status}`);
+  return response.blob();
+}

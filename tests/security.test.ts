@@ -1,14 +1,19 @@
 process.env.NODE_ENV = 'test';
 process.env.PORT = '3011';
 process.env.JWT_SECRET = 'test-jwt-secret-key';
+process.env.TRUST_PROXY = 'loopback, linklocal, uniquelocal';
 
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { io as createSocketClient } from 'socket.io-client';
+import fs from 'node:fs';
+import path from 'node:path';
 
 let LocalDatabase: any;
 let serverInstance: any;
+let appInstance: any;
 
 // Seed mock database state
 const mockDb = {
@@ -37,7 +42,7 @@ const mockDb = {
       id: 'user-admin',
       full_name: 'Viet Hoang',
       email: 'viet@studio.com',
-      password_hash: bcrypt.hashSync('123abc456', 10),
+      password_hash: bcrypt.hashSync('AdminTest@2026!', 10),
       role_id: 'role-admin',
       is_active: true,
       created_at: '2026-01-01T00:00:00Z',
@@ -47,7 +52,7 @@ const mockDb = {
       id: 'user-sale-1',
       full_name: 'Sale User 1',
       email: 'sale1@studio.com',
-      password_hash: bcrypt.hashSync('staff123', 10),
+      password_hash: bcrypt.hashSync('SalesTest@2026!', 10),
       role_id: 'role-sales',
       is_active: true,
       created_at: '2026-06-01T00:00:00Z',
@@ -57,7 +62,7 @@ const mockDb = {
       id: 'user-sale-2',
       full_name: 'Sale User 2',
       email: 'sale2@studio.com',
-      password_hash: bcrypt.hashSync('staff123', 10),
+      password_hash: bcrypt.hashSync('SalesTest@2026!', 10),
       role_id: 'role-sales',
       is_active: true,
       created_at: '2026-06-01T00:00:00Z',
@@ -74,6 +79,7 @@ const mockDb = {
   objective_progress_updates: [],
   notifications: [],
   chat_messages: [],
+  chat_read_states: [],
   studio_settings: {
     name: "The Will Studio",
     phone: "0901 234 567",
@@ -125,6 +131,7 @@ before(async () => {
   // Dynamically import server to start it
   const { startServer } = await import('../server');
   const res = await startServer();
+  appInstance = res.app;
   serverInstance = res.server;
 });
 
@@ -150,6 +157,14 @@ function generateToken(userId: string, email: string, sessionVersion = 0) {
 }
 
 describe('Studio V2 Security Hardening Regression Tests', () => {
+
+  test('0. trust proxy accepts private proxies but rejects public proxy hops', () => {
+    const trustProxy = appInstance.get('trust proxy fn');
+
+    assert.strictEqual(trustProxy('127.0.0.1', 0), true);
+    assert.strictEqual(trustProxy('172.18.0.1', 0), true);
+    assert.strictEqual(trustProxy('8.8.8.8', 0), false);
+  });
 
   test('1. authenticate middleware fails if session version is mismatched', async () => {
     const token = generateToken('user-sale-1', 'sale1@studio.com', 0);
@@ -201,7 +216,7 @@ describe('Studio V2 Security Hardening Regression Tests', () => {
     const loginRes = await fetch(`${BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'viet@studio.com', password: '123abc456' })
+      body: JSON.stringify({ email: 'viet@studio.com', password: 'AdminTest@2026!' })
     });
     assert.strictEqual(loginRes.status, 200);
     const loginData = await loginRes.json() as any;
@@ -491,5 +506,164 @@ describe('Studio V2 Security Hardening Regression Tests', () => {
     assert.strictEqual(res.status, 200);
     const data = await res.json() as any;
     assert.strictEqual(data.status, 'OK');
+  });
+
+  test('13. Chat contacts expose safe fields and enforce private-message policy', async () => {
+    const salesToken = generateToken('user-sale-1', 'sale1@studio.com', 0);
+    const contactsRes = await fetch(`${BASE_URL}/api/chat/contacts`, {
+      headers: { Authorization: `Bearer ${salesToken}` }
+    });
+    assert.strictEqual(contactsRes.status, 200);
+    const contacts = await contactsRes.json() as any[];
+    assert.deepStrictEqual(contacts.map(contact => contact.id), ['user-admin']);
+    assert.strictEqual(contacts[0].password_hash, undefined);
+    assert.strictEqual(contacts[0].email, undefined);
+
+    const forbiddenRes = await fetch(`${BASE_URL}/api/chat/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${salesToken}` },
+      body: JSON.stringify({ receiver_id: 'user-sale-2', content: 'Không được phép' })
+    });
+    assert.strictEqual(forbiddenRes.status, 403);
+  });
+
+  test('14. Chat unread state persists per conversation and clears when read', async () => {
+    const adminToken = generateToken('user-admin', 'viet@studio.com', 0);
+    const salesToken = generateToken('user-sale-1', 'sale1@studio.com', 0);
+    const db = LocalDatabase.get();
+    db.chat_messages = [];
+    db.chat_read_states = [];
+    LocalDatabase.save(db);
+
+    const sendRes = await fetch(`${BASE_URL}/api/chat/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ receiver_id: 'user-sale-1', content: 'Tin nhắn cần đọc' })
+    });
+    assert.strictEqual(sendRes.status, 201);
+
+    const unreadRes = await fetch(`${BASE_URL}/api/chat/unread`, {
+      headers: { Authorization: `Bearer ${salesToken}` }
+    });
+    const unread = await unreadRes.json() as any;
+    assert.strictEqual(unread.direct['user-admin'], 1);
+    assert.strictEqual(unread.total, 1);
+
+    const readRes = await fetch(`${BASE_URL}/api/chat/read`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${salesToken}` },
+      body: JSON.stringify({ receiver_id: 'user-admin' })
+    });
+    assert.strictEqual(readRes.status, 200);
+
+    const afterReadRes = await fetch(`${BASE_URL}/api/chat/unread`, {
+      headers: { Authorization: `Bearer ${salesToken}` }
+    });
+    const afterRead = await afterReadRes.json() as any;
+    assert.strictEqual(afterRead.direct['user-admin'] || 0, 0);
+    assert.strictEqual(afterRead.total, 0);
+  });
+
+  test('15. Chat pushes new messages to authenticated users in realtime', async () => {
+    const salesToken = generateToken('user-sale-1', 'sale1@studio.com', 0);
+    const adminToken = generateToken('user-admin', 'viet@studio.com', 0);
+    const socket = createSocketClient(BASE_URL, {
+      path: '/socket.io',
+      auth: { token: salesToken },
+      transports: ['websocket'],
+      forceNew: true,
+    });
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Socket connection timeout')), 2000);
+        socket.once('connect', () => {
+          clearTimeout(timeout);
+          resolve();
+        });
+        socket.once('connect_error', reject);
+      });
+
+      const receivedMessage = new Promise<any>((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Realtime message timeout')), 2000);
+        socket.once('chat:message', message => {
+          clearTimeout(timeout);
+          resolve(message);
+        });
+      });
+
+      const sendRes = await fetch(`${BASE_URL}/api/chat/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+        body: JSON.stringify({ receiver_id: null, content: 'Realtime test message' })
+      });
+      assert.strictEqual(sendRes.status, 201);
+      const message = await receivedMessage;
+      assert.strictEqual(message.content, 'Realtime test message');
+      assert.strictEqual(message.sender_id, 'user-admin');
+    } finally {
+      socket.disconnect();
+    }
+  });
+
+  test('16. Chat supports protected image attachments, mentions and task references', async () => {
+    const adminToken = generateToken('user-admin', 'viet@studio.com', 0);
+    const salesToken = generateToken('user-sale-1', 'sale1@studio.com', 0);
+    const db = LocalDatabase.get();
+    db.tasks = [{
+      id: 'task-chat-ref', title: 'Duyệt album khách hàng', description: null, order_id: null,
+      assigned_to: 'user-sale-1', assigned_by: 'user-admin', status: 'pending', priority: 'high',
+      due_date: null, created_at: '2026-07-12T00:00:00Z', updated_at: '2026-07-12T00:00:00Z'
+    }];
+    LocalDatabase.save(db);
+
+    const searchRes = await fetch(`${BASE_URL}/api/chat/references?q=duy%E1%BB%87t`, {
+      headers: { Authorization: `Bearer ${salesToken}` }
+    });
+    assert.strictEqual(searchRes.status, 200);
+    const references = await searchRes.json() as any[];
+    assert.strictEqual(references[0].id, 'task-chat-ref');
+
+    const uploadRes = await fetch(`${BASE_URL}/api/chat/attachments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({
+        name: 'anh-test.png',
+        data_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+      })
+    });
+    assert.strictEqual(uploadRes.status, 201);
+    const attachment = await uploadRes.json() as any;
+
+    try {
+      const sendRes = await fetch(`${BASE_URL}/api/chat/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+        body: JSON.stringify({
+          receiver_id: null,
+          content: '@Sale User 1 xem giúp công việc này',
+          attachment_filename: attachment.filename,
+          attachment_name: attachment.name,
+          attachment_mime: attachment.mime,
+          reference_type: 'task',
+          reference_id: 'task-chat-ref',
+          mentioned_user_ids: ['user-sale-1', 'not-a-user']
+        })
+      });
+      assert.strictEqual(sendRes.status, 201);
+      const message = await sendRes.json() as any;
+      assert.strictEqual(message.reference_id, 'task-chat-ref');
+      assert.deepStrictEqual(message.mentioned_user_ids, ['user-sale-1']);
+      assert.strictEqual(message.attachment_filename, attachment.filename);
+
+      const imageRes = await fetch(`${BASE_URL}/api/chat/attachments/${attachment.filename}`, {
+        headers: { Authorization: `Bearer ${salesToken}` }
+      });
+      assert.strictEqual(imageRes.status, 200);
+      assert.strictEqual(imageRes.headers.get('content-type'), 'image/png');
+    } finally {
+      const imagePath = path.join(process.cwd(), 'chat_uploads', attachment.filename);
+      if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
+    }
   });
 });

@@ -2,6 +2,8 @@ node_modules/
 build/
 dist/
 coverage/
+chat_uploads/
+data/chat_uploads/
 .DS_Store
 *.log
 .env*

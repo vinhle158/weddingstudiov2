@@ -440,6 +440,7 @@ export default function App() {
           <Chat 
             userId={user?.id}
             userRole={role?.name}
+            onNavigate={handleNavigate}
           />
         )}
 

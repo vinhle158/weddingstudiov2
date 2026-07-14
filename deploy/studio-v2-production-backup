@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+umask 077
+
+readonly DB_CONTAINER="studiov2_postgres_prod"
+readonly UPLOADS_DIR="/home/will/studio-v2/data/chat_uploads"
+readonly BACKUP_DIR="/var/backups/studio-v2/production"
+readonly REMOTE="gdrive:StudioV2-Backups/PostgreSQL"
+readonly RCLONE_CONFIG="/root/.config/rclone/rclone.conf"
+readonly PASSPHRASE_FILE="/root/.config/restic/studio-v2-password"
+readonly LOCK_FILE="/run/lock/studio-v2-production-backup.lock"
+
+export RCLONE_CONFIG
+
+exec 9>"${LOCK_FILE}"
+flock -n 9 || {
+  echo "A Studio V2 production backup is already running."
+  exit 0
+}
+
+install -d -m 700 "${BACKUP_DIR}"
+work_dir="$(mktemp -d "${BACKUP_DIR}/.tmp.XXXXXX")"
+cleanup() {
+  rm -rf "${work_dir}"
+}
+trap cleanup EXIT
+
+timestamp="$(date '+%Y%m%dT%H%M%S%z')"
+database_user="$(docker exec "${DB_CONTAINER}" sh -c 'printf %s "$POSTGRES_USER"')"
+database_name="$(docker exec "${DB_CONTAINER}" sh -c 'printf %s "$POSTGRES_DB"')"
+
+container_status="$(docker inspect "${DB_CONTAINER}" --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}')"
+if [[ "${container_status}" != "healthy" && "${container_status}" != "running" ]]; then
+  echo "PostgreSQL container is not ready: ${container_status}" >&2
+  exit 1
+fi
+
+if [[ ! -d "${UPLOADS_DIR}" ]]; then
+  echo "Chat uploads directory does not exist: ${UPLOADS_DIR}" >&2
+  exit 1
+fi
+
+plain_dump="${work_dir}/${database_name}_${timestamp}.dump"
+plain_uploads="${work_dir}/chat_uploads_${timestamp}.tar"
+
+# Dump the database first. Files created after this point may be extra in the
+# archive, but a restored database will never reference a file omitted by an
+# earlier file snapshot.
+docker exec "${DB_CONTAINER}" pg_dump \
+  --username "${database_user}" \
+  --dbname "${database_name}" \
+  --format custom \
+  --no-owner \
+  --no-acl > "${plain_dump}"
+
+test -s "${plain_dump}"
+docker exec -i "${DB_CONTAINER}" pg_restore --list < "${plain_dump}" > /dev/null
+
+tar -C "${UPLOADS_DIR}" -cf "${plain_uploads}" .
+test -s "${plain_uploads}"
+tar -tf "${plain_uploads}" > /dev/null
+
+encrypt_file() {
+  local source_file="$1"
+  gpg --batch --yes --pinentry-mode loopback \
+    --passphrase-file "${PASSPHRASE_FILE}" \
+    --symmetric \
+    --cipher-algo AES256 \
+    --s2k-digest-algo SHA512 \
+    --output "${source_file}.gpg" \
+    "${source_file}"
+  rm -f "${source_file}"
+}
+
+encrypt_file "${plain_dump}"
+encrypt_file "${plain_uploads}"
+
+checksum_file="${work_dir}/studio_v2_${timestamp}.sha256"
+(
+  cd "${work_dir}"
+  sha256sum -- *.gpg > "$(basename "${checksum_file}")"
+  sha256sum --check "$(basename "${checksum_file}")"
+)
+
+rclone mkdir "${REMOTE}"
+rclone copy "${work_dir}" "${REMOTE}" \
+  --include '*.dump.gpg' \
+  --include '*.tar.gpg' \
+  --include '*.sha256' \
+  --transfers 2 \
+  --checkers 4
+rclone check "${work_dir}" "${REMOTE}" \
+  --one-way \
+  --include '*.dump.gpg' \
+  --include '*.tar.gpg' \
+  --include '*.sha256'
+
+install -m 600 "${work_dir}"/*.gpg "${BACKUP_DIR}/"
+install -m 600 "${checksum_file}" "${BACKUP_DIR}/"
+
+find "${BACKUP_DIR}" -maxdepth 1 -type f -mmin +10080 -delete
+rclone delete "${REMOTE}" \
+  --min-age 30d \
+  --include '*.dump.gpg' \
+  --include '*.tar.gpg' \
+  --include '*.sha256'
+
+echo "Studio V2 production backup completed: ${timestamp}"

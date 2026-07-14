@@ -17,6 +17,17 @@ export default defineConfig(() => {
           main: path.resolve(__dirname, 'index.html'),
           demo: path.resolve(__dirname, 'demo.html'),
         },
+        output: {
+          manualChunks(id) {
+            if (id.includes('/src/components/mobile/')) return 'app-mobile';
+            if (!id.includes('node_modules')) return undefined;
+            if (id.includes('/recharts/') || id.includes('/d3-')) return 'vendor-charts';
+            if (id.includes('/lucide-react/')) return 'vendor-icons';
+            if (id.includes('/gsap/') || id.includes('/motion/') || id.includes('/framer-motion/')) return 'vendor-animation';
+            if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/scheduler/')) return 'vendor-react';
+            return 'vendor';
+          },
+        },
       },
     },
     server: {

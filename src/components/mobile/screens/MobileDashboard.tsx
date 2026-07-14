@@ -9,16 +9,23 @@ import {
   AlertCircle, 
   Sparkles,
   ChevronRight,
-  TrendingUp
+  TrendingUp,
+  BellRing,
+  BellOff
 } from 'lucide-react';
+import { BrowserNotificationStatus } from '../../../lib/browserNotifications';
 
 interface MobileDashboardProps {
   userRole: string;
   userId: string;
   onNavigate: (tab: string, arg?: any) => void;
+  unreadNotifications: number;
+  notificationStatus: BrowserNotificationStatus;
+  pushEnabled: boolean;
+  onTogglePush: () => Promise<void>;
 }
 
-export default function MobileDashboard({ userRole, userId, onNavigate }: MobileDashboardProps) {
+export default function MobileDashboard({ userRole, userId, onNavigate, unreadNotifications, notificationStatus, pushEnabled, onTogglePush }: MobileDashboardProps) {
   const isStaff = userRole === 'role-photographer' || userRole === 'role-editor' || userRole === 'role-staff';
   
   const [summary, setSummary] = useState<any>(null);
@@ -94,6 +101,45 @@ export default function MobileDashboard({ userRole, userId, onNavigate }: Mobile
         <div className="flex items-center gap-2 mt-4 text-[10px] text-slate-300 font-semibold bg-slate-700/50 p-2.5 rounded-xl border border-slate-700 w-fit">
           <Calendar className="w-3.5 h-3.5 text-gold-400" />
           <span>Hôm nay: {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric' })}</span>
+        </div>
+      </div>
+
+      {/* Browser notifications */}
+      <div className={`rounded-2xl border p-4 shadow-2xs ${pushEnabled ? 'bg-emerald-50/70 border-emerald-200' : 'bg-white border-slate-200/70'}`}>
+        <div className="flex items-start gap-3">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${pushEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-gold-50 text-gold-700'}`}>
+            {pushEnabled ? <BellRing className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <h3 className="text-xs font-bold text-slate-800">Thông báo đẩy</h3>
+                <p className="text-[10px] text-slate-500 mt-0.5">
+                  {pushEnabled
+                    ? 'Đang nhận tin nhắn và việc mới khi web chạy nền.'
+                    : notificationStatus === 'denied'
+                      ? 'Trình duyệt đang chặn thông báo. Hãy mở cài đặt trang để cấp lại quyền.'
+                      : notificationStatus === 'unsupported'
+                        ? 'Trình duyệt này chưa hỗ trợ thông báo.'
+                        : 'Bật để không bỏ lỡ tin nhắn và công việc mới.'}
+                </p>
+              </div>
+              {unreadNotifications > 0 && (
+                <button type="button" onClick={() => onNavigate('notifications')} className="min-w-7 h-7 px-2 rounded-full bg-rose-500 text-white text-[10px] font-bold">
+                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                </button>
+              )}
+            </div>
+            {notificationStatus !== 'unsupported' && notificationStatus !== 'denied' && (
+              <button
+                type="button"
+                onClick={() => void onTogglePush()}
+                className={`mt-3 rounded-xl px-3 py-2 text-[10px] font-bold transition-colors ${pushEnabled ? 'bg-white text-emerald-700 border border-emerald-200' : 'bg-slate-900 text-white'}`}
+              >
+                {pushEnabled ? 'Tắt thông báo' : 'Bật thông báo'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

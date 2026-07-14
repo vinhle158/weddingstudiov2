@@ -63,21 +63,21 @@ const defaultUsers: User[] = [
     id: 'user-admin',
     full_name: 'Viet Hoang',
     email: 'viet@studio.com',
-    password_hash: bcrypt.hashSync('123abc456', 10),  // ← Hardcoded
+    password_hash: bcrypt.hashSync('[REDACTED_ADMIN_PASSWORD]', 10),  // ← Hardcoded
     role_id: 'role-admin',
   },
   {
     id: 'user-sale',
     full_name: 'Nguyễn Thị Sales',
     email: 'sale@studio.com',
-    password_hash: bcrypt.hashSync('staff123', 10),    // ← Hardcoded
+    password_hash: bcrypt.hashSync('[REDACTED_STAFF_PASSWORD]', 10),    // ← Hardcoded
     role_id: 'role-sales',
   }
 ];
 ```
 
 **Vấn đề:**  
-Mật khẩu admin (`123abc456`) và sales (`staff123`) bị hardcode trực tiếp trong source code. Bất kỳ ai có quyền đọc repo đều sở hữu credentials admin-level. Nếu repo bị leak (accidental push, contributor离开, fork public), toàn bộ hệ thống bị compromise.
+Mật khẩu admin và sales đã được redacted từng bị hardcode trực tiếp trong source code. Bất kỳ ai có quyền đọc repo đều có thể sở hữu credentials admin-level. Nếu repo bị leak (accidental push, contributor rời dự án, fork public), toàn bộ hệ thống bị compromise.
 
 **Tác hại:**
 - Attacker login với quyền admin

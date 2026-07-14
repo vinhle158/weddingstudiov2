@@ -9,6 +9,8 @@ import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import helmet from 'helmet';
+import { createServer as createHttpServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import { createServer as createViteServer } from 'vite';
 import { LocalDatabase, User, Customer, Order, OrderStatusHistory, Task, TaskUpdate, Role, Objective, ObjectiveKeyResult, ObjectiveProgressUpdate, Notification, ChatMessage, Lead, LeadFeedback, prisma } from './src/db_service';
 import { classifyIntent } from './src/lib/chatbot/nlp';
@@ -38,6 +40,153 @@ function sanitizeUser(user: User | undefined): Omit<User, 'password_hash'> | und
   return cleanUser;
 }
 
+const VIETNAM_TIME_ZONE = 'Asia/Ho_Chi_Minh';
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const vietnamDateFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: VIETNAM_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+interface CalendarDate {
+  year: number;
+  month: number;
+  day: number;
+}
+
+function parseIsoCalendarDate(value: unknown): CalendarDate | null {
+  if (typeof value !== 'string') return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  if (
+    parsed.getUTCFullYear() !== year
+    || parsed.getUTCMonth() !== month - 1
+    || parsed.getUTCDate() !== day
+  ) return null;
+
+  return { year, month, day };
+}
+
+function isValidOptionalCalendarDate(value: unknown): boolean {
+  return value === undefined || value === null || value === '' || parseIsoCalendarDate(value) !== null;
+}
+
+function normalizeOptionalCalendarDate(value: unknown): string | null {
+  return value === undefined || value === null || value === '' ? null : String(value);
+}
+
+function getVietnamCalendarDate(now: Date): CalendarDate {
+  const parts = vietnamDateFormatter.formatToParts(now);
+  const read = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find(part => part.type === type)?.value);
+  return { year: read('year'), month: read('month'), day: read('day') };
+}
+
+function isLeapYear(year: number): boolean {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}
+
+function annualOccurrence(year: number, month: number, day: number): CalendarDate {
+  // Business rule: customers born on 29/02 are reminded on 28/02 in non-leap years.
+  if (month === 2 && day === 29 && !isLeapYear(year)) return { year, month, day: 28 };
+  return { year, month, day };
+}
+
+function calendarDayNumber(date: CalendarDate): number {
+  return Date.UTC(date.year, date.month - 1, date.day) / DAY_IN_MS;
+}
+
+function nextAnnualOccurrence(today: CalendarDate, month: number, day: number): { date: CalendarDate; daysUntil: number } {
+  let date = annualOccurrence(today.year, month, day);
+  let daysUntil = calendarDayNumber(date) - calendarDayNumber(today);
+  if (daysUntil < 0) {
+    date = annualOccurrence(today.year + 1, month, day);
+    daysUntil = calendarDayNumber(date) - calendarDayNumber(today);
+  }
+  return { date, daysUntil };
+}
+
+function formatCalendarDate(date: CalendarDate): string {
+  return `${String(date.day).padStart(2, '0')}/${String(date.month).padStart(2, '0')}/${date.year}`;
+}
+
+export function buildAnniversaryNotifications(
+  customers: Customer[],
+  existingNotifications: Notification[],
+  reminderDays: number,
+  now = new Date(),
+): Notification[] {
+  const safeReminderDays = Number.isInteger(reminderDays) && reminderDays >= 1 && reminderDays <= 30
+    ? reminderDays
+    : 7;
+  const today = getVietnamCalendarDate(now);
+  const existingIds = new Set(existingNotifications.map(notification => notification.related_id).filter(Boolean));
+  const generated: Notification[] = [];
+
+  const addNotification = (
+    customer: Customer,
+    type: 'birthday' | 'wedding',
+    sourceDate: CalendarDate,
+  ) => {
+    const occurrence = nextAnnualOccurrence(today, sourceDate.month, sourceDate.day);
+    const years = occurrence.date.year - sourceDate.year;
+    if (years <= 0 || occurrence.daysUntil > safeReminderDays) return;
+
+    const reminderId = `anniversary:${type}:${customer.id}:${years}:${occurrence.date.year}`;
+    if (existingIds.has(reminderId)) return;
+    existingIds.add(reminderId);
+
+    const fbText = customer.facebook_url ? ` | FB: ${customer.facebook_url}` : '';
+    const formattedDate = formatCalendarDate(occurrence.date);
+    const isWedding = type === 'wedding';
+    generated.push({
+      id: 'notif-' + crypto.randomUUID(),
+      sender_id: 'system',
+      receiver_id: null,
+      title: isWedding
+        ? `[Kỷ niệm] Sắp đến kỷ niệm ${years} năm ngày cưới của khách hàng`
+        : '[Sinh nhật] Sắp đến ngày sinh nhật / thôi nôi của khách hàng',
+      content: isWedding
+        ? `Khách hàng ${customer.full_name} (SĐT: ${customer.phone}${fbText}) có kỷ niệm ${years} năm ngày cưới vào ngày ${formattedDate}. Vui lòng tạo tác vụ chăm sóc cho Sale.`
+        : `Khách hàng ${customer.full_name} (SĐT: ${customer.phone}${fbText}) có sinh nhật/kỷ niệm thôi nôi vào ngày ${formattedDate}. Vui lòng tạo tác vụ chăm sóc cho Sale.`,
+      type: 'anniversary',
+      related_id: reminderId,
+      is_read_by: [],
+      created_at: now.toISOString(),
+    });
+  };
+
+  for (const customer of customers) {
+    const weddingDate = parseIsoCalendarDate(customer.wedding_date);
+    if (weddingDate) addNotification(customer, 'wedding', weddingDate);
+    const birthday = parseIsoCalendarDate(customer.birthday);
+    if (birthday) addNotification(customer, 'birthday', birthday);
+  }
+
+  return generated;
+}
+
+export async function scanAndGenerateAnniversaryNotifications(now = new Date()): Promise<number> {
+  const db = LocalDatabase.get();
+  const generated = buildAnniversaryNotifications(
+    db.customers || [],
+    db.notifications || [],
+    db.studio_settings?.anniversary_reminder_days ?? 7,
+    now,
+  );
+  if (generated.length === 0) return 0;
+
+  db.notifications = [...(db.notifications || []), ...generated];
+  LocalDatabase.save(db);
+  console.log(`[ANNIVERSARY] Generated ${generated.length} anniversary notification(s).`);
+  return generated.length;
+}
+
 // Extend Express Request type to include authenticated user
 interface AuthenticatedRequest extends Request {
   user?: User;
@@ -46,6 +195,22 @@ interface AuthenticatedRequest extends Request {
 
 async function startServer() {
   const app = express();
+
+  // Trust only proxy ranges explicitly configured by the deployment.
+  // Production traffic reaches Express through Cloudflare Tunnel and Docker's private bridge.
+  const trustProxy = process.env.TRUST_PROXY?.trim();
+  if (trustProxy) {
+    app.set('trust proxy', trustProxy);
+  }
+
+  const httpServer = createHttpServer(app);
+  const io = new SocketIOServer(httpServer, {
+    path: '/socket.io',
+    cors: {
+      origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+      credentials: true,
+    },
+  });
   
   // Initialize the database connection and cache
   await LocalDatabase.initialize();
@@ -75,7 +240,7 @@ async function startServer() {
     origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
     credentials: true,
   }));
-  app.use(express.json());
+  app.use(express.json({ limit: '8mb' }));
 
   // Setup login rate limiter
   const loginLimiter = rateLimit({
@@ -88,33 +253,53 @@ async function startServer() {
 
 
   // ----------------- AUTHENTICATION MIDDLEWARE -----------------
+  const resolveAuthenticatedUser = (token: string): { user: User; role?: Role } => {
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; sessionVersion?: number };
+    const db = LocalDatabase.get();
+    const user = db.users.find(u => u.id === decoded.userId);
+
+    if (!user || !user.is_active) throw new Error('Invalid or inactive user');
+    if (decoded.sessionVersion === undefined || decoded.sessionVersion !== (user.session_version || 0)) {
+      throw new Error('Session has expired or logged out');
+    }
+
+    return { user, role: db.roles.find(r => r.id === user.role_id) };
+  };
+
   const authenticate = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Unauthorized: Missing token' });
     }
-    const token = authHeader.split(' ')[1];
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; sessionVersion?: number };
-      const db = LocalDatabase.get();
-      const user = db.users.find(u => u.id === decoded.userId);
-      
-      if (!user || !user.is_active) {
-        return res.status(401).json({ error: 'Unauthorized: Invalid or inactive user' });
-      }
-
-      if (decoded.sessionVersion === undefined || decoded.sessionVersion !== (user.session_version || 0)) {
-        return res.status(401).json({ error: 'Unauthorized: Session has expired or logged out' });
-      }
-
-      const role = db.roles.find(r => r.id === user.role_id);
+      const { user, role } = resolveAuthenticatedUser(authHeader.slice('Bearer '.length));
       req.user = user;
       req.role = role;
       next();
     } catch (err) {
-      return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
+      const message = err instanceof Error && err.message === 'Session has expired or logged out'
+        ? 'Unauthorized: Session has expired or logged out'
+        : 'Unauthorized: Invalid or expired token';
+      return res.status(401).json({ error: message });
     }
   };
+
+  io.use((socket, next) => {
+    const token = typeof socket.handshake.auth?.token === 'string' ? socket.handshake.auth.token : '';
+    try {
+      const { user } = resolveAuthenticatedUser(token);
+      socket.data.userId = user.id;
+      next();
+    } catch {
+      next(new Error('Unauthorized'));
+    }
+  });
+
+  io.on('connection', socket => {
+    const userId = socket.data.userId as string;
+    socket.join('chat:general');
+    socket.join(`chat:user:${userId}`);
+  });
 
   // Helper to check standard permission keys
   const requirePermission = (permission: string) => {
@@ -1439,6 +1624,9 @@ async function startServer() {
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: 'Định dạng email không hợp lệ' });
     }
+    if (!isValidOptionalCalendarDate(birthday) || !isValidOptionalCalendarDate(wedding_date)) {
+      return res.status(400).json({ error: 'Ngày sinh hoặc ngày kỷ niệm không hợp lệ' });
+    }
 
     const db = LocalDatabase.get();
     const newCust: Customer = {
@@ -1448,8 +1636,8 @@ async function startServer() {
       email: email || null,
       address: address || null,
       notes: notes || null,
-      birthday: birthday || null,
-      wedding_date: wedding_date || null,
+      birthday: normalizeOptionalCalendarDate(birthday),
+      wedding_date: normalizeOptionalCalendarDate(wedding_date),
       facebook_url: facebook_url || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -1476,6 +1664,9 @@ async function startServer() {
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: 'Định dạng email không hợp lệ' });
     }
+    if (!isValidOptionalCalendarDate(birthday) || !isValidOptionalCalendarDate(wedding_date)) {
+      return res.status(400).json({ error: 'Ngày sinh hoặc ngày kỷ niệm không hợp lệ' });
+    }
 
     const db = LocalDatabase.get();
     const idx = db.customers.findIndex(c => c.id === id);
@@ -1488,8 +1679,8 @@ async function startServer() {
     if (email !== undefined) db.customers[idx].email = email;
     if (address !== undefined) db.customers[idx].address = address;
     if (notes !== undefined) db.customers[idx].notes = notes;
-    if (birthday !== undefined) db.customers[idx].birthday = birthday;
-    if (wedding_date !== undefined) db.customers[idx].wedding_date = wedding_date;
+    if (birthday !== undefined) db.customers[idx].birthday = normalizeOptionalCalendarDate(birthday);
+    if (wedding_date !== undefined) db.customers[idx].wedding_date = normalizeOptionalCalendarDate(wedding_date);
     if (facebook_url !== undefined) db.customers[idx].facebook_url = facebook_url;
     db.customers[idx].updated_at = new Date().toISOString();
 
@@ -2538,6 +2729,176 @@ async function startServer() {
   });
 
   // ----------------- CHAT ENDPOINTS -----------------
+  const canStartPrivateChat = (requestingUser: User, targetUser: User) => {
+    if (!targetUser.is_active || requestingUser.id === targetUser.id) return false;
+    const requesterRole = LocalDatabase.get().roles.find(role => role.id === requestingUser.role_id)?.name;
+    return requesterRole === 'admin' || requesterRole === 'manager'
+      || targetUser.role_id === 'role-admin'
+      || targetUser.role_id === 'role-manager';
+  };
+
+  const chatConversationKey = (targetUserId: string | null) => targetUserId ? `dm:${targetUserId}` : 'general';
+  const chatUploadsDir = path.resolve(process.cwd(), 'chat_uploads');
+  const canAccessTask = (user: User, role: Role | undefined, task: Task) => {
+    if (role?.permissions.includes('tasks.view_all') || role?.permissions.includes('admin') || role?.id === 'role-admin') return true;
+    return task.assigned_to === user.id;
+  };
+
+  const resolveChatReference = (user: User, role: Role | undefined, referenceType: unknown, referenceId: unknown) => {
+    if (!referenceType || !referenceId) return null;
+    const db = LocalDatabase.get();
+    if (referenceType === 'task') {
+      const task = db.tasks.find(item => item.id === referenceId);
+      if (!task || !canAccessTask(user, role, task)) return null;
+      return { type: 'task' as const, id: task.id, label: `${task.title}${task.order_id ? ` · ${db.orders.find(order => order.id === task.order_id)?.order_code || task.order_id}` : ''}` };
+    }
+    if (referenceType === 'customer') {
+      const canViewCustomers = role?.permissions.includes('customers.view') || role?.permissions.includes('admin') || role?.id === 'role-admin';
+      const customer = canViewCustomers ? db.customers.find(item => item.id === referenceId) : undefined;
+      if (!customer) return null;
+      return { type: 'customer' as const, id: customer.id, label: `${customer.full_name} · ${customer.phone}` };
+    }
+    return null;
+  };
+
+  app.get('/api/chat/references', authenticate, (req: AuthenticatedRequest, res: Response) => {
+    const query = String(req.query.q || '').trim().toLocaleLowerCase('vi-VN');
+    if (query.length < 2) return res.json([]);
+    const db = LocalDatabase.get();
+    const results: Array<{ type: 'task' | 'customer'; id: string; label: string; subtitle: string }> = [];
+
+    for (const task of db.tasks) {
+      const order = db.orders.find(item => item.id === task.order_id);
+      const haystack = `${task.id} ${task.title} ${order?.order_code || ''}`.toLocaleLowerCase('vi-VN');
+      if (results.length < 6 && haystack.includes(query) && canAccessTask(req.user!, req.role, task)) {
+        results.push({ type: 'task', id: task.id, label: task.title, subtitle: order?.order_code || task.id });
+      }
+    }
+
+    const canViewCustomers = req.role?.permissions.includes('customers.view') || req.role?.permissions.includes('admin') || req.role?.id === 'role-admin';
+    if (canViewCustomers) {
+      for (const customer of db.customers) {
+        const haystack = `${customer.id} ${customer.full_name} ${customer.phone}`.toLocaleLowerCase('vi-VN');
+        if (results.length < 12 && haystack.includes(query)) {
+          results.push({ type: 'customer', id: customer.id, label: customer.full_name, subtitle: customer.phone });
+        }
+      }
+    }
+    res.json(results);
+  });
+
+  app.post('/api/chat/attachments', authenticate, (req: AuthenticatedRequest, res: Response) => {
+    const { data_url, name } = req.body;
+    const match = typeof data_url === 'string' ? data_url.match(/^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/) : null;
+    if (!match) return res.status(400).json({ error: 'Chỉ hỗ trợ ảnh PNG, JPEG hoặc WebP' });
+    const bytes = Buffer.from(match[2], 'base64');
+    if (bytes.length === 0 || bytes.length > 5 * 1024 * 1024) {
+      return res.status(400).json({ error: 'Ảnh phải nhỏ hơn 5 MB' });
+    }
+    fs.mkdirSync(chatUploadsDir, { recursive: true });
+    const extension = match[1] === 'image/png' ? 'png' : match[1] === 'image/webp' ? 'webp' : 'jpg';
+    const filename = `${crypto.randomUUID()}.${extension}`;
+    fs.writeFileSync(path.join(chatUploadsDir, filename), bytes, { flag: 'wx' });
+    res.status(201).json({ filename, name: String(name || `anh-chup.${extension}`).slice(0, 120), mime: match[1] });
+  });
+
+  app.get('/api/chat/attachments/:filename', authenticate, (req: AuthenticatedRequest, res: Response) => {
+    const filename = req.params.filename;
+    if (!/^[a-f0-9-]+\.(?:png|jpg|webp)$/.test(filename)) return res.status(400).json({ error: 'Tên ảnh không hợp lệ' });
+    const message = (LocalDatabase.get().chat_messages || []).find(item => item.attachment_filename === filename);
+    if (!message || (message.receiver_id !== null && message.sender_id !== req.user!.id && message.receiver_id !== req.user!.id)) {
+      return res.status(404).json({ error: 'Không tìm thấy ảnh' });
+    }
+    const filePath = path.join(chatUploadsDir, filename);
+    if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Không tìm thấy ảnh' });
+    res.type(message.attachment_mime || 'application/octet-stream').sendFile(filePath);
+  });
+
+  app.get('/api/chat/contacts', authenticate, (req: AuthenticatedRequest, res: Response) => {
+    const db = LocalDatabase.get();
+    const contacts = db.users
+      .filter(user => canStartPrivateChat(req.user!, user))
+      .map(user => {
+        const role = db.roles.find(item => item.id === user.role_id);
+        return {
+          id: user.id,
+          full_name: user.full_name,
+          role_id: user.role_id,
+          role_name: role?.name || '',
+          role_display_name: role?.display_name || 'Nhân viên',
+          is_active: user.is_active,
+        };
+      });
+    res.json(contacts);
+  });
+
+  app.get('/api/chat/mentionable-users', authenticate, (req: AuthenticatedRequest, res: Response) => {
+    const db = LocalDatabase.get();
+    res.json(db.users.filter(user => user.is_active && user.id !== req.user!.id).map(user => {
+      const role = db.roles.find(item => item.id === user.role_id);
+      return {
+        id: user.id,
+        full_name: user.full_name,
+        role_id: user.role_id,
+        role_name: role?.name || '',
+        role_display_name: role?.display_name || 'Nhân viên',
+        is_active: true,
+      };
+    }));
+  });
+
+  app.get('/api/chat/unread', authenticate, (req: AuthenticatedRequest, res: Response) => {
+    const db = LocalDatabase.get();
+    const userId = req.user!.id;
+    const readStates = db.chat_read_states || [];
+    const lastReadFor = (key: string) => readStates.find(state => state.user_id === userId && state.conversation_key === key)?.last_read_at || '';
+    const direct: Record<string, number> = {};
+    let general = 0;
+
+    for (const message of db.chat_messages || []) {
+      if (message.sender_id === userId) continue;
+      if (message.receiver_id === null) {
+        if (message.created_at > lastReadFor('general')) general += 1;
+      } else if (message.receiver_id === userId) {
+        const key = chatConversationKey(message.sender_id);
+        if (message.created_at > lastReadFor(key)) {
+          direct[message.sender_id] = (direct[message.sender_id] || 0) + 1;
+        }
+      }
+    }
+
+    res.json({ general, direct, total: general + Object.values(direct).reduce((sum, count) => sum + count, 0) });
+  });
+
+  app.post('/api/chat/read', authenticate, (req: AuthenticatedRequest, res: Response) => {
+    const db = LocalDatabase.get();
+    const userId = req.user!.id;
+    const targetUserId = req.body.receiver_id === 'null' || !req.body.receiver_id ? null : String(req.body.receiver_id);
+    if (targetUserId) {
+      const target = db.users.find(user => user.id === targetUserId);
+      if (!target || !canStartPrivateChat(req.user!, target)) {
+        return res.status(403).json({ error: 'Bạn không có quyền truy cập cuộc trò chuyện này' });
+      }
+    }
+
+    if (!db.chat_read_states) db.chat_read_states = [];
+    const conversationKey = chatConversationKey(targetUserId);
+    const now = new Date().toISOString();
+    const existing = db.chat_read_states.find(state => state.user_id === userId && state.conversation_key === conversationKey);
+    if (existing) {
+      existing.last_read_at = now;
+    } else {
+      db.chat_read_states.push({
+        id: `chat-read-${LocalDatabase.uuid()}`,
+        user_id: userId,
+        conversation_key: conversationKey,
+        last_read_at: now,
+      });
+    }
+    LocalDatabase.save(db);
+    res.json({ success: true, conversation_key: conversationKey, last_read_at: now });
+  });
+
   app.get('/api/chat/dashboard-messages', authenticate, (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
     const userId = req.user!.id;
@@ -2570,6 +2931,13 @@ async function startServer() {
     const userId = req.user!.id;
     const targetUserId = req.query.receiver_id === 'null' || !req.query.receiver_id ? null : req.query.receiver_id as string;
 
+    if (targetUserId) {
+      const target = db.users.find(user => user.id === targetUserId);
+      if (!target || !canStartPrivateChat(req.user!, target)) {
+        return res.status(403).json({ error: 'Bạn không có quyền truy cập cuộc trò chuyện này' });
+      }
+    }
+
     const messages = db.chat_messages || [];
 
     let filtered = [];
@@ -2597,21 +2965,45 @@ async function startServer() {
   });
 
   app.post('/api/chat/messages', authenticate, (req: AuthenticatedRequest, res: Response) => {
-    const { receiver_id, content } = req.body;
-    if (!content || !content.trim()) {
-      return res.status(400).json({ error: 'Nội dung tin nhắn không được để trống' });
+    const { receiver_id, content, attachment_filename, attachment_name, attachment_mime, reference_type, reference_id, mentioned_user_ids } = req.body;
+    const normalizedContent = typeof content === 'string' ? content.trim() : '';
+    if (!normalizedContent && !attachment_filename && !reference_id) {
+      return res.status(400).json({ error: 'Tin nhắn cần có nội dung, ảnh hoặc tham chiếu' });
     }
 
     const targetUserId = receiver_id === 'null' || !receiver_id ? null : receiver_id as string;
 
     const db = LocalDatabase.get();
+    if (targetUserId) {
+      const target = db.users.find(user => user.id === targetUserId);
+      if (!target || !canStartPrivateChat(req.user!, target)) {
+        return res.status(403).json({ error: 'Bạn không có quyền gửi tin nhắn cho người này' });
+      }
+    }
     if (!db.chat_messages) db.chat_messages = [];
+    const attachmentIsValid = typeof attachment_filename === 'string'
+      && /^[a-f0-9-]+\.(?:png|jpg|webp)$/.test(attachment_filename)
+      && fs.existsSync(path.join(chatUploadsDir, attachment_filename));
+    if (attachment_filename && !attachmentIsValid) return res.status(400).json({ error: 'Ảnh đính kèm không hợp lệ' });
+    const reference = resolveChatReference(req.user!, req.role, reference_type, reference_id);
+    if (reference_id && !reference) return res.status(403).json({ error: 'Bạn không có quyền gắn hồ sơ này' });
+    const allowedMentionIds = new Set(targetUserId ? [targetUserId] : db.users.filter(user => user.is_active && user.id !== req.user!.id).map(user => user.id));
+    const mentions = Array.isArray(mentioned_user_ids)
+      ? [...new Set(mentioned_user_ids.filter((id): id is string => typeof id === 'string' && allowedMentionIds.has(id)))].slice(0, 20)
+      : [];
 
     const newMsg: ChatMessage = {
       id: 'msg-' + LocalDatabase.uuid(),
       sender_id: req.user!.id,
       receiver_id: targetUserId,
-      content: content.trim(),
+      content: normalizedContent,
+      attachment_filename: attachmentIsValid ? attachment_filename : null,
+      attachment_name: attachmentIsValid ? String(attachment_name || 'Ảnh chụp').slice(0, 120) : null,
+      attachment_mime: attachmentIsValid ? String(attachment_mime || 'image/png') : null,
+      reference_type: reference?.type || null,
+      reference_id: reference?.id || null,
+      reference_label: reference?.label || null,
+      mentioned_user_ids: mentions,
       created_at: new Date().toISOString()
     };
 
@@ -2619,11 +3011,19 @@ async function startServer() {
     LocalDatabase.save(db);
 
     const sender = db.users.find(u => u.id === req.user!.id);
-    res.status(201).json({
+    const responseMessage = {
       ...newMsg,
       sender_name: sender ? sender.full_name : 'Nhân viên',
       sender_role_id: sender ? sender.role_id : ''
-    });
+    };
+
+    if (targetUserId === null) {
+      io.to('chat:general').emit('chat:message', responseMessage);
+    } else {
+      io.to(`chat:user:${req.user!.id}`).to(`chat:user:${targetUserId}`).emit('chat:message', responseMessage);
+    }
+
+    res.status(201).json(responseMessage);
   });
 
   function maskApiKey(key: string | undefined | null): string {
@@ -2652,6 +3052,13 @@ async function startServer() {
       return res.status(400).json({ error: 'Định dạng email không hợp lệ' });
     }
 
+    const parsedReminderDays = anniversary_reminder_days === undefined
+      ? 7
+      : Number(anniversary_reminder_days);
+    if (!Number.isInteger(parsedReminderDays) || parsedReminderDays < 1 || parsedReminderDays > 30) {
+      return res.status(400).json({ error: 'Số ngày nhắc kỷ niệm phải là số nguyên từ 1 đến 30' });
+    }
+
     db.studio_settings = {
       name,
       phone,
@@ -2662,7 +3069,7 @@ async function startServer() {
       notes: notes || '',
       backup_schedule: backup_schedule || 'weekly',
       last_backup_time: db.studio_settings?.last_backup_time || '',
-      anniversary_reminder_days: anniversary_reminder_days !== undefined ? parseInt(anniversary_reminder_days, 10) : 7
+      anniversary_reminder_days: parsedReminderDays
     };
 
     LocalDatabase.save(db);
@@ -3302,109 +3709,6 @@ async function startServer() {
   }
 
   // ----------------- ANNIVERSARY NOTIFICATION SCHEDULER -----------------
-  async function scanAndGenerateAnniversaryNotifications() {
-    const db = LocalDatabase.get();
-    const settings = db.studio_settings;
-    const reminderDays = settings?.anniversary_reminder_days !== undefined ? settings.anniversary_reminder_days : 7;
-
-    const today = new Date();
-    const utcOffset = today.getTimezoneOffset() * 60000;
-    const vnTime = new Date(today.getTime() + utcOffset + (7 * 3600000));
-    
-    const todayZero = new Date(vnTime.getFullYear(), vnTime.getMonth(), vnTime.getDate());
-    const currentYear = todayZero.getFullYear();
-
-    const customers = db.customers || [];
-    let notifications = db.notifications || [];
-    let hasChanges = false;
-
-    for (const customer of customers) {
-      const fbText = customer.facebook_url ? ` | FB: ${customer.facebook_url}` : '';
-
-      // 1. Quét ngày cưới (wedding_date)
-      if (customer.wedding_date) {
-        const parts = customer.wedding_date.split('-');
-        if (parts.length === 3) {
-          const wYear = parseInt(parts[0], 10);
-          const wMonth = parseInt(parts[1], 10) - 1;
-          const wDay = parseInt(parts[2], 10);
-
-          const years = currentYear - wYear;
-          if (years > 0) {
-            const anniversaryThisYear = new Date(currentYear, wMonth, wDay);
-            const timeDiff = anniversaryThisYear.getTime() - todayZero.getTime();
-            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
-            if (daysDiff >= 0 && daysDiff <= reminderDays) {
-              const reminderId = `anniversary:wedding:${customer.id}:${years}:${currentYear}`;
-              const exists = notifications.some(n => n.related_id === reminderId);
-              if (!exists) {
-                const formattedWeddingDate = `${String(wDay).padStart(2, '0')}/${String(wMonth + 1).padStart(2, '0')}/${currentYear}`;
-                
-                notifications.push({
-                  id: 'notif-' + crypto.randomUUID(),
-                  sender_id: 'system',
-                  receiver_id: null,
-                  title: `[Kỷ niệm] Sắp đến kỷ niệm ${years} năm ngày cưới của khách hàng`,
-                  content: `Khách hàng ${customer.full_name} (SĐT: ${customer.phone}${fbText}) có kỷ niệm ${years} năm ngày cưới vào ngày ${formattedWeddingDate}. Vui lòng tạo tác vụ chăm sóc cho Sale.`,
-                  type: 'anniversary' as any,
-                  related_id: reminderId,
-                  is_read_by: [],
-                  created_at: new Date().toISOString()
-                });
-                hasChanges = true;
-              }
-            }
-          }
-        }
-      }
-
-      // 2. Quét ngày sinh nhật (birthday)
-      if (customer.birthday) {
-        const parts = customer.birthday.split('-');
-        if (parts.length === 3) {
-          const bYear = parseInt(parts[0], 10);
-          const bMonth = parseInt(parts[1], 10) - 1;
-          const bDay = parseInt(parts[2], 10);
-
-          const age = currentYear - bYear;
-          if (age > 0) {
-            const birthdayThisYear = new Date(currentYear, bMonth, bDay);
-            const timeDiff = birthdayThisYear.getTime() - todayZero.getTime();
-            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
-            if (daysDiff >= 0 && daysDiff <= reminderDays) {
-              const reminderId = `anniversary:birthday:${customer.id}:${age}:${currentYear}`;
-              const exists = notifications.some(n => n.related_id === reminderId);
-              if (!exists) {
-                const formattedBirthDate = `${String(bDay).padStart(2, '0')}/${String(bMonth + 1).padStart(2, '0')}/${currentYear}`;
-                
-                notifications.push({
-                  id: 'notif-' + crypto.randomUUID(),
-                  sender_id: 'system',
-                  receiver_id: null,
-                  title: `[Sinh nhật] Sắp đến ngày sinh nhật / thôi nôi của khách hàng`,
-                  content: `Khách hàng ${customer.full_name} (SĐT: ${customer.phone}${fbText}) có sinh nhật/kỷ niệm thôi nôi vào ngày ${formattedBirthDate}. Vui lòng tạo tác vụ chăm sóc cho Sale.`,
-                  type: 'anniversary' as any,
-                  related_id: reminderId,
-                  is_read_by: [],
-                  created_at: new Date().toISOString()
-                });
-                hasChanges = true;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if (hasChanges) {
-      db.notifications = notifications;
-      LocalDatabase.save(db);
-      console.log(`[ANNIVERSARY] Generated anniversary notifications.`);
-    }
-  }
-
   if (process.env.NODE_ENV !== 'test') {
     setTimeout(() => {
       console.log('[ANNIVERSARY] Initial scanning starting...');
@@ -3422,10 +3726,10 @@ async function startServer() {
   }
 
   const host = process.env.HOST || (fs.existsSync('/.dockerenv') ? '0.0.0.0' : '127.0.0.1');
-  const server = app.listen(PORT as number, host, () => {
+  const server = httpServer.listen(PORT as number, host, () => {
     console.log(`Server running on port ${PORT} (bound to ${host})`);
   });
-  return { app, server };
+  return { app, server, io };
 }
 
 if (process.env.NODE_ENV !== 'test') {
