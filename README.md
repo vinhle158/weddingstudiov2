@@ -1,5 +1,5 @@
 # 🌟 Hệ thống Quản lý Studio Ảnh Cưới - STUDIO V2
-**Dự án Quản lý Hoạt động Nội bộ cho "The Will Studio" / "Aura Bridal Studio"**
+**Dự án Quản lý Hoạt động Nội bộ cho "The Will Studio"**
 
 Ứng dụng **STUDIO V2** là giải pháp quản lý toàn diện được thiết kế đặc thù cho các hoạt động của Studio chụp ảnh cưới tại Rạch Giá. Ứng dụng hoạt động mượt mà trên cả máy tính (Desktop) lẫn điện thoại di động (Mobile Web-App), giúp chuẩn hóa quy trình tiếp đón khách hàng, theo dõi hợp đồng cưới, phân công công việc cho nhân sự và đo lường mục tiêu kinh doanh.
 
