@@ -244,3 +244,24 @@ Ngày 2026-07-14 đã rà lại chức năng nhắc sinh nhật/thôi nôi và k
 - Runtime local build mới: `/`, `/healthz` và toàn bộ asset chunks trả HTTP 200; login đạt; API thật từ chối đúng setting 31 ngày và ngày `2027-02-29`.
 
 Giới hạn xác minh: kênh điều khiển in-app browser không khả dụng trong lượt này nên visual browser QA không được tự động thao tác lại. UI form không bị sửa cấu trúc; visual QA vẫn là checkpoint bắt buộc trước cutover production.
+
+## 12. Trạng thái release và rehearsal ngày 2026-07-14
+
+Đã hoàn thành phần chuẩn bị release và rehearsal không ảnh hưởng production:
+
+- Release source: commit `96048be106b0f0afc497d88a5c42c485d69a7313`.
+- Compose production được khóa theo image digest, bind app/PostgreSQL về localhost và thêm database healthcheck tại commit `b05f361`.
+- Image Linux AMD64: `vinhle158/studiov2-app@sha256:a1bf06d9de933937e739cd63f0570e54fbec84c11ee4203b0e6da5114bfe8bf5`.
+- Local gate đạt: lint, 39/39 tests, build không có chunk warning, audit 0, `git diff --check`, migration deploy/status/diff trên schema tạm.
+- Backup thủ công production ngày 2026-07-14 hoàn tất với service exit 0; checksum, giải mã, `pg_restore` và so sánh row count trên database phụ đều đạt.
+- Migration chạy thành công trên `studio_db_chat_rehearsal`; schema Prisma up to date.
+- Rehearsal có đúng 4 role và duy nhất `viet@studio.com`.
+- Login, `/api/auth/me`, database status, Socket.IO, chat, ảnh bảo vệ bằng auth và persistent upload qua restart đều đạt.
+- Scheduler sinh nhật tạo đúng một notification và không tạo trùng sau hai lần restart/scan.
+- Production cũ vẫn running và `/healthz` trả `OK`; chưa đổi database, container, compose hoặc traffic production.
+
+Điểm dừng bắt buộc trước cutover:
+
+- Mật khẩu hiện tại của `viet@studio.com` trùng với credential hạ tầng đã được chia sẻ trong quá trình vận hành và từng xuất hiện trong tài liệu/test cũ. Current tree đã được làm sạch chuỗi credential, nhưng Git history không thể coi credential đó còn bí mật.
+- Vì vậy không được tiếp tục giữ nguyên password hash khi cutover. Cần người dùng chọn mật khẩu quản trị ứng dụng mới hoặc cho phép tạo tự động và bàn giao qua file local mode `0600`.
+- Việc đổi mật khẩu ứng dụng không đồng nghĩa được phép đổi mật khẩu SSH; đây là hai thao tác tách biệt.
