@@ -3,7 +3,7 @@
 
 Ứng dụng **STUDIO V2** là giải pháp quản lý toàn diện được thiết kế đặc thù cho các hoạt động của Studio chụp ảnh cưới tại Rạch Giá. Ứng dụng hoạt động mượt mà trên cả máy tính (Desktop) lẫn điện thoại di động (Mobile Web-App), giúp chuẩn hóa quy trình tiếp đón khách hàng, theo dõi hợp đồng cưới, phân công công việc cho nhân sự và đo lường mục tiêu kinh doanh.
 
-![Giao diện trang chủ Studio V2](assets/homepage.png)
+
 
 ---
 
