@@ -104,8 +104,9 @@ export default function App() {
   }, []);
 
   const [unreadCount, setUnreadCount] = useState(0);
-  const [toast, setToast] = useState<{ id: string; title: string; content: string; type: string } | null>(null);
-  const [previewNotification, setPreviewNotification] = useState<{ id: string; title: string; content: string; type: string } | null>(null);
+  type NotificationPreview = { id: string; title: string; content: string; type: string; related_id?: string | null };
+  const [toast, setToast] = useState<NotificationPreview | null>(null);
+  const [previewNotification, setPreviewNotification] = useState<NotificationPreview | null>(null);
   const [knownNotifIds, setKnownNotifIds] = useState<Set<string>>(new Set());
   const [isFirstNotifLoad, setIsFirstNotifLoad] = useState(true);
 
@@ -124,6 +125,16 @@ export default function App() {
         if (isFirstNotifLoad) {
           setKnownNotifIds(new Set(currentIds));
           setIsFirstNotifLoad(false);
+          const pendingSoftwareUpdate = notifs.find((n: any) => !n.is_read && n.type === 'software_update');
+          if (pendingSoftwareUpdate) {
+            setToast({
+              id: pendingSoftwareUpdate.id,
+              title: pendingSoftwareUpdate.title,
+              content: pendingSoftwareUpdate.content,
+              type: pendingSoftwareUpdate.type,
+              related_id: pendingSoftwareUpdate.related_id
+            });
+          }
         } else {
           // Tìm những thông báo mới chưa từng biết và chưa đọc
           const newUnread = notifs.find((n: any) => !n.is_read && !knownNotifIds.has(n.id));
@@ -132,7 +143,8 @@ export default function App() {
               id: newUnread.id,
               title: newUnread.title,
               content: newUnread.content,
-              type: newUnread.type
+              type: newUnread.type,
+              related_id: newUnread.related_id
             });
 
             // Phát tiếng bip nhẹ
@@ -222,10 +234,18 @@ export default function App() {
     setMobileMenuOpen(false);
   };
 
-  const handleOpenNotificationDetail = (notificationId: string) => {
+  const handleOpenNotificationDetail = (notification: NotificationPreview) => {
     setPreviewNotification(null);
     setToast(null);
-    handleNavigate('notifications', { selectNotificationId: notificationId });
+    if (notification.type === 'software_update') {
+      apiRequest(`/api/notifications/${notification.id}/read`, 'POST').catch(() => undefined);
+      handleNavigate('settings', {
+        settingsSubTab: 'history',
+        releaseId: notification.related_id?.replace('software_update:', '') || ''
+      });
+      return;
+    }
+    handleNavigate('notifications', { selectNotificationId: notification.id });
   };
 
   // Clear navigation args on subsequent tab switches (to avoid repeating modal openings)
@@ -460,7 +480,11 @@ export default function App() {
         )}
 
         {activeTab === 'settings' && (
-          <Settings onSettingsSaved={fetchStudioSettings} />
+          <Settings
+            onSettingsSaved={fetchStudioSettings}
+            initialSubTab={navigationArg?.settingsSubTab}
+            initialReleaseId={navigationArg?.releaseId}
+          />
         )}
       </>
     );
@@ -707,7 +731,7 @@ export default function App() {
 
   // 2. PC VIEWPORT RENDER
   return (
-    <div className="min-h-screen bg-[#faf9f6] flex flex-col font-sans overflow-hidden">
+    <div className="h-screen h-dvh bg-[#faf9f6] flex flex-col font-sans overflow-hidden">
       <div id="demo-camera-viewport" className="flex-1 flex flex-col md:flex-row min-h-0 w-full h-full origin-center">
         {/* Mobile Header (When browser actually resized small) */}
         <header className="md:hidden bg-white text-slate-800 px-4 py-3 flex justify-between items-center z-20 shadow-xs border-b border-slate-200/60 shrink-0">
@@ -723,7 +747,7 @@ export default function App() {
         </header>
 
         {/* Navigation Sidebar (Desktop & Mobile drawer) */}
-        <aside className={`bg-white text-slate-700 w-full md:w-56 shrink-0 p-4 flex flex-col justify-between z-10 md:sticky md:top-[40px] md:h-[calc(100vh-40px)] border-r border-slate-200/80 transition-all duration-300 ${
+        <aside className={`bg-white text-slate-700 w-full md:w-56 shrink-0 p-4 flex flex-col justify-between z-10 md:sticky md:top-0 md:h-full md:max-h-full border-r border-slate-200/80 transition-all duration-300 ${
           mobileMenuOpen ? 'fixed inset-x-0 top-[88px] bottom-0 bg-white' : 'hidden md:flex'
         }`}>
           <div className="space-y-6 flex-1 flex flex-col">
@@ -793,7 +817,7 @@ export default function App() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+        <main className="flex-1 min-h-0 p-6 md:p-8 overflow-y-auto overscroll-contain max-w-7xl mx-auto w-full">
           {renderMainContent()}
         </main>
       </div>
@@ -818,8 +842,12 @@ export default function App() {
       {toast && (
         <div className="fixed bottom-4 right-4 z-50 max-w-sm w-full bg-white rounded-2xl border border-amber-200 shadow-xl p-4 flex gap-3 animate-slide-in cursor-pointer hover:border-gold-500 transition-colors"
           onClick={() => {
-            setPreviewNotification(toast);
-            setToast(null);
+            if (toast.type === 'software_update') {
+              handleOpenNotificationDetail(toast);
+            } else {
+              setPreviewNotification(toast);
+              setToast(null);
+            }
           }}
         >
           <div className="w-10 h-10 rounded-full bg-amber-50 shrink-0 flex items-center justify-center text-amber-500">
@@ -876,10 +904,10 @@ export default function App() {
               >
                 Đóng
               </button>
-              {previewNotification.content.length > 220 && (
+              {(previewNotification.content.length > 220 || previewNotification.type === 'software_update') && (
                 <button
                   type="button"
-                  onClick={() => handleOpenNotificationDetail(previewNotification.id)}
+                  onClick={() => handleOpenNotificationDetail(previewNotification)}
                   className="rounded-xl bg-amber-600 px-3 py-2 text-xs font-bold text-white hover:bg-amber-700"
                 >
                   Xem chi tiết

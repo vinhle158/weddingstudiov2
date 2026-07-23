@@ -8,14 +8,14 @@ generator client {
 }
 
 model User {
-  id            String   @id
-  full_name     String
-  email         String   @unique
-  password_hash String
-  role_id       String
-  is_active     Boolean
-  created_at    String
-  session_version Int    @default(0)
+  id              String  @id
+  full_name       String
+  email           String  @unique
+  password_hash   String
+  role_id         String
+  is_active       Boolean
+  created_at      String
+  session_version Int     @default(0)
 }
 
 model Role {
@@ -26,7 +26,7 @@ model Role {
 }
 
 model Customer {
-  id           String   @id
+  id           String  @id
   full_name    String
   phone        String
   email        String?
@@ -40,24 +40,54 @@ model Customer {
 }
 
 model Order {
-  id             String   @id
-  order_code     String   @unique
-  customer_id    String
-  status         String
-  shoot_date     String
-  shoot_time     String?
-  package_name   String
-  package_price  Float
-  deposit_amount Float
-  total_amount   Float
-  notes          String?
-  created_by     String
+  id                 String  @id
+  order_code         String  @unique
+  customer_id        String
+  service_package_id String?
+  status             String
+  shoot_date         String
+  shoot_time         String?
+  package_name       String
+  package_price      Float
+  deposit_amount     Float
+  total_amount       Float
+  notes              String?
+  created_by         String
+  created_at         String
+  updated_at         String
+}
+
+model ServicePackage {
+  id            String  @id
+  name          String  @unique
+  default_price Float
+  description   String?
+  is_active     Boolean @default(true)
+  sort_order    Int     @default(0)
+  created_by    String
+  created_at    String
+  updated_at    String
+}
+
+model OrderPayment {
+  id             String  @id
+  order_id       String
+  installment_no Int
+  amount         Float
+  payment_date   String
+  note           String?
+  recorded_by    String
   created_at     String
-  updated_at     String
+  voided_at      String?
+  voided_by      String?
+  void_reason    String?
+
+  @@index([order_id])
+  @@index([payment_date])
 }
 
 model OrderStatusHistory {
-  id          String   @id
+  id          String  @id
   order_id    String
   from_status String
   to_status   String
@@ -67,8 +97,8 @@ model OrderStatusHistory {
 }
 
 model DressInventory {
-  id         String   @id
-  code       String   @unique
+  id         String  @id
+  code       String  @unique
   name       String
   category   String
   size       String
@@ -80,7 +110,7 @@ model DressInventory {
 }
 
 model DressRental {
-  id          String   @id
+  id          String  @id
   dress_id    String
   order_id    String
   rented_date String
@@ -92,7 +122,7 @@ model DressRental {
 }
 
 model Task {
-  id          String   @id
+  id          String  @id
   title       String
   description String?
   order_id    String?
@@ -106,7 +136,7 @@ model Task {
 }
 
 model TaskUpdate {
-  id                String   @id
+  id                String  @id
   task_id           String
   updated_by        String
   status_changed_to String?
@@ -115,7 +145,7 @@ model TaskUpdate {
 }
 
 model Objective {
-  id           String   @id
+  id           String  @id
   title        String
   description  String?
   status       String
@@ -126,7 +156,7 @@ model Objective {
 }
 
 model ObjectiveKeyResult {
-  id                  String   @id
+  id                  String  @id
   objective_id        String
   title               String
   assigned_department String
@@ -138,40 +168,40 @@ model ObjectiveKeyResult {
 }
 
 model ObjectiveProgressUpdate {
-  id             String   @id
-  key_result_id  String
-  updated_by     String
-  progress_from  Float
-  progress_to    Float
-  comment        String?
-  created_at     String
+  id            String  @id
+  key_result_id String
+  updated_by    String
+  progress_from Float
+  progress_to   Float
+  comment       String?
+  created_at    String
 }
 
 model Notification {
-  id         String   @id
-  sender_id  String
+  id          String   @id
+  sender_id   String
   receiver_id String?
-  title      String
-  content    String
-  type       String
-  related_id String?
-  is_read_by String[]
-  created_at String
+  title       String
+  content     String
+  type        String
+  related_id  String?
+  is_read_by  String[]
+  created_at  String
 }
 
 model ChatMessage {
-  id                 String   @id
-  sender_id          String
-  receiver_id        String?
-  content            String
+  id                  String   @id
+  sender_id           String
+  receiver_id         String?
+  content             String
   attachment_filename String?
-  attachment_name    String?
-  attachment_mime    String?
-  reference_type     String?
-  reference_id       String?
-  reference_label    String?
-  mentioned_user_ids String[] @default([])
-  created_at         String
+  attachment_name     String?
+  attachment_mime     String?
+  reference_type      String?
+  reference_id        String?
+  reference_label     String?
+  mentioned_user_ids  String[] @default([])
+  created_at          String
 }
 
 model ChatReadState {
@@ -208,7 +238,7 @@ model DatabaseBackup {
 }
 
 model Lead {
-  id                  String   @id
+  id                  String  @id
   date                String
   customer_name       String
   phone               String?

@@ -154,8 +154,11 @@ export default function MobileApp({ user, role, onLogout, studioSettings }: Mobi
       case 'orders':
         return (
           <MobileOrders
-            userRole={role?.id}
+            userRole={role?.name}
             initialSelectedOrderId={navigationArg?.selectOrderId}
+            initialOpenCreateForCustomerId={navigationArg?.openCreateForCustomerId}
+            initialCreateCustomerDraft={navigationArg?.createCustomerDraft}
+            initialCreatePrefill={navigationArg?.createOrderPrefill}
             onNavigate={handleNavigate}
           />
         );

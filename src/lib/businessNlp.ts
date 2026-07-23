@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { prisma } from '../db_service';
 import { formatVndFromThousands } from './money';
+import { getOrderStatusDefinition } from './orderStatus';
 
 // Interfaces mapping to Section 2 of spec
 export interface DictionaryEntry {
@@ -235,6 +236,8 @@ export const statusTranslationMap: Record<string, string> = {
 
 export function translateStatus(status: string): string {
   if (!status) return 'N/A';
+  const orderStatus = getOrderStatusDefinition(status);
+  if (orderStatus) return orderStatus.label;
   return statusTranslationMap[status.toLowerCase()] || status;
 }
 
@@ -276,7 +279,7 @@ export function generateNaturalResponse(intent: string, resolvedConcepts: string
     if (rows.length === 0) return `Không tìm thấy đơn hàng/hợp đồng nào phù hợp.`;
     reply += `Tìm thấy các đơn hàng/hợp đồng phù hợp:\n\n`;
     rows.forEach((o: any) => {
-      reply += `• Hợp đồng **[${o.order_code}]** - KH: **${o.customer_name}** - Trạng thái: **${translateStatus(o.status)}** - Gói: **"${o.package_name}"** - Ngày chụp: **${o.shoot_date}**\n`;
+      reply += `• Hợp đồng **[${o.order_code}]** - KH: **${o.customer_name}** - Trạng thái: **${translateStatus(o.status)}** - Gói: **"${o.package_name}"** - Ngày chụp: **${o.shoot_date || 'Chưa có ngày chụp'}**\n`;
     });
   }
   else if (concept === 'SCHEDULE_RANGE') {
@@ -559,7 +562,7 @@ export async function processNlpQuery(rawQuestion: string): Promise<{ answer: st
       SELECT 
         (SELECT COUNT(*) FROM "Customer") as customers,
         (SELECT COUNT(*) FROM "Order") as orders,
-        (SELECT COUNT(*) FROM "Order" WHERE status != 'cancelled' AND status != 'delivered') as active_orders,
+        (SELECT COUNT(*) FROM "Order" WHERE status != 'cancelled' AND status != 'completed' AND status != 'delivered') as active_orders,
         (SELECT COALESCE(SUM(total_amount), 0) FROM "Order") as total_order_value,
         (SELECT COUNT(*) FROM "Task" WHERE status != 'done' AND status != 'cancelled') as pending_tasks,
         (SELECT COUNT(*) FROM "Task" WHERE status != 'done' AND status != 'cancelled' AND due_date < $1) as overdue_tasks,
@@ -594,7 +597,7 @@ export async function processNlpQuery(rawQuestion: string): Promise<{ answer: st
       SELECT 'missing_assignment' as alert_type, null as title, null as due_date, null as assigned_to_name, o.order_code, 0::float as total_amount, o.shoot_date, o.shoot_time, c.full_name as customer_name
       FROM "Order" o
       LEFT JOIN "Customer" c ON o.customer_id = c.id
-      WHERE o.status != 'cancelled' AND o.status != 'delivered'
+      WHERE o.status != 'cancelled' AND o.status != 'completed' AND o.status != 'delivered'
         AND NOT EXISTS (SELECT 1 FROM "Task" t WHERE t.order_id = o.id)
       
       UNION ALL
@@ -602,7 +605,7 @@ export async function processNlpQuery(rawQuestion: string): Promise<{ answer: st
       SELECT 'missing_deposit' as alert_type, null as title, null as due_date, null as assigned_to_name, o.order_code, o.total_amount, null as shoot_date, null as shoot_time, c.full_name as customer_name
       FROM "Order" o
       LEFT JOIN "Customer" c ON o.customer_id = c.id
-      WHERE o.status != 'cancelled' AND o.status != 'delivered' AND o.deposit_amount <= 0 AND o.total_amount > 0
+      WHERE o.status != 'cancelled' AND o.status != 'completed' AND o.status != 'delivered' AND o.deposit_amount <= 0 AND o.total_amount > 0
       
       LIMIT $2
     `;

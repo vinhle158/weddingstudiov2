@@ -19,7 +19,7 @@ interface NotificationItem {
   receiver_id: string | null;
   title: string;
   content: string;
-  type: 'general' | 'task_assignment' | 'order_update' | 'system';
+  type: 'general' | 'task_assignment' | 'order_update' | 'system' | 'anniversary' | 'software_update';
   related_id: string | null;
   is_read: boolean;
   created_at: string;
@@ -114,6 +114,7 @@ export default function MobileNotifications({ userId, userRole, onRefresh }: Mob
     switch (type) {
       case 'task_assignment': return 'bg-blue-50 text-blue-700 border-blue-100';
       case 'order_update': return 'bg-amber-50 text-amber-700 border-amber-100';
+      case 'software_update': return 'bg-violet-50 text-violet-700 border-violet-100';
       case 'system': return 'bg-rose-50 text-rose-700 border-rose-100';
       default: return 'bg-slate-50 text-slate-700 border-slate-100';
     }
@@ -191,7 +192,7 @@ export default function MobileNotifications({ userId, userRole, onRefresh }: Mob
               <p className="text-[9px] text-slate-400 font-bold">Người gửi: {selectedNotif.sender_name} · {new Date(selectedNotif.created_at).toLocaleString('vi-VN')}</p>
             </div>
             
-            <div className="bg-slate-50 p-4 rounded-lg border text-xs text-slate-700 leading-relaxed font-semibold">
+            <div className="bg-slate-50 p-4 rounded-lg border text-xs text-slate-700 leading-relaxed font-semibold whitespace-pre-line">
               {selectedNotif.content}
             </div>
           </div>

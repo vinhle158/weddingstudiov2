@@ -14,7 +14,8 @@ import {
   Sparkles,
   ArrowRight,
   Gift,
-  Heart
+  Heart,
+  History
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -25,7 +26,7 @@ interface NotificationItem {
   receiver_id: string | null;
   title: string;
   content: string;
-  type: 'general' | 'task_assignment' | 'order_update' | 'system' | 'anniversary';
+  type: 'general' | 'task_assignment' | 'order_update' | 'system' | 'anniversary' | 'software_update';
   related_id: string | null;
   is_read: boolean;
   created_at: string;
@@ -484,6 +485,22 @@ export default function Notifications({ userRole, userId, onNavigate, initialSel
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60 text-xs text-slate-700 leading-relaxed whitespace-pre-line">
                   {selectedItem.content}
                 </div>
+
+                {activeTab === 'notifications' && selectedItem.type === 'software_update' && onNavigate && userRole === 'admin' && (
+                  <button
+                    onClick={() => {
+                      if (!selectedItem.is_read) handleMarkAsRead(selectedItem.id);
+                      onNavigate('settings', {
+                        settingsSubTab: 'history',
+                        releaseId: selectedItem.related_id?.replace('software_update:', '') || ''
+                      });
+                    }}
+                    className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-2xs hover:shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <History className="w-4 h-4" />
+                    Xem nội dung cập nhật
+                  </button>
+                )}
 
                 {activeTab === 'notifications' && selectedItem.type === 'anniversary' && onNavigate && (userRole === 'admin' || userRole === 'manager') && (
                   <button

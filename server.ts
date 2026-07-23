@@ -12,12 +12,20 @@ import helmet from 'helmet';
 import { createServer as createHttpServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { createServer as createViteServer } from 'vite';
-import { LocalDatabase, User, Customer, Order, OrderStatusHistory, Task, TaskUpdate, Role, Objective, ObjectiveKeyResult, ObjectiveProgressUpdate, Notification, ChatMessage, Lead, LeadFeedback, prisma } from './src/db_service';
+import { LocalDatabase, User, Customer, Order, OrderPayment, OrderStatusHistory, ServicePackage, Task, TaskUpdate, Role, Objective, ObjectiveKeyResult, ObjectiveProgressUpdate, Notification, ChatMessage, Lead, LeadFeedback, prisma } from './src/db_service';
 import { classifyIntent } from './src/lib/chatbot/nlp';
 import { extractEntities } from './src/lib/chatbot/entityExtractor';
 import { buildAndExecuteQuery } from './src/lib/chatbot/queryBuilder';
 import { renderResponse } from './src/lib/chatbot/responseTemplates';
 import { resolveCustomer } from './src/lib/chatbot/fuzzyMatch';
+import {
+  ORDER_STATUS_IDS,
+  canTransitionOrderStatus,
+  getOrderStatusDefinition,
+  isActiveOrderStatus,
+  normalizeOrderStatus,
+} from './src/lib/orderStatus';
+import { SOFTWARE_CHANGELOG, SoftwareRelease } from './src/lib/softwareChangelog';
 
 const DEV_JWT_SECRET = crypto.randomBytes(32).toString('hex');
 
@@ -187,6 +195,76 @@ export async function scanAndGenerateAnniversaryNotifications(now = new Date()):
   return generated.length;
 }
 
+export function buildSoftwareUpdateNotifications(
+  releases: SoftwareRelease[],
+  users: User[],
+  existingNotifications: Notification[],
+  now = new Date(),
+): Notification[] {
+  const admins = users.filter(user => user.is_active && user.role_id === 'role-admin');
+  const existingKeys = new Set(existingNotifications.map(notification =>
+    `${notification.receiver_id || 'global'}:${notification.related_id || ''}`
+  ));
+  const generated: Notification[] = [];
+  const notificationContent = (release: SoftwareRelease) =>
+    `${release.summary}\n\nNội dung cập nhật:\n${release.changes.map(item => `• ${item}`).join('\n')}`;
+
+  for (const release of releases) {
+    const relatedId = `software_update:${release.id}`;
+    for (const admin of admins) {
+      const uniqueKey = `${admin.id}:${relatedId}`;
+      if (existingKeys.has(uniqueKey)) continue;
+      existingKeys.add(uniqueKey);
+      generated.push({
+        id: 'notif-' + crypto.randomUUID(),
+        sender_id: 'system',
+        receiver_id: admin.id,
+        title: `[Cập nhật ID:${release.id}] Phiên bản mới đã sẵn sàng`,
+        content: notificationContent(release),
+        type: 'software_update',
+        related_id: relatedId,
+        is_read_by: [],
+        created_at: now.toISOString(),
+      });
+    }
+  }
+
+  return generated;
+}
+
+export async function scanAndGenerateSoftwareUpdateNotifications(now = new Date()): Promise<number> {
+  const db = LocalDatabase.get();
+  let refreshedExistingContent = false;
+  for (const release of SOFTWARE_CHANGELOG) {
+    const relatedId = `software_update:${release.id}`;
+    const title = `[Cập nhật ID:${release.id}] Phiên bản mới đã sẵn sàng`;
+    const content = `${release.summary}\n\nNội dung cập nhật:\n${release.changes.map(item => `• ${item}`).join('\n')}`;
+    for (const notification of db.notifications || []) {
+      if (notification.type !== 'software_update' || notification.related_id !== relatedId) continue;
+      if (notification.title !== title || notification.content !== content) {
+        notification.title = title;
+        notification.content = content;
+        refreshedExistingContent = true;
+      }
+    }
+  }
+
+  const generated = buildSoftwareUpdateNotifications(
+    SOFTWARE_CHANGELOG,
+    db.users || [],
+    db.notifications || [],
+    now,
+  );
+  if (generated.length === 0 && !refreshedExistingContent) return 0;
+
+  db.notifications = [...(db.notifications || []), ...generated];
+  LocalDatabase.save(db);
+  if (generated.length > 0) {
+    console.log(`[SOFTWARE UPDATE] Generated ${generated.length} admin notification(s).`);
+  }
+  return generated.length;
+}
+
 // Extend Express Request type to include authenticated user
 interface AuthenticatedRequest extends Request {
   user?: User;
@@ -214,6 +292,7 @@ async function startServer() {
   
   // Initialize the database connection and cache
   await LocalDatabase.initialize();
+  await scanAndGenerateSoftwareUpdateNotifications();
 
   const PORT = parseInt(process.env.PORT || '3000', 10);
 
@@ -511,7 +590,7 @@ async function startServer() {
     const today = new Date().toISOString().split('T')[0];
 
     if (name === 'get_business_overview') {
-      const activeOrders = db.orders.filter(o => o.status !== 'cancelled' && o.status !== 'delivered');
+      const activeOrders = db.orders.filter(o => isActiveOrderStatus(o.status));
       const overdueTasks = db.tasks.filter(t => t.status !== 'done' && t.due_date && t.due_date < today);
       const openLeads = (db.leads || []).filter(l => l.status === 'consulting');
       const revenue = db.orders.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
@@ -565,18 +644,25 @@ async function startServer() {
           o.customer_phone
         ].some(v => normalizeSearch(v).includes(query)))
         .slice(0, limit)
-        .map(o => ({
-          id: o.id,
-          order_code: o.order_code,
-          customer_name: o.customer_name,
-          customer_phone: o.customer_phone,
-          status: o.status,
-          shoot_date: o.shoot_date,
-          package_name: o.package_name,
-          total_amount: o.total_amount,
-          deposit_amount: o.deposit_amount,
-          notes: o.notes
-        }));
+        .map(o => {
+          const paidTotal = (db.order_payments || [])
+            .filter(payment => payment.order_id === o.id && !payment.voided_at)
+            .reduce((sum, payment) => sum + payment.amount, 0);
+          return {
+            id: o.id,
+            order_code: o.order_code,
+            customer_name: o.customer_name,
+            customer_phone: o.customer_phone,
+            status: o.status,
+            shoot_date: o.shoot_date,
+            package_name: o.package_name,
+            total_amount: o.total_amount,
+            deposit_amount: o.deposit_amount,
+            paid_total: paidTotal,
+            remaining_amount: Math.max(0, o.total_amount - paidTotal),
+            notes: o.notes
+          };
+        });
     }
 
     if (name === 'search_tasks') {
@@ -682,7 +768,7 @@ async function startServer() {
       const daysAhead = clampLimit(args.days_ahead, 7);
       const alertLimit = clampLimit(args.limit);
       const rangeEnd = toDateKey(addDays(new Date(), daysAhead));
-      const activeOrders = db.orders.filter(o => o.status !== 'cancelled' && o.status !== 'delivered');
+      const activeOrders = db.orders.filter(o => isActiveOrderStatus(o.status));
       const upcomingOrders = activeOrders.filter(o => o.shoot_date >= today && o.shoot_date <= rangeEnd);
 
       return {
@@ -855,14 +941,9 @@ async function startServer() {
   };
 
   const translateStatus = (status: string): string => {
+    const orderStatus = getOrderStatusDefinition(status);
+    if (orderStatus) return orderStatus.label;
     const map: Record<string, string> = {
-      new: 'Đơn mới',
-      confirmed: 'Đã xác nhận',
-      shooting: 'Đang chụp',
-      editing: 'Đang hậu kỳ',
-      ready: 'Sẵn sàng',
-      delivered: 'Đã giao',
-      cancelled: 'Đã hủy',
       pending: 'Chờ thực hiện',
       in_progress: 'Đang làm',
       done: 'Đã xong',
@@ -965,7 +1046,7 @@ async function startServer() {
       if (!Array.isArray(result) || result.length === 0) return 'Không tìm thấy đơn hàng nào phù hợp.';
       output += `Tìm thấy các đơn hàng/hợp đồng phù hợp:\n\n`;
       result.forEach((o: any) => {
-        output += `• Hợp đồng **[${o.order_code}]** - KH: **${o.customer_name}** - Trạng thái: **${translateStatus(o.status)}** - Gói: **"${o.package_name}"** - Ngày chụp: **${o.shoot_date}**\n`;
+        output += `• Hợp đồng **[${o.order_code}]** - KH: **${o.customer_name}** - Trạng thái: **${translateStatus(o.status)}** - Gói: **"${o.package_name}"** - Ngày chụp: **${o.shoot_date || 'Chưa có ngày chụp'}**\n`;
       });
       return output;
     }
@@ -1028,7 +1109,7 @@ async function startServer() {
         if (orders.length > 0) {
           output += `Không tìm thấy khách hàng trực tiếp với từ khóa "${args?.query || ''}", nhưng tìm thấy các hợp đồng liên quan:\n\n`;
           orders.forEach((o: any) => {
-            output += `• Hợp đồng **[${o.order_code}]** - KH: **${o.customer_name}** - Trạng thái: **${translateStatus(o.status)}** - Gói: **"${o.package_name}"** - Ngày chụp: **${o.shoot_date}**\n`;
+            output += `• Hợp đồng **[${o.order_code}]** - KH: **${o.customer_name}** - Trạng thái: **${translateStatus(o.status)}** - Gói: **"${o.package_name}"** - Ngày chụp: **${o.shoot_date || 'Chưa có ngày chụp'}**\n`;
           });
           return output;
         }
@@ -1410,6 +1491,22 @@ async function startServer() {
     res.json(usersWithRoles);
   });
 
+  app.get('/api/users/directory', authenticate, (req: AuthenticatedRequest, res: Response) => {
+    const db = LocalDatabase.get();
+    res.json(db.users
+      .filter(user => user.is_active)
+      .map(user => {
+        const role = db.roles.find(item => item.id === user.role_id);
+        return {
+          id: user.id,
+          full_name: user.full_name,
+          role_id: user.role_id,
+          role_name: role?.display_name || 'Nhân viên',
+          is_active: true
+        };
+      }));
+  });
+
   app.post('/api/users', authenticate, requirePermission('users.manage'), async (req: AuthenticatedRequest, res: Response) => {
     const { full_name, email, password, role_id } = req.body;
     if (!full_name || !email || !password || !role_id) {
@@ -1696,20 +1793,58 @@ async function startServer() {
 
 
   // ----------------- ORDERS ENDPOINTS -----------------
+  const isValidShootTime = (value: unknown) =>
+    value === undefined || value === null || value === '' || /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value));
+
+  const parseNonNegativeMoney = (value: unknown): number | null => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  };
+
+  const activeOrderPayments = (db: ReturnType<typeof LocalDatabase.get>, orderId: string) =>
+    (db.order_payments || []).filter(payment => payment.order_id === orderId && !payment.voided_at);
+
+  const syncLegacyDepositAmount = (db: ReturnType<typeof LocalDatabase.get>, orderId: string) => {
+    const order = db.orders.find(item => item.id === orderId);
+    if (!order) return;
+    order.deposit_amount = activeOrderPayments(db, orderId)
+      .filter(payment => payment.installment_no === 1)
+      .reduce((sum, payment) => sum + payment.amount, 0);
+    order.updated_at = new Date().toISOString();
+  };
+
+  const validatePaymentInput = (value: any): string | null => {
+    if (!Number.isInteger(Number(value?.installment_no)) || Number(value.installment_no) < 1 || Number(value.installment_no) > 3) {
+      return 'Lần thanh toán phải là 1, 2 hoặc 3';
+    }
+    if (parseNonNegativeMoney(value?.amount) === null || Number(value.amount) <= 0) {
+      return 'Số tiền thanh toán phải lớn hơn 0';
+    }
+    if (!parseIsoCalendarDate(value?.payment_date)) {
+      return 'Ngày thanh toán không hợp lệ';
+    }
+    return null;
+  };
+
   app.get('/api/orders', authenticate, requirePermission('orders.view'), (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
     const { status, date, assigned_staff } = req.query;
 
     let result = db.orders.map(o => {
       const customer = db.customers.find(c => c.id === o.customer_id);
+      const paidTotal = activeOrderPayments(db, o.id).reduce((sum, payment) => sum + payment.amount, 0);
       return {
         ...o,
         customer_name: customer ? customer.full_name : 'Unknown',
-        customer_phone: customer ? customer.phone : 'N/A'
+        customer_phone: customer ? customer.phone : 'N/A',
+        paid_total: paidTotal,
+        remaining_amount: Math.max(0, o.total_amount - paidTotal)
       };
     });
 
-    if (status) {
+    if (status === 'unscheduled') {
+      result = result.filter(o => !o.shoot_date);
+    } else if (status) {
       result = result.filter(o => o.status === status);
     }
 
@@ -1718,11 +1853,11 @@ async function startServer() {
     }
 
     if (assigned_staff) {
-      // Find orders that have tasks assigned to this staff member
-      const matchingOrderIds = db.tasks
+      // The signer is the first related staff member; task assignees are added later.
+      const matchingOrderIds = new Set(db.tasks
         .filter(t => t.assigned_to === assigned_staff && t.order_id)
-        .map(t => t.order_id);
-      result = result.filter(o => matchingOrderIds.includes(o.id));
+        .map(t => t.order_id));
+      result = result.filter(o => o.created_by === assigned_staff || matchingOrderIds.has(o.id));
     }
 
     if (req.query.page || req.query.limit) {
@@ -1741,8 +1876,8 @@ async function startServer() {
   });
 
   app.post('/api/orders', authenticate, requirePermission('orders.create'), (req: AuthenticatedRequest, res: Response) => {
-    const { customer_id, shoot_date, shoot_time, package_name, package_price, deposit_amount, total_amount, notes } = req.body;
-    if (!customer_id || !shoot_date || !package_name) {
+    const { customer_id, service_package_id, shoot_date, shoot_time, package_name, package_price, total_amount, notes, payments = [] } = req.body;
+    if (!customer_id || !package_name) {
       return res.status(400).json({ error: 'Thiếu thông tin tạo đơn hàng' });
     }
 
@@ -1752,17 +1887,45 @@ async function startServer() {
       return res.status(400).json({ error: 'Khách hàng không tồn tại' });
     }
 
+    if (!isValidShootTime(shoot_time)) {
+      return res.status(400).json({ error: 'Giờ chụp phải theo định dạng 24 giờ HH:mm' });
+    }
+    if (!isValidOptionalCalendarDate(shoot_date)) {
+      return res.status(400).json({ error: 'Ngày chụp không hợp lệ' });
+    }
+    const parsedPackagePrice = parseNonNegativeMoney(package_price ?? 0);
+    const parsedTotalAmount = parseNonNegativeMoney(total_amount ?? package_price ?? 0);
+    if (parsedPackagePrice === null || parsedTotalAmount === null) {
+      return res.status(400).json({ error: 'Giá gói không hợp lệ' });
+    }
+    if (!Array.isArray(payments)) {
+      return res.status(400).json({ error: 'Danh sách thanh toán không hợp lệ' });
+    }
+    for (const payment of payments) {
+      const paymentError = validatePaymentInput(payment);
+      if (paymentError) return res.status(400).json({ error: paymentError });
+    }
+    const paidTotal = payments.reduce((sum: number, payment: any) => sum + Number(payment.amount), 0);
+    if (paidTotal > parsedTotalAmount) {
+      return res.status(400).json({ error: 'Tổng tiền đã thu không được vượt quá giá trị hợp đồng' });
+    }
+    if (service_package_id && !db.service_packages.some(item => item.id === service_package_id)) {
+      return res.status(400).json({ error: 'Gói dịch vụ được chọn không tồn tại' });
+    }
+
+    const normalizedShootDate = typeof shoot_date === 'string' ? shoot_date.trim() : '';
     const newOrder: Order = {
       id: 'order-' + LocalDatabase.uuid(),
       order_code: LocalDatabase.generateOrderCode(),
       customer_id,
+      service_package_id: service_package_id || null,
       status: 'new',
-      shoot_date,
-      shoot_time: shoot_time || null,
+      shoot_date: normalizedShootDate,
+      shoot_time: normalizedShootDate && shoot_time ? shoot_time : null,
       package_name,
-      package_price: Number(package_price) || 0,
-      deposit_amount: Number(deposit_amount) || 0,
-      total_amount: Number(total_amount) || Number(package_price) || 0,
+      package_price: parsedPackagePrice,
+      deposit_amount: 0,
+      total_amount: parsedTotalAmount,
       notes: notes || null,
       created_by: req.user!.id,
       created_at: new Date().toISOString(),
@@ -1770,6 +1933,24 @@ async function startServer() {
     };
 
     db.orders.push(newOrder);
+
+    const createdAt = new Date().toISOString();
+    for (const payment of payments) {
+      db.order_payments.push({
+        id: 'payment-' + LocalDatabase.uuid(),
+        order_id: newOrder.id,
+        installment_no: Number(payment.installment_no),
+        amount: Number(payment.amount),
+        payment_date: String(payment.payment_date),
+        note: payment.note ? String(payment.note).trim() : null,
+        recorded_by: req.user!.id,
+        created_at: createdAt,
+        voided_at: null,
+        voided_by: null,
+        void_reason: null
+      });
+    }
+    syncLegacyDepositAmount(db, newOrder.id);
 
     // Initial status history
     const history: OrderStatusHistory = {
@@ -1810,19 +1991,41 @@ async function startServer() {
         changed_by_name: changer ? changer.full_name : 'Hệ thống'
       };
     }).sort((a,b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime());
+    const payments = (db.order_payments || []).filter(payment => payment.order_id === order.id).map(payment => {
+      const recorder = db.users.find(user => user.id === payment.recorded_by);
+      const voider = payment.voided_by ? db.users.find(user => user.id === payment.voided_by) : null;
+      return {
+        ...payment,
+        recorded_by_name: recorder?.full_name || 'Hệ thống',
+        voided_by_name: voider?.full_name || null
+      };
+    }).sort((a, b) => b.created_at.localeCompare(a.created_at));
+    const activePayments = payments.filter(payment => !payment.voided_at);
+    const paidTotal = activePayments.reduce((sum, payment) => sum + payment.amount, 0);
 
     res.json({
       ...order,
       customer,
       created_by_name: creator ? creator.full_name : 'Ẩn danh',
       tasks,
-      history
+      history,
+      payments,
+      payment_summary: {
+        paid_total: paidTotal,
+        remaining_amount: Math.max(0, order.total_amount - paidTotal),
+        installments: [1, 2, 3].map(installmentNo => ({
+          installment_no: installmentNo,
+          amount: activePayments
+            .filter(payment => payment.installment_no === installmentNo)
+            .reduce((sum, payment) => sum + payment.amount, 0)
+        }))
+      }
     });
   });
 
   app.put('/api/orders/:id', authenticate, requirePermission('orders.edit'), (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const { shoot_date, shoot_time, package_name, package_price, deposit_amount, total_amount, notes } = req.body;
+    const { service_package_id, shoot_date, shoot_time, package_name, package_price, total_amount, notes } = req.body;
 
     const db = LocalDatabase.get();
     const idx = db.orders.findIndex(o => o.id === id);
@@ -1830,17 +2033,95 @@ async function startServer() {
       return res.status(404).json({ error: 'Không tìm thấy đơn hàng' });
     }
 
-    if (shoot_date) db.orders[idx].shoot_date = shoot_date;
-    if (shoot_time !== undefined) db.orders[idx].shoot_time = shoot_time;
+    if (!isValidShootTime(shoot_time)) {
+      return res.status(400).json({ error: 'Giờ chụp phải theo định dạng 24 giờ HH:mm' });
+    }
+    if (!isValidOptionalCalendarDate(shoot_date)) {
+      return res.status(400).json({ error: 'Ngày chụp không hợp lệ' });
+    }
+    if (service_package_id !== undefined && service_package_id !== null && !db.service_packages.some(item => item.id === service_package_id)) {
+      return res.status(400).json({ error: 'Gói dịch vụ được chọn không tồn tại' });
+    }
+    const nextPackagePrice = package_price === undefined ? db.orders[idx].package_price : parseNonNegativeMoney(package_price);
+    const nextTotalAmount = total_amount === undefined ? db.orders[idx].total_amount : parseNonNegativeMoney(total_amount);
+    if (nextPackagePrice === null || nextTotalAmount === null) {
+      return res.status(400).json({ error: 'Giá gói không hợp lệ' });
+    }
+    const paidTotal = activeOrderPayments(db, id).reduce((sum, payment) => sum + payment.amount, 0);
+    if (nextTotalAmount < paidTotal) {
+      return res.status(400).json({ error: 'Giá trị hợp đồng không được thấp hơn tổng tiền đã thu' });
+    }
+
+    if (service_package_id !== undefined) db.orders[idx].service_package_id = service_package_id || null;
+    if (shoot_date !== undefined) {
+      db.orders[idx].shoot_date = typeof shoot_date === 'string' ? shoot_date.trim() : '';
+      if (!db.orders[idx].shoot_date) db.orders[idx].shoot_time = null;
+    }
+    if (shoot_time !== undefined) {
+      db.orders[idx].shoot_time = db.orders[idx].shoot_date && shoot_time ? shoot_time : null;
+    }
     if (package_name) db.orders[idx].package_name = package_name;
-    if (package_price !== undefined) db.orders[idx].package_price = Number(package_price) || 0;
-    if (deposit_amount !== undefined) db.orders[idx].deposit_amount = Number(deposit_amount) || 0;
-    if (total_amount !== undefined) db.orders[idx].total_amount = Number(total_amount) || 0;
+    if (package_price !== undefined) db.orders[idx].package_price = nextPackagePrice;
+    if (total_amount !== undefined) db.orders[idx].total_amount = nextTotalAmount;
     if (notes !== undefined) db.orders[idx].notes = notes;
     db.orders[idx].updated_at = new Date().toISOString();
 
     LocalDatabase.save(db);
     res.json(db.orders[idx]);
+  });
+
+  app.post('/api/orders/:id/payments', authenticate, requirePermission('orders.edit'), (req: AuthenticatedRequest, res: Response) => {
+    const db = LocalDatabase.get();
+    const order = db.orders.find(item => item.id === req.params.id);
+    if (!order) return res.status(404).json({ error: 'Không tìm thấy đơn hàng' });
+
+    const paymentError = validatePaymentInput(req.body);
+    if (paymentError) return res.status(400).json({ error: paymentError });
+
+    const amount = Number(req.body.amount);
+    const currentPaid = activeOrderPayments(db, order.id).reduce((sum, payment) => sum + payment.amount, 0);
+    if (currentPaid + amount > order.total_amount) {
+      return res.status(400).json({ error: 'Khoản thu làm tổng tiền đã thu vượt quá giá trị hợp đồng' });
+    }
+
+    const payment: OrderPayment = {
+      id: 'payment-' + LocalDatabase.uuid(),
+      order_id: order.id,
+      installment_no: Number(req.body.installment_no),
+      amount,
+      payment_date: String(req.body.payment_date),
+      note: req.body.note ? String(req.body.note).trim() : null,
+      recorded_by: req.user!.id,
+      created_at: new Date().toISOString(),
+      voided_at: null,
+      voided_by: null,
+      void_reason: null
+    };
+    db.order_payments.push(payment);
+    syncLegacyDepositAmount(db, order.id);
+    LocalDatabase.save(db);
+    res.status(201).json(payment);
+  });
+
+  app.post('/api/orders/:orderId/payments/:paymentId/void', authenticate, requirePermission('orders.edit'), (req: AuthenticatedRequest, res: Response) => {
+    const db = LocalDatabase.get();
+    const payment = db.order_payments.find(item =>
+      item.id === req.params.paymentId && item.order_id === req.params.orderId
+    );
+    if (!payment) return res.status(404).json({ error: 'Không tìm thấy khoản thu' });
+    if (payment.voided_at) return res.status(400).json({ error: 'Khoản thu này đã được hủy trước đó' });
+
+    const reason = typeof req.body.reason === 'string' ? req.body.reason.trim() : '';
+    if (reason.length < 3) {
+      return res.status(400).json({ error: 'Vui lòng nhập lý do hủy khoản thu' });
+    }
+
+    payment.voided_at = new Date().toISOString();
+    payment.voided_by = req.user!.id;
+    payment.void_reason = reason;
+    syncLegacyDepositAmount(db, payment.order_id);
+    LocalDatabase.save(db);
+    res.json({ success: true, payment });
   });
 
   app.post('/api/orders/:id/status', authenticate, requirePermission('orders.edit'), (req: AuthenticatedRequest, res: Response) => {
@@ -1858,27 +2139,23 @@ async function startServer() {
     }
 
     const oldStatus = db.orders[idx].status;
+    const normalizedStatus = normalizeOrderStatus(status);
 
-    // Rule check: Cannot transition backwards unless admin
-    const statusOrder = ['new', 'confirmed', 'shooting', 'editing', 'ready', 'delivered', 'cancelled'];
-    const oldIdx = statusOrder.indexOf(oldStatus);
-    const newIdx = statusOrder.indexOf(status);
-
-    if (newIdx === -1) {
+    if (!normalizedStatus || !ORDER_STATUS_IDS.includes(normalizedStatus)) {
       return res.status(400).json({
         error: 'Trạng thái đơn hàng không hợp lệ',
-        allowedStatuses: statusOrder
+        allowedStatuses: ORDER_STATUS_IDS
       });
     }
 
-    if (newIdx < oldIdx && req.role?.id !== 'role-admin' && status !== 'cancelled') {
+    if (!canTransitionOrderStatus(oldStatus, normalizedStatus, req.role?.id === 'role-admin')) {
       return res.status(400).json({ 
-        error: 'Chỉ Quản trị viên (Admin) mới có quyền đổi trạng thái đơn hàng quay ngược lại!' 
+        error: 'Chỉ Quản trị viên (Admin) mới có quyền đổi trạng thái quay ngược, ngoại trừ vòng lặp gửi demo và chỉnh sửa lại!'
       });
     }
 
     // Change status
-    db.orders[idx].status = status;
+    db.orders[idx].status = normalizedStatus;
     db.orders[idx].updated_at = new Date().toISOString();
 
     // Log status history
@@ -1886,9 +2163,9 @@ async function startServer() {
       id: 'hist-' + LocalDatabase.uuid(),
       order_id: id,
       from_status: oldStatus,
-      to_status: status,
+      to_status: normalizedStatus,
       changed_by: req.user!.id,
-      note: note || `Đổi trạng thái từ ${oldStatus} sang ${status}`,
+      note: note || `Đổi trạng thái từ ${oldStatus} sang ${normalizedStatus}`,
       changed_at: new Date().toISOString()
     };
     db.order_status_history.push(history);
@@ -2223,12 +2500,13 @@ async function startServer() {
     const db = LocalDatabase.get();
     
     // Status counts of orders
-    const orderStatuses: Record<string, number> = {
-      new: 0, confirmed: 0, shooting: 0, editing: 0, ready: 0, delivered: 0, cancelled: 0
-    };
+    const orderStatuses: Record<string, number> = Object.fromEntries(
+      ORDER_STATUS_IDS.map(status => [status, 0]),
+    );
     db.orders.forEach(o => {
-      if (orderStatuses[o.status] !== undefined) {
-        orderStatuses[o.status]++;
+      const normalizedStatus = normalizeOrderStatus(o.status);
+      if (normalizedStatus && orderStatuses[normalizedStatus] !== undefined) {
+        orderStatuses[normalizedStatus]++;
       }
     });
 
@@ -2268,7 +2546,7 @@ async function startServer() {
     const next7DaysStr = next7Days.toISOString().split('T')[0];
 
     const upcoming = db.orders
-      .filter(o => o.status !== 'cancelled' && o.shoot_date >= todayStr && o.shoot_date <= next7DaysStr)
+      .filter(o => isActiveOrderStatus(o.status) && o.shoot_date >= todayStr && o.shoot_date <= next7DaysStr)
       .map(o => {
         const cust = db.customers.find(c => c.id === o.customer_id);
         return {
@@ -3032,6 +3310,77 @@ async function startServer() {
     return `${key.substring(0, 3)}...${key.substring(key.length - 4)}`;
   }
 
+  // ----------------- SERVICE PACKAGE SETTINGS ENDPOINTS -----------------
+  app.get('/api/service-packages', authenticate, (req: AuthenticatedRequest, res: Response) => {
+    const db = LocalDatabase.get();
+    const includeInactive = req.query.include_inactive === 'true' && req.role?.id === 'role-admin';
+    const packages = (db.service_packages || [])
+      .filter(item => includeInactive || item.is_active)
+      .sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name, 'vi'));
+    res.json(packages);
+  });
+
+  app.post('/api/service-packages', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
+    const db = LocalDatabase.get();
+    const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+    const defaultPrice = parseNonNegativeMoney(req.body.default_price);
+    if (!name) return res.status(400).json({ error: 'Tên gói dịch vụ không được để trống' });
+    if (defaultPrice === null) return res.status(400).json({ error: 'Giá gói không hợp lệ' });
+    if (db.service_packages.some(item => item.name.toLocaleLowerCase('vi') === name.toLocaleLowerCase('vi'))) {
+      return res.status(400).json({ error: 'Tên gói dịch vụ đã tồn tại' });
+    }
+    const now = new Date().toISOString();
+    const servicePackage: ServicePackage = {
+      id: 'package-' + LocalDatabase.uuid(),
+      name,
+      default_price: defaultPrice,
+      description: req.body.description ? String(req.body.description).trim() : null,
+      is_active: req.body.is_active !== false,
+      sort_order: Number.isInteger(Number(req.body.sort_order)) ? Number(req.body.sort_order) : db.service_packages.length,
+      created_by: req.user!.id,
+      created_at: now,
+      updated_at: now
+    };
+    db.service_packages.push(servicePackage);
+    LocalDatabase.save(db);
+    res.status(201).json(servicePackage);
+  });
+
+  app.put('/api/service-packages/:id', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
+    const db = LocalDatabase.get();
+    const item = db.service_packages.find(servicePackage => servicePackage.id === req.params.id);
+    if (!item) return res.status(404).json({ error: 'Không tìm thấy gói dịch vụ' });
+
+    const name = req.body.name === undefined ? item.name : String(req.body.name).trim();
+    const defaultPrice = req.body.default_price === undefined ? item.default_price : parseNonNegativeMoney(req.body.default_price);
+    if (!name) return res.status(400).json({ error: 'Tên gói dịch vụ không được để trống' });
+    if (defaultPrice === null) return res.status(400).json({ error: 'Giá gói không hợp lệ' });
+    if (db.service_packages.some(other =>
+      other.id !== item.id && other.name.toLocaleLowerCase('vi') === name.toLocaleLowerCase('vi')
+    )) {
+      return res.status(400).json({ error: 'Tên gói dịch vụ đã tồn tại' });
+    }
+
+    item.name = name;
+    item.default_price = defaultPrice;
+    if (req.body.description !== undefined) item.description = req.body.description ? String(req.body.description).trim() : null;
+    if (req.body.is_active !== undefined) item.is_active = Boolean(req.body.is_active);
+    if (req.body.sort_order !== undefined && Number.isInteger(Number(req.body.sort_order))) item.sort_order = Number(req.body.sort_order);
+    item.updated_at = new Date().toISOString();
+    LocalDatabase.save(db);
+    res.json(item);
+  });
+
+  app.delete('/api/service-packages/:id', authenticate, requirePermission('users.manage'), (req: AuthenticatedRequest, res: Response) => {
+    const db = LocalDatabase.get();
+    const item = db.service_packages.find(servicePackage => servicePackage.id === req.params.id);
+    if (!item) return res.status(404).json({ error: 'Không tìm thấy gói dịch vụ' });
+    item.is_active = false;
+    item.updated_at = new Date().toISOString();
+    LocalDatabase.save(db);
+    res.json({ success: true, service_package: item });
+  });
+
   // ----------------- STUDIO SETTINGS ENDPOINTS -----------------
   app.get('/api/studio/settings', authenticate, (req: AuthenticatedRequest, res: Response) => {
     const db = LocalDatabase.get();
@@ -3157,6 +3506,39 @@ async function startServer() {
     }
 
     const cloned = JSON.parse(JSON.stringify(importedDb));
+    cloned.service_packages = Array.isArray(cloned.service_packages)
+      ? cloned.service_packages
+      : JSON.parse(JSON.stringify(currentDb.service_packages || []));
+    cloned.orders = Array.isArray(cloned.orders) ? cloned.orders.map((order: any) => ({
+      ...order,
+      service_package_id: order.service_package_id || null
+    })) : [];
+    cloned.order_payments = Array.isArray(cloned.order_payments)
+      ? cloned.order_payments
+      : cloned.orders
+        .filter((order: any) => Number(order.deposit_amount) > 0)
+        .map((order: any) => ({
+          id: `legacy-import-deposit-${order.id}`,
+          order_id: order.id,
+          installment_no: 1,
+          amount: Number(order.deposit_amount),
+          payment_date: parseIsoCalendarDate(String(order.created_at || '').slice(0, 10))
+            ? String(order.created_at).slice(0, 10)
+            : new Date().toISOString().slice(0, 10),
+          note: 'Dữ liệu tiền cọc từ bản backup cũ; ngày thu tạm lấy theo ngày tạo hợp đồng.',
+          recorded_by: order.created_by,
+          created_at: order.created_at || new Date().toISOString(),
+          voided_at: null,
+          voided_by: null,
+          void_reason: null
+        }));
+
+    for (const payment of cloned.order_payments) {
+      const paymentError = validatePaymentInput(payment);
+      if (paymentError || !payment.id || !payment.order_id || !payment.recorded_by || !payment.created_at) {
+        return { error: `Lịch sử thanh toán không hợp lệ: ${paymentError || 'thiếu thông tin bắt buộc'}` };
+      }
+    }
 
     for (const u of cloned.users) {
       if (!u.password_hash) {

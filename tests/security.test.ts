@@ -22,7 +22,7 @@ const mockDb = {
       id: 'role-admin',
       name: 'admin',
       display_name: 'Quản trị viên',
-      permissions: ['admin', 'users.manage', 'leads.view_all', 'leads.manage']
+      permissions: ['admin', 'users.manage', 'leads.view_all', 'leads.manage', 'orders.view', 'orders.create', 'orders.edit']
     },
     {
       id: 'role-sales',
@@ -71,6 +71,8 @@ const mockDb = {
   ],
   customers: [],
   orders: [],
+  service_packages: [],
+  order_payments: [],
   order_status_history: [],
   tasks: [],
   task_updates: [],
@@ -412,6 +414,245 @@ describe('Studio V2 Security Hardening Regression Tests', () => {
     LocalDatabase.save(mockDb as any);
   });
 
+  test('orders can be created without a shoot date and scheduled later', async () => {
+    const adminToken = generateToken('user-admin', 'viet@studio.com', 0);
+    const db = LocalDatabase.get();
+    db.customers = [{
+      id: 'customer-unscheduled',
+      full_name: 'Khách chưa chốt lịch',
+      phone: '0909999999',
+      email: null,
+      address: null,
+      notes: null,
+      birthday: null,
+      wedding_date: null,
+      facebook_url: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }];
+    db.orders = [];
+    db.order_status_history = [];
+    LocalDatabase.save(db);
+
+    const createRes = await fetch(`${BASE_URL}/api/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`
+      },
+      body: JSON.stringify({
+        customer_id: 'customer-unscheduled',
+        shoot_date: '',
+        shoot_time: null,
+        package_name: 'Gói cưới chưa chốt lịch',
+        package_price: 12000,
+        deposit_amount: 3000,
+        total_amount: 12000
+      })
+    });
+
+    assert.strictEqual(createRes.status, 201);
+    const created = await createRes.json() as any;
+    assert.strictEqual(created.shoot_date, '');
+    assert.strictEqual(created.shoot_time, null);
+
+    const unscheduledRes = await fetch(`${BASE_URL}/api/orders?status=unscheduled`, {
+      headers: { Authorization: `Bearer ${adminToken}` }
+    });
+    assert.strictEqual(unscheduledRes.status, 200);
+    const unscheduledOrders = await unscheduledRes.json() as any[];
+    assert.ok(unscheduledOrders.some(order => order.id === created.id));
+
+    const updateRes = await fetch(`${BASE_URL}/api/orders/${created.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`
+      },
+      body: JSON.stringify({ shoot_date: '2026-08-20', shoot_time: '09:00' })
+    });
+
+    assert.strictEqual(updateRes.status, 200);
+    const updated = await updateRes.json() as any;
+    assert.strictEqual(updated.shoot_date, '2026-08-20');
+    assert.strictEqual(updated.shoot_time, '09:00');
+
+    const afterSchedulingRes = await fetch(`${BASE_URL}/api/orders?status=unscheduled`, {
+      headers: { Authorization: `Bearer ${adminToken}` }
+    });
+    assert.strictEqual(afterSchedulingRes.status, 200);
+    const afterSchedulingOrders = await afterSchedulingRes.json() as any[];
+    assert.ok(afterSchedulingOrders.every(order => order.id !== created.id));
+
+    LocalDatabase.save(mockDb as any);
+  });
+
+  test('order signer is treated as the first related staff member', async () => {
+    const adminToken = generateToken('user-admin', 'viet@studio.com', 0);
+    const salesToken = generateToken('user-sale-1', 'sale1@studio.com', 0);
+    const db = LocalDatabase.get();
+    db.customers = [{
+      id: 'customer-related-staff',
+      full_name: 'Khách kiểm tra người liên quan',
+      phone: '0908888888',
+      email: null,
+      address: null,
+      notes: null,
+      birthday: null,
+      wedding_date: null,
+      facebook_url: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }];
+    db.orders = [];
+    db.tasks = [];
+    db.order_status_history = [];
+    LocalDatabase.save(db);
+
+    const directoryRes = await fetch(`${BASE_URL}/api/users/directory`, {
+      headers: { Authorization: `Bearer ${salesToken}` }
+    });
+    assert.strictEqual(directoryRes.status, 200);
+    const directory = await directoryRes.json() as any[];
+    assert.ok(directory.some(user => user.id === 'user-sale-1'));
+    assert.ok(directory.every(user => user.password_hash === undefined && user.email === undefined));
+
+    const createRes = await fetch(`${BASE_URL}/api/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`
+      },
+      body: JSON.stringify({
+        customer_id: 'customer-related-staff',
+        shoot_date: '',
+        package_name: 'Gói kiểm tra truy dấu'
+      })
+    });
+    assert.strictEqual(createRes.status, 201);
+    const created = await createRes.json() as any;
+    assert.strictEqual(created.created_by, 'user-admin');
+
+    const signerFilterRes = await fetch(`${BASE_URL}/api/orders?assigned_staff=user-admin`, {
+      headers: { Authorization: `Bearer ${adminToken}` }
+    });
+    assert.strictEqual(signerFilterRes.status, 200);
+    const signerOrders = await signerFilterRes.json() as any[];
+    assert.ok(signerOrders.some(order => order.id === created.id));
+
+    const unrelatedFilterRes = await fetch(`${BASE_URL}/api/orders?assigned_staff=user-sale-1`, {
+      headers: { Authorization: `Bearer ${adminToken}` }
+    });
+    assert.strictEqual(unrelatedFilterRes.status, 200);
+    const unrelatedOrders = await unrelatedFilterRes.json() as any[];
+    assert.ok(unrelatedOrders.every(order => order.id !== created.id));
+
+    db.tasks.push({
+      id: 'task-related-staff',
+      title: 'Công việc đã giao',
+      description: null,
+      order_id: created.id,
+      assigned_to: 'user-sale-1',
+      assigned_by: 'user-admin',
+      status: 'pending',
+      priority: 'normal',
+      due_date: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    });
+    LocalDatabase.save(db);
+
+    const assigneeFilterRes = await fetch(`${BASE_URL}/api/orders?assigned_staff=user-sale-1`, {
+      headers: { Authorization: `Bearer ${adminToken}` }
+    });
+    assert.strictEqual(assigneeFilterRes.status, 200);
+    const assigneeOrders = await assigneeFilterRes.json() as any[];
+    assert.ok(assigneeOrders.some(order => order.id === created.id));
+
+    const detailRes = await fetch(`${BASE_URL}/api/orders/${created.id}`, {
+      headers: { Authorization: `Bearer ${adminToken}` }
+    });
+    assert.strictEqual(detailRes.status, 200);
+    const detail = await detailRes.json() as any;
+    assert.strictEqual(detail.created_by_name, 'Viet Hoang');
+
+    LocalDatabase.save(mockDb as any);
+  });
+
+  test('staff can use the new workflow and repeat the demo revision loop', async () => {
+    const db = LocalDatabase.get();
+    const originalRoles = db.roles;
+    const originalUsers = db.users;
+    const originalOrders = db.orders;
+    const originalHistory = db.order_status_history;
+
+    db.roles = [...originalRoles, {
+      id: 'role-order-editor',
+      name: 'order_editor',
+      display_name: 'Nhân sự xử lý ảnh',
+      permissions: ['orders.view', 'orders.edit']
+    }];
+    db.users = [...originalUsers, {
+      id: 'user-order-editor',
+      full_name: 'Nhân sự xử lý ảnh',
+      email: 'editor@studio.com',
+      password_hash: bcrypt.hashSync('EditorTest@2026!', 10),
+      role_id: 'role-order-editor',
+      is_active: true,
+      created_at: new Date().toISOString(),
+      session_version: 0
+    }];
+    db.orders = [{
+      id: 'order-status-workflow',
+      order_code: 'ORD-STATUS',
+      customer_id: 'customer-related-staff',
+      status: 'demo_sent',
+      shoot_date: '2026-08-20',
+      shoot_time: '09:00',
+      package_name: 'Gói kiểm tra trạng thái',
+      package_price: 12000,
+      deposit_amount: 3000,
+      total_amount: 12000,
+      notes: null,
+      created_by: 'user-admin',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }];
+    db.order_status_history = [];
+    LocalDatabase.save(db);
+
+    const editorToken = generateToken('user-order-editor', 'editor@studio.com', 0);
+    const updateStatus = (status: string) => fetch(`${BASE_URL}/api/orders/order-status-workflow/status`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${editorToken}`
+      },
+      body: JSON.stringify({ status })
+    });
+
+    const revisionRes = await updateStatus('revision');
+    assert.strictEqual(revisionRes.status, 200);
+    const demoAgainRes = await updateStatus('demo_sent');
+    assert.strictEqual(demoAgainRes.status, 200);
+
+    db.orders[0].status = 'photos_ready';
+    LocalDatabase.save(db);
+    const backwardRes = await updateStatus('selected');
+    assert.strictEqual(backwardRes.status, 400);
+
+    assert.deepStrictEqual(
+      db.order_status_history.slice(0, 2).map((item: any) => item.to_status),
+      ['revision', 'demo_sent']
+    );
+
+    db.roles = originalRoles;
+    db.users = originalUsers;
+    db.orders = originalOrders;
+    db.order_status_history = originalHistory;
+    LocalDatabase.save(db);
+  });
+
   test('9. /api/demo/cleanup is blocked in production or without users.manage permission', async () => {
     const salesToken = generateToken('user-sale-1', 'sale1@studio.com', 0);
 
@@ -665,5 +906,111 @@ describe('Studio V2 Security Hardening Regression Tests', () => {
       const imagePath = path.join(process.cwd(), 'chat_uploads', attachment.filename);
       if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
     }
+  });
+
+  test('17. Admin manages service packages without rewriting contract snapshots', async () => {
+    const adminToken = generateToken('user-admin', 'viet@studio.com', 0);
+    const createRes = await fetch(`${BASE_URL}/api/service-packages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ name: 'Gói Studio Test', default_price: 1200, description: 'Test', sort_order: 1 })
+    });
+    assert.strictEqual(createRes.status, 201);
+    const created = await createRes.json() as any;
+    assert.strictEqual(created.default_price, 1200);
+
+    const updateRes = await fetch(`${BASE_URL}/api/service-packages/${created.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ default_price: 1500, is_active: false })
+    });
+    assert.strictEqual(updateRes.status, 200);
+    const updated = await updateRes.json() as any;
+    assert.strictEqual(updated.default_price, 1500);
+    assert.strictEqual(updated.is_active, false);
+  });
+
+  test('18. Payment ledger requires dates, prevents overpayment and preserves void history', async () => {
+    const adminToken = generateToken('user-admin', 'viet@studio.com', 0);
+    const db = LocalDatabase.get();
+    db.customers.push({
+      id: 'customer-payment-test', full_name: 'Khách Thanh Toán', phone: '0909000000',
+      email: null, address: null, notes: null, birthday: null, wedding_date: null,
+      facebook_url: null, created_at: '2026-07-23T00:00:00Z', updated_at: '2026-07-23T00:00:00Z'
+    });
+    LocalDatabase.save(db);
+
+    const orderRes = await fetch(`${BASE_URL}/api/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({
+        customer_id: 'customer-payment-test',
+        package_name: 'Gói thanh toán test',
+        package_price: 1000,
+        total_amount: 1000,
+        payments: [{ installment_no: 1, amount: 300, payment_date: '2026-07-23' }]
+      })
+    });
+    assert.strictEqual(orderRes.status, 201);
+    const order = await orderRes.json() as any;
+    assert.strictEqual(order.deposit_amount, 300);
+
+    const missingDateRes = await fetch(`${BASE_URL}/api/orders/${order.id}/payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ installment_no: 2, amount: 100 })
+    });
+    assert.strictEqual(missingDateRes.status, 400);
+
+    const overpaymentRes = await fetch(`${BASE_URL}/api/orders/${order.id}/payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ installment_no: 2, amount: 701, payment_date: '2026-07-23' })
+    });
+    assert.strictEqual(overpaymentRes.status, 400);
+
+    const detailRes = await fetch(`${BASE_URL}/api/orders/${order.id}`, {
+      headers: { Authorization: `Bearer ${adminToken}` }
+    });
+    const detail = await detailRes.json() as any;
+    assert.strictEqual(detail.payment_summary.paid_total, 300);
+    assert.strictEqual(detail.payment_summary.remaining_amount, 700);
+
+    const payment = detail.payments.find((item: any) => !item.voided_at);
+    const voidRes = await fetch(`${BASE_URL}/api/orders/${order.id}/payments/${payment.id}/void`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ reason: 'Nhập nhầm khoản thu' })
+    });
+    assert.strictEqual(voidRes.status, 200);
+
+    const afterVoid = LocalDatabase.get();
+    assert.strictEqual(afterVoid.orders.find((item: any) => item.id === order.id).deposit_amount, 0);
+    assert.ok(afterVoid.order_payments.find((item: any) => item.id === payment.id).voided_at);
+  });
+
+  test('19. Software update notifications target active admins and are not duplicated', async () => {
+    const { buildSoftwareUpdateNotifications } = await import('../server');
+    const now = new Date('2026-07-23T12:00:00.000Z');
+    const releases = [{
+      id: '999',
+      date: '2026-07-23',
+      summary: 'Bản cập nhật kiểm thử',
+      changes: ['Nội dung kiểm thử'],
+      status: 'verified' as const
+    }];
+    const users = [
+      { ...mockDb.users[0], id: 'active-admin', role_id: 'role-admin', is_active: true },
+      { ...mockDb.users[0], id: 'inactive-admin', role_id: 'role-admin', is_active: false },
+      { ...mockDb.users[1], id: 'active-sale', role_id: 'role-sales', is_active: true }
+    ];
+
+    const firstBatch = buildSoftwareUpdateNotifications(releases, users as any, [], now);
+    assert.strictEqual(firstBatch.length, 1);
+    assert.strictEqual(firstBatch[0].receiver_id, 'active-admin');
+    assert.strictEqual(firstBatch[0].related_id, 'software_update:999');
+
+    const duplicateBatch = buildSoftwareUpdateNotifications(releases, users as any, firstBatch, now);
+    assert.strictEqual(duplicateBatch.length, 0);
   });
 });

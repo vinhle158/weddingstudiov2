@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../lib/api';
 import { MONEY_INPUT_HINT, formatVndFromThousands } from '../lib/money';
+import {
+  ORDER_STATUS_DEFINITIONS,
+  getOrderStatusDefinition,
+  getOrderStatusLabel,
+  normalizeOrderStatus,
+} from '../lib/orderStatus';
 import { 
   Plus, 
   Calendar, 
@@ -41,6 +47,9 @@ interface OrdersProps {
   isMobile?: boolean;
 }
 
+const formatShootDate = (shootDate: string | null | undefined) =>
+  shootDate ? new Date(shootDate).toLocaleDateString('vi-VN') : 'Chưa có ngày chụp';
+
 export default function Orders({ 
   userRole, 
   onNavigate, 
@@ -68,6 +77,7 @@ export default function Orders({
   const [customers, setCustomers] = useState<any[]>([]);
   const [customersLoaded, setCustomersLoaded] = useState(false);
   const [staffUsers, setStaffUsers] = useState<any[]>([]);
+  const [servicePackages, setServicePackages] = useState<any[]>([]);
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -94,8 +104,13 @@ export default function Orders({
   const [shootDate, setShootDate] = useState('');
   const [shootTime, setShootTime] = useState('');
   const [packageName, setPackageName] = useState('');
+  const [servicePackageId, setServicePackageId] = useState('');
   const [packagePrice, setPackagePrice] = useState(0);
-  const [depositAmount, setDepositAmount] = useState(0);
+  const [initialPayments, setInitialPayments] = useState([
+    { installment_no: 1, amount: 0, payment_date: '', note: '' },
+    { installment_no: 2, amount: 0, payment_date: '', note: '' },
+    { installment_no: 3, amount: 0, payment_date: '', note: '' }
+  ]);
   const [orderNotes, setOrderNotes] = useState('');
   const [createError, setCreateError] = useState<string | null>(null);
 
@@ -117,10 +132,15 @@ export default function Orders({
   const [editShootDate, setEditShootDate] = useState('');
   const [editShootTime, setEditShootTime] = useState('');
   const [editPackageName, setEditPackageName] = useState('');
+  const [editServicePackageId, setEditServicePackageId] = useState('');
   const [editPackagePrice, setEditPackagePrice] = useState(0);
-  const [editDepositAmount, setEditDepositAmount] = useState(0);
   const [editOrderNotes, setEditOrderNotes] = useState('');
   const [editError, setEditError] = useState<string | null>(null);
+  const [paymentInstallment, setPaymentInstallment] = useState(1);
+  const [paymentAmount, setPaymentAmount] = useState(0);
+  const [paymentDate, setPaymentDate] = useState('');
+  const [paymentNote, setPaymentNote] = useState('');
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const fetchOrders = async () => {
     try {
@@ -172,7 +192,6 @@ export default function Orders({
     if (prefill.package_name) setPackageName(prefill.package_name);
     if (prefill.package_price !== undefined) {
       setPackagePrice(prefill.package_price || 0);
-      setDepositAmount(0);
     }
     if (prefill.notes !== undefined) setOrderNotes(prefill.notes || '');
   };
@@ -189,10 +208,16 @@ export default function Orders({
     }
 
     try {
-      const users = await apiRequest('/api/users');
+      const users = await apiRequest('/api/users/directory');
       setStaffUsers(users.filter((u: any) => u.is_active));
     } catch (e) {
       setStaffUsers([]);
+    }
+
+    try {
+      setServicePackages(await apiRequest('/api/service-packages'));
+    } catch (e) {
+      setServicePackages([]);
     }
   };
 
@@ -288,8 +313,13 @@ export default function Orders({
     setShootDate('');
     setShootTime('');
     setPackageName('');
+    setServicePackageId('');
     setPackagePrice(0);
-    setDepositAmount(0);
+    setInitialPayments([
+      { installment_no: 1, amount: 0, payment_date: '', note: '' },
+      { installment_no: 2, amount: 0, payment_date: '', note: '' },
+      { installment_no: 3, amount: 0, payment_date: '', note: '' }
+    ]);
     setOrderNotes('');
     setCustomerSearch('');
     setIsCustDropdownOpen(false);
@@ -327,8 +357,17 @@ export default function Orders({
         return;
       }
 
-      if (!shootDate || !packageName) {
-        setCreateError('Vui lòng nhập ngày chụp và tên gói dịch vụ');
+      if (!packageName) {
+        setCreateError('Vui lòng nhập tên gói dịch vụ');
+        return;
+      }
+      const payments = initialPayments.filter(payment => payment.amount > 0);
+      if (payments.some(payment => !payment.payment_date)) {
+        setCreateError('Mỗi khoản đã thu phải có ngày thanh toán');
+        return;
+      }
+      if (payments.reduce((sum, payment) => sum + payment.amount, 0) > packagePrice) {
+        setCreateError('Tổng tiền đã thu không được vượt quá giá gói');
         return;
       }
 
@@ -349,10 +388,11 @@ export default function Orders({
         customer_id: finalCustomerId,
         shoot_date: shootDate,
         shoot_time: shootTime || null,
+        service_package_id: servicePackageId || null,
         package_name: packageName,
         package_price: packagePrice || 0,
-        deposit_amount: depositAmount || 0,
         total_amount: packagePrice || 0,
+        payments,
         notes: orderNotes || null
       });
 
@@ -369,9 +409,9 @@ export default function Orders({
     setEditOrderId(order.id);
     setEditShootDate(order.shoot_date);
     setEditShootTime(order.shoot_time || '');
+    setEditServicePackageId(order.service_package_id || '');
     setEditPackageName(order.package_name || '');
     setEditPackagePrice(order.package_price || 0);
-    setEditDepositAmount(order.deposit_amount || 0);
     setEditOrderNotes(order.notes || '');
     setEditError(null);
     setIsEditModalOpen(true);
@@ -379,8 +419,8 @@ export default function Orders({
 
   const handleUpdateOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editShootDate || !editPackageName) {
-      setEditError('Ngày chụp và tên gói dịch vụ là bắt buộc');
+    if (!editPackageName) {
+      setEditError('Tên gói dịch vụ là bắt buộc');
       return;
     }
 
@@ -389,9 +429,9 @@ export default function Orders({
       const updated = await apiRequest(`/api/orders/${editOrderId}`, 'PUT', {
         shoot_date: editShootDate,
         shoot_time: editShootTime || null,
+        service_package_id: editServicePackageId || null,
         package_name: editPackageName,
         package_price: editPackagePrice || 0,
-        deposit_amount: editDepositAmount || 0,
         total_amount: editPackagePrice || 0,
         notes: editOrderNotes || null
       });
@@ -404,10 +444,71 @@ export default function Orders({
     }
   };
 
+  const applyServicePackage = (id: string, edit = false) => {
+    const selected = servicePackages.find(item => item.id === id);
+    if (edit) {
+      setEditServicePackageId(id);
+      if (selected) {
+        setEditPackageName(selected.name);
+        setEditPackagePrice(selected.default_price);
+      }
+      return;
+    }
+    setServicePackageId(id);
+    if (selected) {
+      setPackageName(selected.name);
+      setPackagePrice(selected.default_price);
+    }
+  };
+
+  const updateInitialPayment = (index: number, field: 'amount' | 'payment_date' | 'note', value: number | string) => {
+    setInitialPayments(current => current.map((payment, paymentIndex) =>
+      paymentIndex === index ? { ...payment, [field]: value } : payment
+    ));
+  };
+
+  const handleAddPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedOrder) return;
+    setPaymentError(null);
+    if (paymentAmount <= 0 || !paymentDate) {
+      setPaymentError('Vui lòng nhập số tiền và ngày thanh toán');
+      return;
+    }
+    try {
+      await apiRequest(`/api/orders/${selectedOrder.id}/payments`, 'POST', {
+        installment_no: paymentInstallment,
+        amount: paymentAmount,
+        payment_date: paymentDate,
+        note: paymentNote || null
+      });
+      setPaymentAmount(0);
+      setPaymentDate('');
+      setPaymentNote('');
+      await fetchOrderDetail(selectedOrder.id);
+      fetchOrders();
+    } catch (err: any) {
+      setPaymentError(err.message || 'Không thể ghi nhận khoản thu');
+    }
+  };
+
+  const handleVoidPayment = async (payment: any) => {
+    if (!selectedOrder || payment.voided_at) return;
+    const reason = window.prompt('Nhập lý do hủy khoản thu này:');
+    if (!reason) return;
+    try {
+      await apiRequest(`/api/orders/${selectedOrder.id}/payments/${payment.id}/void`, 'POST', { reason });
+      await fetchOrderDetail(selectedOrder.id);
+      fetchOrders();
+    } catch (err: any) {
+      setPaymentError(err.message || 'Không thể hủy khoản thu');
+    }
+  };
+
   // Status transition form handling
   const handleOpenStatusModal = () => {
     if (!selectedOrder) return;
-    setNewStatus(selectedOrder.status);
+    setNewStatus(normalizeOrderStatus(selectedOrder.status) || 'new');
     setStatusNote('');
     setStatusError(null);
     setIsStatusModalOpen(true);
@@ -416,7 +517,7 @@ export default function Orders({
   const handleUpdateStatus = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatusError(null);
-    if (newStatus === selectedOrder.status) {
+    if (newStatus === normalizeOrderStatus(selectedOrder.status)) {
       setIsStatusModalOpen(false);
       return;
     }
@@ -474,14 +575,11 @@ export default function Orders({
 
 
 
-  const statusMap: Record<string, { label: string, color: string }> = {
-    new: { label: 'Đơn mới', color: 'bg-gray-100 text-gray-700 border-gray-200' },
-    confirmed: { label: 'Đã xác nhận', color: 'bg-sky-50 text-sky-700 border-sky-100' },
-    shooting: { label: 'Đang chụp', color: 'bg-amber-50 text-amber-700 border-amber-100' },
-    editing: { label: 'Đang hậu kỳ', color: 'bg-indigo-50 text-indigo-700 border-indigo-100' },
-    ready: { label: 'Ảnh đã xong', color: 'bg-purple-50 text-purple-700 border-purple-100' },
-    delivered: { label: 'Hoàn tất', color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
-    cancelled: { label: 'Đã hủy', color: 'bg-rose-50 text-rose-700 border-rose-100' },
+  const getStatusMeta = (status: string) => {
+    const definition = getOrderStatusDefinition(status);
+    return definition
+      ? { label: definition.label, color: definition.badgeColor }
+      : { label: status || 'Không rõ', color: 'bg-gray-100 text-gray-700 border-gray-200' };
   };
 
   const canEdit = userRole === 'admin' || userRole === 'manager' || userRole === 'sales';
@@ -550,8 +648,9 @@ export default function Orders({
               className="bg-slate-50 border border-slate-200 rounded-lg py-1 px-2.5 text-xs text-slate-700 focus:outline-none focus:border-gold-500 cursor-pointer"
             >
               <option value="">Tất cả trạng thái</option>
-              {Object.entries(statusMap).map(([k, v]) => (
-                <option key={k} value={k}>{v.label}</option>
+              <option value="unscheduled">Chưa có ngày chụp</option>
+              {ORDER_STATUS_DEFINITIONS.map(status => (
+                <option key={status.id} value={status.id}>{status.label}</option>
               ))}
             </select>
           </div>
@@ -634,7 +733,7 @@ export default function Orders({
                 filteredOrders.map((order, idx) => {
                   const isSelected = selectedOrder?.id === order.id;
                   const rowNum = idx + 1;
-                  const badge = statusMap[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-700 border-gray-200' };
+                  const badge = getStatusMeta(order.status);
                   return (
                     <tr 
                       key={order.id}
@@ -667,7 +766,7 @@ export default function Orders({
 
                       {/* Ngày Chụp */}
                       <td className="px-4 py-2.5 border-r border-slate-200 text-center text-slate-500 font-mono">
-                        {new Date(order.shoot_date).toLocaleDateString('vi-VN')}
+                        {formatShootDate(order.shoot_date)}
                       </td>
 
                       {/* Giờ Chụp */}
@@ -731,7 +830,7 @@ export default function Orders({
           ) : (
             filteredOrders.map((order) => {
               const isSelected = selectedOrder?.id === order.id;
-              const badge = statusMap[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-700 border-gray-200' };
+              const badge = getStatusMeta(order.status);
               
               return (
                 <div 
@@ -769,7 +868,7 @@ export default function Orders({
                     <div>
                       <span className="block text-slate-400 font-medium">Ngày chụp:</span>
                       <span className="font-semibold font-mono text-slate-700">
-                        {order.shoot_date ? new Date(order.shoot_date).toLocaleDateString('vi-VN') : 'Chưa xếp lịch'}
+                        {formatShootDate(order.shoot_date)}
                       </span>
                     </div>
                     <div>
@@ -802,8 +901,8 @@ export default function Orders({
                 <div>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="font-mono text-base font-bold text-gray-900">{selectedOrder.order_code}</span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusMap[selectedOrder.status]?.color}`}>
-                      {statusMap[selectedOrder.status]?.label}
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${getStatusMeta(selectedOrder.status).color}`}>
+                      {getStatusMeta(selectedOrder.status).label}
                     </span>
                   </div>
                   <h3 className="text-base font-bold text-gray-900 mt-2 leading-snug">{selectedOrder.package_name}</h3>
@@ -855,7 +954,7 @@ export default function Orders({
                     <p className="flex items-center">
                       <Calendar className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0" />
                       <strong className="w-20 shrink-0">Ngày chụp:</strong>
-                      <span className="text-slate-900 font-semibold">{new Date(selectedOrder.shoot_date).toLocaleDateString('vi-VN')}</span>
+                      <span className="text-slate-900 font-semibold">{formatShootDate(selectedOrder.shoot_date)}</span>
                     </p>
                     <p className="flex items-center">
                       <Clock className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0" />
@@ -863,6 +962,17 @@ export default function Orders({
                       <span className="text-slate-900">{selectedOrder.shoot_time || 'Chưa định giờ'}</span>
                     </p>
                   </div>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                    Người tạo hợp đồng
+                  </span>
+                  <p className="flex items-center text-slate-700 pl-1">
+                    <User className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0" />
+                    <strong className="w-28 shrink-0">Người ký hợp đồng:</strong>
+                    <span className="text-slate-900 font-semibold">{selectedOrder.created_by_name}</span>
+                  </p>
                 </div>
               </div>
 
@@ -880,6 +990,76 @@ export default function Orders({
 
             {/* Right Column (Colspan 2): Tasks & Logs split layout */}
             <div className="lg:col-span-2 space-y-6">
+
+              {/* Immutable payment ledger */}
+              <div className="bg-white rounded-2xl border border-emerald-100 p-5 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-xs uppercase tracking-wide flex items-center">
+                      <DollarSign className="w-4 h-4 text-emerald-600 mr-2" /> Thanh toán & lịch sử thu tiền
+                    </h4>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs">
+                      <span>Giá trị: <strong>{formatVndFromThousands(selectedOrder.total_amount || 0)}</strong></span>
+                      <span className="text-emerald-700">Đã thu: <strong>{formatVndFromThousands(selectedOrder.payment_summary?.paid_total || 0)}</strong></span>
+                      <span className="text-amber-700">Còn lại: <strong>{formatVndFromThousands(selectedOrder.payment_summary?.remaining_amount || 0)}</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                {canEdit && (
+                  <form onSubmit={handleAddPayment} className="grid grid-cols-1 sm:grid-cols-[100px_1fr_1fr_auto] gap-2 items-end bg-emerald-50/50 border border-emerald-100 rounded-xl p-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase">Lần thu</label>
+                      <select value={paymentInstallment} onChange={(e) => setPaymentInstallment(Number(e.target.value))} className="w-full bg-white border border-emerald-100 rounded-lg px-2 py-2 text-xs">
+                        <option value={1}>Lần 1 (Cọc)</option>
+                        <option value={2}>Lần 2</option>
+                        <option value={3}>Lần 3</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase">Số tiền (nghìn)</label>
+                      <input type="number" min="0" value={paymentAmount} onChange={(e) => setPaymentAmount(parseFloat(e.target.value) || 0)} className="w-full bg-white border border-emerald-100 rounded-lg px-2 py-2 text-xs" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase">Ngày thanh toán</label>
+                      <input type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} className="w-full bg-white border border-emerald-100 rounded-lg px-2 py-2 text-xs" />
+                    </div>
+                    <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-3 py-2 text-xs font-bold">Ghi nhận</button>
+                    <input
+                      type="text"
+                      value={paymentNote}
+                      onChange={(e) => setPaymentNote(e.target.value)}
+                      placeholder="Ghi chú khoản thu (tùy chọn)"
+                      className="sm:col-span-4 w-full bg-white border border-emerald-100 rounded-lg px-3 py-2 text-xs"
+                    />
+                    {paymentError && <p className="sm:col-span-4 text-xs text-rose-600">{paymentError}</p>}
+                  </form>
+                )}
+
+                <div className="space-y-2 max-h-52 overflow-y-auto">
+                  {!selectedOrder.payments?.length ? (
+                    <p className="text-xs text-slate-400 italic text-center py-4">Chưa có khoản thu nào được ghi nhận.</p>
+                  ) : selectedOrder.payments.map((payment: any) => (
+                    <div key={payment.id} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl border p-3 text-xs ${payment.voided_at ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-emerald-100'}`}>
+                      <div>
+                        <p className={`font-bold ${payment.voided_at ? 'line-through text-slate-500' : 'text-slate-900'}`}>
+                          Lần {payment.installment_no}{payment.installment_no === 1 ? ' (Cọc)' : ''}: {formatVndFromThousands(payment.amount)}
+                        </p>
+                        <p className="text-[10px] text-slate-500 mt-1">
+                          Ngày thu: {new Date(`${payment.payment_date}T00:00:00`).toLocaleDateString('vi-VN')} • Ghi nhận: {payment.recorded_by_name}
+                        </p>
+                        {payment.note && <p className="text-[10px] text-slate-500 italic mt-1">{payment.note}</p>}
+                        {payment.voided_at && <p className="text-[10px] text-rose-600 mt-1">Đã hủy: {payment.void_reason} • {payment.voided_by_name}</p>}
+                      </div>
+                      {canEdit && !payment.voided_at && (
+                        <button type="button" onClick={() => handleVoidPayment(payment)} className="text-rose-600 hover:bg-rose-50 border border-rose-100 px-2 py-1 rounded-lg text-[10px] font-bold shrink-0">
+                          Hủy khoản thu
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
               
               {/* Internal tasks list */}
               <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-xs space-y-4">
@@ -947,10 +1127,10 @@ export default function Orders({
                           </p>
                           <div className="flex items-center gap-1.5 font-mono select-none">
                             {hist.from_status && (
-                              <span className="text-[9px] text-slate-300 line-through uppercase">{hist.from_status}</span>
+                              <span className="text-[9px] text-slate-300 line-through uppercase">{getOrderStatusLabel(hist.from_status)}</span>
                             )}
                             <span className="bg-gold-50 text-gold-950 border border-gold-200/50 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase">
-                              → {hist.to_status}
+                              → {getOrderStatusLabel(hist.to_status)}
                             </span>
                           </div>
                         </div>
@@ -1140,24 +1320,46 @@ export default function Orders({
               {/* Service details */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Ngày chụp *</label>
+                  <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Ngày chụp (có thể bổ sung sau)</label>
                   <input 
                     type="date"
                     value={shootDate}
-                    onChange={(e) => setShootDate(e.target.value)}
+                    onChange={(e) => {
+                      setShootDate(e.target.value);
+                      if (!e.target.value) setShootTime('');
+                    }}
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
-                    required
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Giờ chụp (nếu có)</label>
                   <input 
-                    type="time"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="HH:mm (24h)"
+                    pattern="([01]\d|2[0-3]):[0-5]\d"
+                    title="Nhập giờ 24h theo định dạng HH:mm, ví dụ 14:30"
+                    maxLength={5}
                     value={shootTime}
-                    onChange={(e) => setShootTime(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
+                    onChange={(e) => setShootTime(e.target.value.replace(/[^\d:]/g, '').slice(0, 5))}
+                    disabled={!shootDate}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
+              </div>
+
+	              <div className="space-y-1">
+	                <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Chọn gói đã thiết lập</label>
+                <select
+                  value={servicePackageId}
+                  onChange={(e) => applyServicePackage(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
+                >
+                  <option value="">Tự nhập / Tùy chỉnh</option>
+                  {servicePackages.map(item => (
+                    <option key={item.id} value={item.id}>{item.name} — {formatVndFromThousands(item.default_price)}</option>
+                  ))}
+                </select>
               </div>
 
 	              <div className="space-y-1">
@@ -1172,7 +1374,7 @@ export default function Orders({
 	                />
 	              </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Doanh thu / Giá gói</label>
                     <input
@@ -1185,19 +1387,43 @@ export default function Orders({
                     <p className="text-[10px] font-semibold text-slate-400">{MONEY_INPUT_HINT}</p>
                     <p className="text-[10px] font-bold text-emerald-700">= {formatVndFromThousands(packagePrice)}</p>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Tiền cọc đã trả</label>
-                    <input
-                      type="number"
-                      placeholder="Ví dụ: 500"
-                      value={depositAmount}
-                      onChange={(e) => setDepositAmount(parseFloat(e.target.value) || 0)}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
-                    />
-                    <p className="text-[10px] font-semibold text-slate-400">Nhập theo nghìn đồng.</p>
-                    <p className="text-[10px] font-bold text-emerald-700">= {formatVndFromThousands(depositAmount)}</p>
-                  </div>
                 </div>
+
+              <div className="space-y-2 border border-emerald-100 bg-emerald-50/40 rounded-xl p-3">
+                <div>
+                  <p className="text-xs font-bold text-emerald-900 uppercase tracking-wider">Thanh toán khi ký hợp đồng</p>
+                  <p className="text-[10px] text-emerald-700">Chỉ nhập khoản đã thực thu. Khoản có tiền bắt buộc phải có ngày thanh toán.</p>
+                </div>
+                {initialPayments.map((payment, index) => (
+                  <div key={payment.installment_no} className="grid grid-cols-1 sm:grid-cols-[100px_1fr_1fr] gap-2 items-end">
+                    <span className="text-xs font-bold text-slate-700 pb-2">Lần {payment.installment_no}{payment.installment_no === 1 ? ' (Cọc)' : ''}</span>
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-500">Số tiền (nghìn đồng)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={payment.amount}
+                        onChange={(e) => updateInitialPayment(index, 'amount', parseFloat(e.target.value) || 0)}
+                        className="w-full bg-white border border-emerald-100 rounded-lg py-2 px-3 text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-500">Ngày thanh toán</label>
+                      <input
+                        type="date"
+                        value={payment.payment_date}
+                        onChange={(e) => updateInitialPayment(index, 'payment_date', e.target.value)}
+                        disabled={payment.amount <= 0}
+                        required={payment.amount > 0}
+                        className="w-full bg-white border border-emerald-100 rounded-lg py-2 px-3 text-sm focus:outline-none disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                ))}
+                <p className="text-xs font-bold text-emerald-800">
+                  Tổng đã thu: {formatVndFromThousands(initialPayments.reduce((sum, payment) => sum + payment.amount, 0))}
+                </p>
+              </div>
 
 	              <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Ghi chú, yêu cầu thêm</label>
@@ -1249,6 +1475,12 @@ export default function Orders({
                 </div>
               )}
 
+              {!selectedOrder?.shoot_date && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs">
+                  <strong>Lịch chụp:</strong> Chưa có ngày chụp — hệ thống tự cập nhật khi bổ sung ngày.
+                </div>
+              )}
+
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Trạng thái mới</label>
                 <select 
@@ -1256,8 +1488,8 @@ export default function Orders({
                   onChange={(e) => setNewStatus(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
                 >
-                  {Object.entries(statusMap).map(([k, v]) => (
-                    <option key={k} value={k}>{v.label} ({k.toUpperCase()})</option>
+                  {ORDER_STATUS_DEFINITIONS.map(status => (
+                    <option key={status.id} value={status.id}>{status.label}</option>
                   ))}
                 </select>
               </div>
@@ -1416,24 +1648,46 @@ export default function Orders({
               {/* Service details */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Ngày chụp *</label>
+                  <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Ngày chụp (có thể bổ sung sau)</label>
                   <input 
                     type="date"
                     value={editShootDate}
-                    onChange={(e) => setEditShootDate(e.target.value)}
+                    onChange={(e) => {
+                      setEditShootDate(e.target.value);
+                      if (!e.target.value) setEditShootTime('');
+                    }}
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
-                    required
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Giờ chụp (nếu có)</label>
                   <input 
-                    type="time"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="HH:mm (24h)"
+                    pattern="([01]\d|2[0-3]):[0-5]\d"
+                    title="Nhập giờ 24h theo định dạng HH:mm, ví dụ 14:30"
+                    maxLength={5}
                     value={editShootTime}
-                    onChange={(e) => setEditShootTime(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
+                    onChange={(e) => setEditShootTime(e.target.value.replace(/[^\d:]/g, '').slice(0, 5))}
+                    disabled={!editShootDate}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Chọn gói đã thiết lập</label>
+                <select
+                  value={editServicePackageId}
+                  onChange={(e) => applyServicePackage(e.target.value, true)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
+                >
+                  <option value="">Tự nhập / Tùy chỉnh</option>
+                  {servicePackages.map(item => (
+                    <option key={item.id} value={item.id}>{item.name} — {formatVndFromThousands(item.default_price)}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-1">
@@ -1448,7 +1702,7 @@ export default function Orders({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Doanh thu / Giá gói</label>
                   <input 
@@ -1464,22 +1718,10 @@ export default function Orders({
                   <p className="text-[10px] font-semibold text-slate-400">{MONEY_INPUT_HINT}</p>
                   <p className="text-[10px] font-bold text-emerald-700">= {formatVndFromThousands(editPackagePrice)}</p>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Tiền cọc đã trả</label>
-                  <input 
-                    type="number"
-                    placeholder="Ví dụ: 500"
-                    value={editDepositAmount}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value) || 0;
-                      setEditDepositAmount(val);
-                    }}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-3 text-sm focus:outline-none"
-                  />
-                  <p className="text-[10px] font-semibold text-slate-400">Nhập theo nghìn đồng.</p>
-                  <p className="text-[10px] font-bold text-emerald-700">= {formatVndFromThousands(editDepositAmount)}</p>
-                </div>
               </div>
+              <p className="text-[11px] text-slate-500 bg-slate-50 border border-slate-100 rounded-lg p-2">
+                Tiền đã thu được quản lý trong mục <strong>Lịch sử thu tiền</strong> của hợp đồng, không sửa trực tiếp tại đây.
+              </p>
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Ghi chú, yêu cầu thêm</label>

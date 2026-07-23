@@ -253,7 +253,7 @@ export default function MobileCustomers({ userRole, onNavigate }: MobileCustomer
                     >
                       <div>
                         <p className="text-[10.5px] font-bold text-slate-700">{order.package_name}</p>
-                        <span className="text-[8.5px] text-slate-400 font-bold uppercase">{order.shoot_date}</span>
+                        <span className="text-[8.5px] text-slate-400 font-bold uppercase">{order.shoot_date || 'Chưa có ngày chụp'}</span>
                       </div>
                       <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                     </div>

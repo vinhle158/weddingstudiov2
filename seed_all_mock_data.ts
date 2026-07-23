@@ -98,7 +98,7 @@ async function seedMockData() {
       id: "order-1",
       order_code: "HĐ-2026-0001",
       customer_id: "cust-1",
-      status: "delivered",
+      status: "completed",
       shoot_date: "2026-06-28",
       shoot_time: "08:00",
       package_name: "Gói Album Phim Trường Premium",
@@ -114,7 +114,7 @@ async function seedMockData() {
       id: "order-2",
       order_code: "HĐ-2026-0002",
       customer_id: "cust-2",
-      status: "shooting",
+      status: "raw_sent",
       shoot_date: "2026-07-15",
       shoot_time: "07:00",
       package_name: "Trọn gói Pre-wedding Đà Lạt & Ngày Cưới Luxury",
@@ -130,7 +130,7 @@ async function seedMockData() {
       id: "order-3",
       order_code: "HĐ-2026-0003",
       customer_id: "cust-3",
-      status: "confirmed",
+      status: "new",
       shoot_date: "2026-07-22",
       shoot_time: "09:00",
       package_name: "Trọn gói Album Phim trường L'amour",
@@ -146,7 +146,7 @@ async function seedMockData() {
       id: "order-4",
       order_code: "HĐ-2026-0004",
       customer_id: "cust-4",
-      status: "confirmed",
+      status: "new",
       shoot_date: "2026-08-02",
       shoot_time: "17:00",
       package_name: "Thuê Váy Cưới Luxury Elie Saab VIP",
@@ -162,7 +162,7 @@ async function seedMockData() {
       id: "order-5",
       order_code: "HĐ-2026-0005",
       customer_id: "cust-5",
-      status: "delivered",
+      status: "completed",
       shoot_date: "2026-07-02",
       shoot_time: "07:30",
       package_name: "Quay phim Phóng sự cưới Gold & Váy thiết kế",
@@ -178,7 +178,7 @@ async function seedMockData() {
       id: "order-6",
       order_code: "HĐ-2026-0006",
       customer_id: "cust-6",
-      status: "confirmed",
+      status: "new",
       shoot_date: "2026-07-20",
       shoot_time: "08:30",
       package_name: "Concept Studio Hàn Quốc",
@@ -194,7 +194,7 @@ async function seedMockData() {
       id: "order-7",
       order_code: "HĐ-2026-0007",
       customer_id: "cust-7",
-      status: "confirmed",
+      status: "new",
       shoot_date: "2026-07-25",
       shoot_time: "06:00",
       package_name: "Combo Wedding Day Diamond Full Service",
@@ -223,6 +223,23 @@ async function seedMockData() {
       updated_at: "2026-07-02T11:20:00.000Z"
     }
   ];
+
+  // Đồng bộ tiền cọc mock vào sổ thu tiền mới để lịch sử và công nợ không lệch.
+  db.order_payments = db.orders
+    .filter(order => order.deposit_amount > 0)
+    .map(order => ({
+      id: `seed-payment-${order.id}`,
+      order_id: order.id,
+      installment_no: 1,
+      amount: order.deposit_amount,
+      payment_date: order.created_at.slice(0, 10),
+      note: "Khoản cọc từ dữ liệu mẫu",
+      recorded_by: order.created_by,
+      created_at: order.created_at,
+      voided_at: null,
+      voided_by: null,
+      void_reason: null
+    }));
 
   // 3. NẠP LỊCH SỬ HỢP ĐỒNG (ORDER STATUS HISTORY)
   db.order_status_history = [

@@ -22,8 +22,14 @@ import {
   Loader2,
   Server,
   Cpu,
-  Activity
+  Activity,
+  Tag,
+  Plus,
+  Edit,
+  History
 } from 'lucide-react';
+import { MONEY_INPUT_HINT, formatVndFromThousands } from '../lib/money';
+import { SOFTWARE_CHANGELOG } from '../lib/softwareChangelog';
 
 interface StudioSettings {
   name: string;
@@ -47,12 +53,24 @@ interface BackupItem {
   status: 'success' | 'failed';
 }
 
-interface SettingsProps {
-  onSettingsSaved?: () => void;
+interface ServicePackage {
+  id: string;
+  name: string;
+  default_price: number;
+  description: string | null;
+  is_active: boolean;
+  sort_order: number;
 }
 
-export default function Settings({ onSettingsSaved }: SettingsProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'info' | 'database'>('info');
+interface SettingsProps {
+  onSettingsSaved?: () => void;
+  initialSubTab?: 'info' | 'packages' | 'history' | 'database';
+  initialReleaseId?: string;
+}
+
+export default function Settings({ onSettingsSaved, initialSubTab, initialReleaseId }: SettingsProps) {
+  const [activeSubTab, setActiveSubTab] = useState<'info' | 'packages' | 'history' | 'database'>(initialSubTab || 'info');
+  const [expandedReleaseId, setExpandedReleaseId] = useState<string | null>(initialReleaseId || null);
   
   // Settings Form State
   const [settings, setSettings] = useState<StudioSettings>({
@@ -91,6 +109,11 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
   const [systemStatus, setSystemStatus] = useState<any>(null);
   const [loadingSystemStatus, setLoadingSystemStatus] = useState(false);
   const [systemStatusError, setSystemStatusError] = useState<string | null>(null);
+  const [servicePackages, setServicePackages] = useState<ServicePackage[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(false);
+  const [editingPackageId, setEditingPackageId] = useState<string | null>(null);
+  const [packageForm, setPackageForm] = useState({ name: '', default_price: 0, description: '', sort_order: 0, is_active: true });
+  const [packageMsg, setPackageMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   const fetchSystemStatus = async () => {
     try {
@@ -109,10 +132,17 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
     fetchSettings();
     fetchBackups();
     fetchSystemStatus();
+    fetchServicePackages();
 
     const interval = setInterval(fetchSystemStatus, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!initialReleaseId) return;
+    setActiveSubTab('history');
+    setExpandedReleaseId(initialReleaseId);
+  }, [initialReleaseId]);
 
 
   const fetchSettings = async () => {
@@ -138,6 +168,60 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
       console.error('Failed to fetch backup history:', err);
     } finally {
       setLoadingBackups(false);
+    }
+  };
+
+  const fetchServicePackages = async () => {
+    try {
+      setLoadingPackages(true);
+      setServicePackages(await apiRequest('/api/service-packages?include_inactive=true'));
+    } catch (err: any) {
+      setPackageMsg({ type: 'error', text: err.message || 'Không thể tải danh sách gói' });
+    } finally {
+      setLoadingPackages(false);
+    }
+  };
+
+  const resetPackageForm = () => {
+    setEditingPackageId(null);
+    setPackageForm({ name: '', default_price: 0, description: '', sort_order: servicePackages.length, is_active: true });
+  };
+
+  const handleEditPackage = (item: ServicePackage) => {
+    setEditingPackageId(item.id);
+    setPackageForm({
+      name: item.name,
+      default_price: item.default_price,
+      description: item.description || '',
+      sort_order: item.sort_order,
+      is_active: item.is_active
+    });
+    setPackageMsg(null);
+  };
+
+  const handleSavePackage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPackageMsg(null);
+    try {
+      if (editingPackageId) {
+        await apiRequest(`/api/service-packages/${editingPackageId}`, 'PUT', packageForm);
+      } else {
+        await apiRequest('/api/service-packages', 'POST', packageForm);
+      }
+      setPackageMsg({ type: 'success', text: editingPackageId ? 'Đã cập nhật gói dịch vụ.' : 'Đã tạo gói dịch vụ.' });
+      await fetchServicePackages();
+      resetPackageForm();
+    } catch (err: any) {
+      setPackageMsg({ type: 'error', text: err.message || 'Không thể lưu gói dịch vụ' });
+    }
+  };
+
+  const handleTogglePackage = async (item: ServicePackage) => {
+    try {
+      await apiRequest(`/api/service-packages/${item.id}`, 'PUT', { is_active: !item.is_active });
+      await fetchServicePackages();
+    } catch (err: any) {
+      setPackageMsg({ type: 'error', text: err.message || 'Không thể cập nhật trạng thái gói' });
     }
   };
 
@@ -378,7 +462,7 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
 
 
       {/* Sub tabs navigation */}
-      <div className="flex space-x-1 bg-slate-100 p-1 rounded-xl max-w-md" id="settings-sub-tabs">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl max-w-4xl" id="settings-sub-tabs">
         <button
           onClick={() => setActiveSubTab('info')}
           className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
@@ -390,6 +474,30 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
         >
           <Building className="w-3.5 h-3.5 inline mr-1.5" />
           Thông tin Studio
+        </button>
+        <button
+          onClick={() => setActiveSubTab('history')}
+          className={`py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
+            activeSubTab === 'history'
+              ? 'bg-white text-gold-950 shadow-2xs border border-gold-200/20'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+          id="btn-subtab-history"
+        >
+          <History className="w-3.5 h-3.5 inline mr-1.5" />
+          Lịch sử cập nhật
+        </button>
+        <button
+          onClick={() => setActiveSubTab('packages')}
+          className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
+            activeSubTab === 'packages'
+              ? 'bg-white text-gold-950 shadow-2xs border border-gold-200/20'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+          id="btn-subtab-packages"
+        >
+          <Tag className="w-3.5 h-3.5 inline mr-1.5" />
+          Gói chụp & Giá
         </button>
         <button
           onClick={() => setActiveSubTab('database')}
@@ -577,6 +685,171 @@ export default function Settings({ onSettingsSaved }: SettingsProps) {
               </div>
             </form>
           )}
+        </motion.div>
+      )}
+
+      {activeSubTab === 'packages' && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6"
+          id="service-packages-panel"
+        >
+          <form onSubmit={handleSavePackage} className="bg-white rounded-2xl border border-gold-200/30 p-6 shadow-2xs space-y-4 h-fit">
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="font-semibold text-gold-950 text-base">{editingPackageId ? 'Chỉnh sửa gói chụp' : 'Tạo gói chụp mới'}</h3>
+              <p className="text-xs text-slate-400 mt-1">Giá mặc định có thể được tùy chỉnh khi ký từng hợp đồng.</p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Tên gói *</label>
+              <input required value={packageForm.name} onChange={(e) => setPackageForm({ ...packageForm, name: e.target.value })} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Ví dụ: Gói Album Studio" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Giá mặc định (nghìn đồng)</label>
+              <input type="number" min="0" value={packageForm.default_price} onChange={(e) => setPackageForm({ ...packageForm, default_price: parseFloat(e.target.value) || 0 })} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+              <p className="text-[10px] text-slate-400 mt-1">{MONEY_INPUT_HINT}</p>
+              <p className="text-xs font-bold text-emerald-700 mt-1">= {formatVndFromThousands(packageForm.default_price)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Mô tả</label>
+              <textarea rows={3} value={packageForm.description} onChange={(e) => setPackageForm({ ...packageForm, description: e.target.value })} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Thứ tự hiển thị</label>
+              <input type="number" min="0" value={packageForm.sort_order} onChange={(e) => setPackageForm({ ...packageForm, sort_order: parseInt(e.target.value, 10) || 0 })} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+            </div>
+            {packageMsg && <p className={`text-xs ${packageMsg.type === 'success' ? 'text-emerald-700' : 'text-rose-600'}`}>{packageMsg.text}</p>}
+            <div className="flex gap-2">
+              {editingPackageId && <button type="button" onClick={resetPackageForm} className="flex-1 border border-slate-200 rounded-xl py-2 text-xs font-bold text-slate-600">Hủy sửa</button>}
+              <button type="submit" className="flex-1 bg-gold-600 hover:bg-gold-700 text-white rounded-xl py-2 text-xs font-bold flex items-center justify-center gap-1.5">
+                {editingPackageId ? <Save className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                {editingPackageId ? 'Lưu thay đổi' : 'Tạo gói'}
+              </button>
+            </div>
+          </form>
+
+          <div className="bg-white rounded-2xl border border-gold-200/30 p-6 shadow-2xs">
+            <div className="border-b border-slate-100 pb-3 mb-4">
+              <h3 className="font-semibold text-gold-950 text-base">Danh sách gói chụp</h3>
+              <p className="text-xs text-slate-400 mt-1">Gói ngừng sử dụng không xuất hiện khi ký hợp đồng mới nhưng dữ liệu hợp đồng cũ vẫn được giữ nguyên.</p>
+            </div>
+            {loadingPackages ? (
+              <div className="py-12 flex justify-center"><Loader2 className="w-7 h-7 animate-spin text-gold-500" /></div>
+            ) : servicePackages.length === 0 ? (
+              <p className="py-12 text-center text-xs text-slate-400">Chưa có gói chụp nào.</p>
+            ) : (
+              <div className="space-y-3">
+                {servicePackages.map(item => (
+                  <div key={item.id} className={`border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${item.is_active ? 'border-slate-200' : 'border-slate-100 bg-slate-50 opacity-70'}`}>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <strong className="text-sm text-slate-900">{item.name}</strong>
+                        <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${item.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>{item.is_active ? 'Đang dùng' : 'Ngừng dùng'}</span>
+                      </div>
+                      <p className="text-xs font-bold text-gold-700 mt-1">{formatVndFromThousands(item.default_price)}</p>
+                      {item.description && <p className="text-xs text-slate-500 mt-1">{item.description}</p>}
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <button type="button" onClick={() => handleEditPackage(item)} className="border border-slate-200 text-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold flex items-center gap-1"><Edit className="w-3.5 h-3.5" /> Sửa</button>
+                      <button type="button" onClick={() => handleTogglePackage(item)} className={`border rounded-lg px-3 py-1.5 text-xs font-bold ${item.is_active ? 'border-rose-100 text-rose-600' : 'border-emerald-100 text-emerald-700'}`}>
+                        {item.is_active ? 'Ngừng dùng' : 'Kích hoạt'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {activeSubTab === 'history' && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-4"
+          id="software-history-panel"
+        >
+          <div className="bg-gradient-to-r from-gold-50 to-white rounded-2xl border border-gold-200/40 p-5 shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-gold-950 text-base flex items-center gap-2">
+                  <History className="w-5 h-5 text-gold-600" />
+                  Lịch sử cập nhật phần mềm
+                </h3>
+                <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+                  Mỗi đợt cập nhật có một mã ID riêng. Chọn “Xem chi tiết” khi cần kiểm tra đầy đủ nội dung.
+                </p>
+              </div>
+              <div className="bg-white border border-gold-200/50 rounded-xl px-4 py-2 text-center shrink-0">
+                <p className="text-xl font-bold text-gold-800">{SOFTWARE_CHANGELOG.length}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Đợt cập nhật</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200/70 shadow-2xs overflow-hidden">
+            <div className="hidden md:grid grid-cols-[90px_120px_1fr_120px] gap-3 bg-slate-50 border-b border-slate-100 px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <span>Mã ID</span>
+              <span>Ngày cập nhật</span>
+              <span>Nội dung tóm tắt</span>
+              <span className="text-right">Trạng thái</span>
+            </div>
+
+            <div className="divide-y divide-slate-100">
+              {SOFTWARE_CHANGELOG.map(release => (
+                <details
+                  key={release.id}
+                  open={release.id === expandedReleaseId}
+                  onToggle={(event) => {
+                    const isOpen = event.currentTarget.open;
+                    setExpandedReleaseId(isOpen ? release.id : current => current === release.id ? null : current);
+                  }}
+                  className="group px-4 md:px-5 py-4 open:bg-gold-50/20"
+                >
+                  <summary className="list-none cursor-pointer">
+                    <div className="grid grid-cols-1 md:grid-cols-[90px_120px_1fr_120px] gap-2 md:gap-3 md:items-center">
+                      <span className="font-mono text-xs font-bold text-gold-800 bg-gold-50 border border-gold-200/50 rounded-lg px-2 py-1 w-fit">
+                        ID:{release.id}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-gold-600" />
+                        {new Date(`${release.date}T00:00:00`).toLocaleDateString('vi-VN')}
+                      </span>
+                      <div>
+                        <p className="text-xs font-semibold text-slate-800 leading-relaxed">{release.summary}</p>
+                        <span className="text-[10px] font-bold text-gold-700 group-open:hidden">Xem chi tiết</span>
+                        <span className="text-[10px] font-bold text-gold-700 hidden group-open:inline">Thu gọn</span>
+                      </div>
+                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full w-fit md:ml-auto ${
+                        release.status === 'verified'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'bg-amber-50 text-amber-700'
+                      }`}>
+                        {release.status === 'verified' ? 'Đã kiểm tra' : 'Đang kiểm tra'}
+                      </span>
+                    </div>
+                  </summary>
+
+                  <div className="mt-4 md:ml-[225px] bg-slate-50 border border-slate-100 rounded-xl p-4">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Chi tiết thay đổi</p>
+                    <ul className="grid grid-cols-1 lg:grid-cols-2 gap-x-5 gap-y-2">
+                      {release.changes.map(item => (
+                        <li key={item} className="text-xs text-slate-600 flex items-start gap-2 leading-relaxed">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-blue-50/60 border border-blue-100 rounded-2xl p-4 text-xs text-blue-800 leading-relaxed">
+            <strong>Quy ước ID:</strong> mỗi đợt cập nhật dùng số thứ tự gồm ba chữ số. Đợt tiếp theo sẽ là <strong>ID:002</strong>, sau đó ID:003, ID:004...
+          </div>
         </motion.div>
       )}
 

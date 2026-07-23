@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../lib/api';
+import {
+  ACTIVE_ORDER_STATUS_IDS,
+  ORDER_STATUS_DEFINITIONS,
+  canTransitionOrderStatus,
+  getOrderStatusDefinition,
+  normalizeOrderStatus,
+} from '../lib/orderStatus';
 import { 
   Calendar, 
   Clock, 
@@ -48,14 +55,14 @@ interface DashboardProps {
   isMobile?: boolean;
 }
 
-const ORDER_COLUMNS = [
-  { id: 'new', label: 'Mới nhận', color: 'bg-blue-50 border-blue-200 text-blue-700', dot: 'bg-blue-500' },
-  { id: 'confirmed', label: 'Đã xác nhận', color: 'bg-indigo-50 border-indigo-200 text-indigo-700', dot: 'bg-indigo-500' },
-  { id: 'shooting', label: 'Đang chụp', color: 'bg-amber-50 border-amber-200 text-amber-700', dot: 'bg-amber-500' },
-  { id: 'editing', label: 'Hậu kỳ', color: 'bg-violet-50 border-violet-200 text-violet-700', dot: 'bg-violet-500' },
-  { id: 'ready', label: 'Sẵn sàng', color: 'bg-emerald-50 border-emerald-200 text-emerald-700', dot: 'bg-emerald-500' },
-  { id: 'delivered', label: 'Đã bàn giao', color: 'bg-slate-50 border-slate-200 text-slate-700', dot: 'bg-slate-500' },
-];
+const ORDER_COLUMNS = ORDER_STATUS_DEFINITIONS
+  .filter(status => status.id !== 'cancelled')
+  .map(status => ({
+    id: status.id,
+    label: status.label,
+    color: status.dashboardColor,
+    dot: status.dotColor,
+  }));
 
 const TASK_COLUMNS = [
   { id: 'pending', label: 'Chờ nhận việc', color: 'bg-yellow-50 border-yellow-200 text-yellow-800', dot: 'bg-yellow-500' },
@@ -231,8 +238,9 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
   };
 
   const moveOrder = async (orderId: string, currentStatus: string, direction: 'next' | 'prev') => {
-    const statuses = ['new', 'confirmed', 'shooting', 'editing', 'ready', 'delivered'];
-    const currentIndex = statuses.indexOf(currentStatus);
+    const statuses: string[] = ORDER_COLUMNS.map(column => column.id);
+    const normalizedCurrentStatus = normalizeOrderStatus(currentStatus);
+    const currentIndex = normalizedCurrentStatus ? statuses.indexOf(normalizedCurrentStatus) : -1;
     if (currentIndex === -1) return;
     
     let newIndex = currentIndex + (direction === 'next' ? 1 : -1);
@@ -240,9 +248,8 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
     
     const newStatus = statuses[newIndex];
     
-    // Safety role check for going backward
-    if (newIndex < currentIndex && userRole !== 'admin' && userRole !== 'manager') {
-      showFeedback('Chỉ Quản lý hoặc Quản trị viên mới có quyền dời ngược trạng thái đơn hàng.', 'error');
+    if (!canTransitionOrderStatus(normalizedCurrentStatus, newStatus, userRole === 'admin')) {
+      showFeedback('Chỉ Quản trị viên mới có quyền dời ngược trạng thái, ngoại trừ vòng lặp gửi demo và chỉnh sửa lại.', 'error');
       return;
     }
 
@@ -280,10 +287,13 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
   };
 
   const getOrderStatusCounts = () => {
-    const counts = { new: 0, confirmed: 0, shooting: 0, editing: 0, ready: 0, delivered: 0 };
+    const counts: Record<string, number> = Object.fromEntries(
+      ORDER_COLUMNS.map(column => [column.id, 0]),
+    );
     orders.forEach(o => {
-      if (counts[o.status as keyof typeof counts] !== undefined) {
-        counts[o.status as keyof typeof counts]++;
+      const status = normalizeOrderStatus(o.status);
+      if (status && counts[status] !== undefined) {
+        counts[status]++;
       }
     });
     return counts;
@@ -382,24 +392,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
     };
 
     const getBarColor = (status: string) => {
-      switch (status) {
-        case 'new':
-          return 'bg-slate-100 text-slate-700 border-slate-350 hover:bg-slate-200/60';
-        case 'confirmed':
-          return 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100/60';
-        case 'shooting':
-          return 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100/60';
-        case 'editing':
-          return 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100/60';
-        case 'ready':
-          return 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100/60';
-        case 'delivered':
-          return 'bg-emerald-50 text-emerald-700 border-emerald-250 hover:bg-emerald-100/60';
-        case 'cancelled':
-          return 'bg-rose-50 text-rose-700 border-rose-200 opacity-60 hover:bg-rose-100/60';
-        default:
-          return 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100/60';
-      }
+      return `${getOrderStatusDefinition(status)?.dashboardColor || 'bg-gray-50 text-gray-700 border-gray-200'} hover:brightness-[0.98]`;
     };
     const visibleOrders = orders.filter(order => {
       const shootDateVal = parseLocalDate(order.shoot_date);
@@ -488,7 +481,7 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
 
                   const totalTasksCount = orderTasks.length;
                   const completedTasksCount = orderTasks.filter(t => t.status === 'done').length;
-                  const orderCol = ORDER_COLUMNS.find(c => c.id === order.status) || { label: order.status, color: 'bg-gray-50 border-gray-200 text-gray-700' };
+                  const orderCol = ORDER_COLUMNS.find(c => c.id === normalizeOrderStatus(order.status)) || { label: order.status, color: 'bg-gray-50 border-gray-200 text-gray-700' };
 
                   return (
                     <div key={order.id} className="flex h-14 items-center hover:bg-slate-50/50 transition-colors divide-x divide-slate-100">
@@ -579,9 +572,9 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
                       {bubbleOrder.order_code}
                     </span>
                     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border ${
-                      ORDER_COLUMNS.find(c => c.id === bubbleOrder.status)?.color || 'bg-slate-50 border-slate-200 text-slate-700'
+                      ORDER_COLUMNS.find(c => c.id === normalizeOrderStatus(bubbleOrder.status))?.color || 'bg-slate-50 border-slate-200 text-slate-700'
                     }`}>
-                      {ORDER_COLUMNS.find(c => c.id === bubbleOrder.status)?.label || bubbleOrder.status}
+                      {ORDER_COLUMNS.find(c => c.id === normalizeOrderStatus(bubbleOrder.status))?.label || bubbleOrder.status}
                     </span>
                   </div>
                   <h4 className="text-base font-extrabold text-slate-900 leading-tight">Chi tiết lịch trình & Tiến độ</h4>
@@ -846,14 +839,14 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Đơn đang hoạt động</p>
               <h3 className="text-lg font-bold text-slate-800 mt-1">
-                {summary.orders.by_status.shooting + summary.orders.by_status.editing + summary.orders.by_status.confirmed + summary.orders.by_status.new} Đơn
+                {ACTIVE_ORDER_STATUS_IDS.reduce((total, status) => total + (summary.orders.by_status[status] || 0), 0)} Đơn
               </h3>
               <div className="flex gap-2 mt-1 text-[9px] font-bold">
                 <span className="bg-gold-50 text-gold-700 px-1.5 py-0.5 rounded border border-gold-200/40">
-                  Chụp: {summary.orders.by_status.shooting}
+                  Đã gởi demo: {summary.orders.by_status.demo_sent || 0}
                 </span>
                 <span className="bg-gold-100/50 text-gold-800 px-1.5 py-0.5 rounded border border-gold-200/40">
-                  Hậu kỳ: {summary.orders.by_status.editing}
+                  Chỉnh sửa: {summary.orders.by_status.revision || 0}
                 </span>
               </div>
             </div>
@@ -1468,11 +1461,10 @@ export default function Dashboard({ userRole, userId, onNavigate, studioSettings
                               {shoot.package_name}
                             </td>
                             <td className="p-4">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                                shoot.status === 'confirmed' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
-                                shoot.status === 'shooting' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-gray-50 text-gray-700 border border-gray-100'
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
+                                getOrderStatusDefinition(shoot.status)?.badgeColor || 'bg-gray-50 text-gray-700 border-gray-100'
                               }`}>
-                                {shoot.status === 'confirmed' ? 'Đã cọc' : 'Đang chụp'}
+                                {getOrderStatusDefinition(shoot.status)?.label || shoot.status}
                               </span>
                             </td>
                             <td className="p-4 text-right pr-6">

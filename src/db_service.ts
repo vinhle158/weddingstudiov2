@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import type { OrderStatus } from './lib/orderStatus';
 
 export const prisma = new PrismaClient();
 
@@ -41,7 +42,8 @@ export interface Order {
   id: string;
   order_code: string;
   customer_id: string;
-  status: 'new' | 'confirmed' | 'shooting' | 'editing' | 'ready' | 'delivered' | 'cancelled';
+  service_package_id?: string | null;
+  status: OrderStatus;
   shoot_date: string;
   shoot_time: string | null;
   package_name: string;
@@ -52,6 +54,32 @@ export interface Order {
   created_by: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface ServicePackage {
+  id: string;
+  name: string;
+  default_price: number;
+  description: string | null;
+  is_active: boolean;
+  sort_order: number;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrderPayment {
+  id: string;
+  order_id: string;
+  installment_no: number;
+  amount: number;
+  payment_date: string;
+  note: string | null;
+  recorded_by: string;
+  created_at: string;
+  voided_at: string | null;
+  voided_by: string | null;
+  void_reason: string | null;
 }
 
 export interface OrderStatusHistory {
@@ -236,6 +264,8 @@ export interface DatabaseSchema {
   roles: Role[];
   customers: Customer[];
   orders: Order[];
+  service_packages: ServicePackage[];
+  order_payments: OrderPayment[];
   order_status_history: OrderStatusHistory[];
   tasks: Task[];
   task_updates: TaskUpdate[];
@@ -371,6 +401,8 @@ export class LocalDatabase {
       const users = await prisma.user.findMany();
       const customers = await prisma.customer.findMany();
       const orders = await prisma.order.findMany();
+      const servicePackages = await prisma.servicePackage.findMany();
+      const orderPayments = await prisma.orderPayment.findMany();
       const orderStatusHistory = await prisma.orderStatusHistory.findMany();
       const tasks = await prisma.task.findMany();
       const taskUpdates = await prisma.taskUpdate.findMany();
@@ -402,6 +434,8 @@ export class LocalDatabase {
         roles,
         customers,
         orders: orders as any,
+        service_packages: servicePackages,
+        order_payments: orderPayments,
         order_status_history: orderStatusHistory,
         tasks: tasks as any,
         task_updates: taskUpdates,
@@ -452,7 +486,9 @@ export class LocalDatabase {
         await this.reconcileTable(tx, 'role', data.roles || [], ['name', 'display_name', 'permissions']);
         await this.reconcileTable(tx, 'user', data.users || [], ['full_name', 'email', 'password_hash', 'role_id', 'is_active', 'created_at', 'session_version']);
         await this.reconcileTable(tx, 'customer', data.customers || [], ['full_name', 'phone', 'email', 'address', 'notes', 'birthday', 'wedding_date', 'facebook_url', 'created_at', 'updated_at']);
-        await this.reconcileTable(tx, 'order', data.orders || [], ['order_code', 'customer_id', 'status', 'shoot_date', 'shoot_time', 'package_name', 'package_price', 'deposit_amount', 'total_amount', 'notes', 'created_by', 'created_at', 'updated_at']);
+        await this.reconcileTable(tx, 'order', data.orders || [], ['order_code', 'customer_id', 'service_package_id', 'status', 'shoot_date', 'shoot_time', 'package_name', 'package_price', 'deposit_amount', 'total_amount', 'notes', 'created_by', 'created_at', 'updated_at']);
+        await this.reconcileTable(tx, 'servicePackage', data.service_packages || [], ['name', 'default_price', 'description', 'is_active', 'sort_order', 'created_by', 'created_at', 'updated_at']);
+        await this.reconcileTable(tx, 'orderPayment', data.order_payments || [], ['order_id', 'installment_no', 'amount', 'payment_date', 'note', 'recorded_by', 'created_at', 'voided_at', 'voided_by', 'void_reason']);
         await this.reconcileTable(tx, 'orderStatusHistory', data.order_status_history || [], ['order_id', 'from_status', 'to_status', 'changed_by', 'note', 'changed_at']);
         await this.reconcileTable(tx, 'task', data.tasks || [], ['title', 'description', 'order_id', 'assigned_to', 'assigned_by', 'status', 'priority', 'due_date', 'created_at', 'updated_at']);
         await this.reconcileTable(tx, 'taskUpdate', data.task_updates || [], ['task_id', 'updated_by', 'status_changed_to', 'comment', 'created_at']);

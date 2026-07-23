@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../../../lib/api';
 import { formatCompactVndFromThousands } from '../../../lib/money';
+import { ACTIVE_ORDER_STATUS_IDS } from '../../../lib/orderStatus';
 import { 
   Calendar, 
   Clock, 
@@ -147,20 +148,31 @@ export default function MobileDashboard({ userRole, userId, onNavigate, unreadNo
       <div className="grid grid-cols-2 gap-3">
         {!isStaff && summary ? (
           <>
-            <div className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs flex flex-col justify-between h-24">
+            <button
+              type="button"
+              onClick={() => onNavigate('orders')}
+              className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs flex flex-col justify-between h-24 text-left active:bg-gold-50 transition-colors"
+            >
               <div className="flex justify-between items-start">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Đơn hoạt động</span>
                 <Clock className="w-4 h-4 text-gold-600" />
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-800">
-                  {summary.orders?.by_status?.shooting + summary.orders?.by_status?.editing + summary.orders?.by_status?.confirmed + summary.orders?.by_status?.new || 0} Đơn
+                  {ACTIVE_ORDER_STATUS_IDS.reduce(
+                    (total, status) => total + (summary.orders?.by_status?.[status] || 0),
+                    0,
+                  )} Đơn
                 </h3>
                 <p className="text-[8px] text-slate-400 font-medium mt-0.5">Đồng bộ thời gian thực</p>
               </div>
-            </div>
+            </button>
 
-            <div className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs flex flex-col justify-between h-24">
+            <button
+              type="button"
+              onClick={() => onNavigate('orders')}
+              className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs flex flex-col justify-between h-24 text-left active:bg-emerald-50 transition-colors"
+            >
               <div className="flex justify-between items-start">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Doanh thu tháng</span>
                 <TrendingUp className="w-4 h-4 text-emerald-600" />
@@ -171,9 +183,13 @@ export default function MobileDashboard({ userRole, userId, onNavigate, unreadNo
                 </h3>
                 <p className="text-[8px] text-emerald-600 font-bold mt-0.5">Tăng trưởng ổn định</p>
               </div>
-            </div>
+            </button>
 
-            <div className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs flex flex-col justify-between h-24">
+            <button
+              type="button"
+              onClick={() => onNavigate('tasks')}
+              className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs flex flex-col justify-between h-24 text-left active:bg-gold-50 transition-colors"
+            >
               <div className="flex justify-between items-start">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tiến độ công việc</span>
                 <CheckSquare className="w-4 h-4 text-gold-600" />
@@ -189,9 +205,13 @@ export default function MobileDashboard({ userRole, userId, onNavigate, unreadNo
                   />
                 </div>
               </div>
-            </div>
+            </button>
 
-            <div className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs flex flex-col justify-between h-24">
+            <button
+              type="button"
+              onClick={() => onNavigate('objectives')}
+              className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs flex flex-col justify-between h-24 text-left active:bg-purple-50 transition-colors"
+            >
               <div className="flex justify-between items-start">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Mục tiêu chiến dịch</span>
                 <Target className="w-4 h-4 text-purple-600" />
@@ -204,11 +224,15 @@ export default function MobileDashboard({ userRole, userId, onNavigate, unreadNo
                   {objectives.filter(o => o.status === 'completed').length} đã hoàn thành
                 </p>
               </div>
-            </div>
+            </button>
           </>
         ) : (
           <>
-            <div className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs flex flex-col justify-between h-24">
+            <button
+              type="button"
+              onClick={() => onNavigate('tasks')}
+              className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs flex flex-col justify-between h-24 text-left active:bg-gold-50 transition-colors"
+            >
               <div className="flex justify-between items-start">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Đang thực hiện</span>
                 <Clock className="w-4 h-4 text-gold-600" />
@@ -218,9 +242,13 @@ export default function MobileDashboard({ userRole, userId, onNavigate, unreadNo
                   {staffTasks.filter(t => t.status === 'in_progress').length} Việc
                 </h3>
               </div>
-            </div>
+            </button>
 
-            <div className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs flex flex-col justify-between h-24">
+            <button
+              type="button"
+              onClick={() => onNavigate('tasks')}
+              className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs flex flex-col justify-between h-24 text-left active:bg-amber-50 transition-colors"
+            >
               <div className="flex justify-between items-start">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Chờ nhận việc</span>
                 <AlertCircle className="w-4 h-4 text-amber-500" />
@@ -230,9 +258,13 @@ export default function MobileDashboard({ userRole, userId, onNavigate, unreadNo
                   {staffTasks.filter(t => t.status === 'pending').length} Việc
                 </h3>
               </div>
-            </div>
+            </button>
 
-            <div className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs flex flex-col justify-between h-24 col-span-2">
+            <button
+              type="button"
+              onClick={() => onNavigate('tasks')}
+              className="bg-white p-4 rounded-xl border border-slate-200/50 shadow-2xs flex flex-col justify-between h-24 col-span-2 text-left active:bg-emerald-50 transition-colors"
+            >
               <div className="flex justify-between items-start">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tiến độ nhiệm vụ</span>
                 <CheckSquare className="w-4 h-4 text-emerald-600" />
@@ -248,7 +280,7 @@ export default function MobileDashboard({ userRole, userId, onNavigate, unreadNo
                   />
                 </div>
               </div>
-            </div>
+            </button>
           </>
         )}
       </div>

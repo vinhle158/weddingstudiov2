@@ -88,7 +88,7 @@ async function queryBusinessOverview(todayStr: string): Promise<QueryResult> {
   const customers = await prisma.customer.count();
   const orders = await prisma.order.count();
   const active_orders = await prisma.order.count({
-    where: { status: { notIn: ['cancelled', 'delivered'] } }
+    where: { status: { notIn: ['cancelled', 'completed', 'delivered'] } }
   });
   
   // P1-1: Doanh thu tổng quan loại trừ đơn đã hủy
@@ -204,7 +204,7 @@ async function queryLeadList(entities: ExtractedEntities): Promise<QueryResult> 
 
 async function queryOrderList(entities: ExtractedEntities): Promise<QueryResult> {
   const orders = await prisma.order.findMany({
-    where: { status: { notIn: ['cancelled', 'delivered'] } },
+    where: { status: { notIn: ['cancelled', 'completed', 'delivered'] } },
     take: entities.limit || 5,
     orderBy: { created_at: 'desc' }
   }) as any[];
@@ -292,7 +292,7 @@ async function queryOperationalAlerts(todayStr: string, entities: ExtractedEntit
 
   // active orders
   const activeOrders = await prisma.order.findMany({
-    where: { status: { notIn: ['cancelled', 'delivered'] } }
+    where: { status: { notIn: ['cancelled', 'completed', 'delivered'] } }
   }) as any[];
 
   // P0-3: Đơn thiếu ekip là đơn chưa có bất kỳ một task nào được giao (ngoại trừ các task đã hủy)
@@ -310,7 +310,7 @@ async function queryOperationalAlerts(todayStr: string, entities: ExtractedEntit
   // Missing deposits
   const missingDeposits = await prisma.order.findMany({
     where: {
-      status: { notIn: ['cancelled', 'delivered'] },
+      status: { notIn: ['cancelled', 'completed', 'delivered'] },
       deposit_amount: { lte: 0 },
       total_amount: { gt: 0 }
     },
@@ -474,6 +474,17 @@ async function queryContractStatus(entities: ExtractedEntities): Promise<QueryRe
   const orders = await prisma.order.findMany({
     where: { customer_id: customer.id }
   }) as any[];
+  const payments = await prisma.orderPayment.findMany({
+    where: {
+      order_id: { in: orders.map(order => order.id) },
+      voided_at: null
+    }
+  });
+  orders.forEach(order => {
+    order.paid_total = payments
+      .filter(payment => payment.order_id === order.id)
+      .reduce((sum, payment) => sum + payment.amount, 0);
+  });
 
   return {
     intent: 'CONTRACT_STATUS',

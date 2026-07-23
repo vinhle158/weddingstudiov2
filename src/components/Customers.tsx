@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../lib/api';
+import { getOrderStatusDefinition } from '../lib/orderStatus';
 import { 
   Search, 
   Plus, 
@@ -527,20 +528,13 @@ export default function Customers({ userRole, onNavigate, initialSelectedCustome
                           <span className="font-mono font-bold text-xs text-slate-500">{order.order_code}</span>
                           <span className="text-xs font-bold text-slate-800">{order.package_name}</span>
                           <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
-                            order.status === 'delivered' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                            order.status === 'cancelled' ? 'bg-rose-50 text-rose-700 border-rose-200' : 
-                            'bg-amber-50 text-amber-700 border-amber-200'
+                            getOrderStatusDefinition(order.status)?.badgeColor || 'bg-gray-50 text-gray-700 border-gray-200'
                           }`}>
-                            {order.status === 'new' ? 'Mới' :
-                             order.status === 'confirmed' ? 'Đã xác nhận' :
-                             order.status === 'shooting' ? 'Đang chụp' :
-                             order.status === 'editing' ? 'Hậu kỳ' :
-                             order.status === 'ready' ? 'Xong ảnh' :
-                             order.status === 'delivered' ? 'Đã giao' : 'Đã hủy'}
+                            {getOrderStatusDefinition(order.status)?.label || order.status}
                           </span>
                         </div>
                         <div className="flex items-center space-x-4 text-[11px] text-gray-400">
-                          <span>Ngày chụp: {new Date(order.shoot_date).toLocaleDateString('vi-VN')}</span>
+                          <span>Ngày chụp: {order.shoot_date ? new Date(order.shoot_date).toLocaleDateString('vi-VN') : 'Chưa có ngày chụp'}</span>
                         </div>
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gold-600 transition-colors" />

@@ -1,5 +1,6 @@
 import { QueryResult } from './queryBuilder';
 import { Intent } from './types';
+import { getOrderStatusDefinition } from '../orderStatus';
 
 // Helper to format currency to VND format
 export function formatCurrency(amount: number): string {
@@ -8,6 +9,8 @@ export function formatCurrency(amount: number): string {
 
 // Helper to translate status codes to Vietnamese descriptions
 export function translateStatus(status: string): string {
+  const orderStatus = getOrderStatusDefinition(status);
+  if (orderStatus) return orderStatus.label;
   const map: Record<string, string> = {
     // Order statuses
     new: 'Đơn hàng mới',
@@ -156,7 +159,7 @@ function renderOrderList(data: QueryResult): string {
 
   let reply = `Tìm thấy các đơn hàng/hợp đồng cưới phù hợp:\n\n`;
   orders.forEach(o => {
-    reply += `• Hợp đồng **[${o.order_code}]** - KH: **${o.customer_name}** - Trạng thái: *${translateStatus(o.status)}* - Gói: *"${o.package_name}"* (Ngày chụp: ${o.shoot_date})\n`;
+    reply += `• Hợp đồng **[${o.order_code}]** - KH: **${o.customer_name}** - Trạng thái: *${translateStatus(o.status)}* - Gói: *"${o.package_name}"* (Ngày chụp: ${o.shoot_date || 'Chưa có ngày chụp'})\n`;
   });
   return reply;
 }
@@ -349,12 +352,13 @@ function renderContractStatus(data: QueryResult): string {
 
   let responseText = `Tìm thấy **${orders.length}** đơn hàng/hợp đồng của khách hàng **${customer.full_name}**:\n\n`;
   orders.forEach((o, i) => {
-    const depositPercent = o.total_amount > 0 ? Math.round((o.deposit_amount / o.total_amount) * 100) : 0;
+    const paidTotal = Number(o.paid_total ?? o.deposit_amount ?? 0);
+    const paidPercent = o.total_amount > 0 ? Math.round((paidTotal / o.total_amount) * 100) : 0;
     responseText += `${i + 1}. **Hợp đồng ${o.order_code}**:
    • **Gói dịch vụ**: *${o.package_name}*
-   • **Giá trị**: ${formatCurrency(o.total_amount)} (Đã cọc: ${formatCurrency(o.deposit_amount)} - ${depositPercent}%)
+   • **Giá trị**: ${formatCurrency(o.total_amount)} (Đã thanh toán: ${formatCurrency(paidTotal)} - ${paidPercent}%)
    • **Trạng thái**: **${translateStatus(o.status)}**
-   • **Lịch chụp**: ${o.shoot_date} ${o.shoot_time ? `lúc ${o.shoot_time}` : ''}
+   • **Lịch chụp**: ${o.shoot_date || 'Chưa có ngày chụp'} ${o.shoot_time ? `lúc ${o.shoot_time}` : ''}
    ${o.notes ? `• **Ghi chú**: *${o.notes}*` : ''}\n\n`;
   });
 
